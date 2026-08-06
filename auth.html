@@ -59,10 +59,10 @@
 
         <!-- TAB SWAP (KONEKTE / ENSKRI) -->
         <div class="flex bg-brand-dark p-1 rounded-xl border border-brand-border mb-6">
-            <button id="tabLogin" class="flex-1 py-2 text-xs font-bold rounded-lg text-emerald-400 bg-brand-card border border-emerald-500/20 transition">
+            <button id="tabLogin" type="button" class="flex-1 py-2 text-xs font-bold rounded-lg text-emerald-400 bg-brand-card border border-emerald-500/20 transition">
                 Konekte
             </button>
-            <button id="tabRegister" class="flex-1 py-2 text-xs font-bold text-gray-400 hover:text-white transition">
+            <button id="tabRegister" type="button" class="flex-1 py-2 text-xs font-bold text-gray-400 hover:text-white transition">
                 Enskri
             </button>
         </div>
@@ -72,8 +72,32 @@
 
         <!-- FORMULAIRE -->
         <form id="authForm" class="space-y-4">
+            
+            <!-- NON KONPLÈ (PÈSONALIZE POU ENSKRIPSYON BAK SÈLMAN) -->
+            <div id="fullNameGroup" class="hidden">
+                <label class="block text-xs font-semibold text-gray-300 mb-1.5">Non Konplè</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-xs">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    <input type="text" id="fullNameInput" placeholder="eg. Jean Baptiste" class="w-full pl-10 pr-4 py-3 bg-brand-dark border border-brand-border rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500 transition">
+                </div>
+            </div>
+
+            <!-- NIMEWO TELEFÒN (PÈSONALIZE POU ENSKRIPSYON BAK SÈLMAN) -->
+            <div id="phoneGroup" class="hidden">
+                <label class="block text-xs font-semibold text-gray-300 mb-1.5">Nimewo Telefòn</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-xs">
+                        <i class="fa-solid fa-phone"></i>
+                    </span>
+                    <input type="tel" id="phoneInput" placeholder="+509 3123 4567" class="w-full pl-10 pr-4 py-3 bg-brand-dark border border-brand-border rounded-xl text-xs text-white placeholder-gray-600 focus:outline-none focus:border-emerald-500 transition">
+                </div>
+            </div>
+
+            <!-- ADRÈS EMAIL -->
             <div>
-                <label class="block text-xs font-semibold text-gray-300 mb-1.5">Email</label>
+                <label class="block text-xs font-semibold text-gray-300 mb-1.5">Adrès Imèl</label>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-500 text-xs">
                         <i class="fa-solid fa-envelope"></i>
@@ -82,6 +106,7 @@
                 </div>
             </div>
 
+            <!-- MODPAS -->
             <div>
                 <label class="block text-xs font-semibold text-gray-300 mb-1.5">Modpas</label>
                 <div class="relative">
@@ -106,7 +131,7 @@
 
     <!-- LOGIK JAVASCRIPT AK SUPABASE -->
     <script>
-        // Kle Supabase ou yo
+        // Kle Supabase yo
         const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
         
@@ -123,6 +148,11 @@
         const alertBox = document.getElementById('alertBox');
         const authForm = document.getElementById('authForm');
 
+        const fullNameGroup = document.getElementById('fullNameGroup');
+        const phoneGroup = document.getElementById('phoneGroup');
+        const fullNameInput = document.getElementById('fullNameInput');
+        const phoneInput = document.getElementById('phoneInput');
+
         // Swap nan mòd Konekte
         tabLogin.addEventListener('click', () => {
             isLogin = true;
@@ -130,6 +160,13 @@
             tabRegister.className = "flex-1 py-2 text-xs font-bold text-gray-400 hover:text-white transition";
             authSubtitle.innerText = "Konekte pou w ka gen aksè ak prediksyon VIP yo";
             btnText.innerText = "Konekte";
+            
+            // Kache champ Non ak Telefòn nan Koneksyon
+            fullNameGroup.classList.add('hidden');
+            phoneGroup.classList.add('hidden');
+            fullNameInput.required = false;
+            phoneInput.required = false;
+
             hideAlert();
         });
 
@@ -140,6 +177,13 @@
             tabLogin.className = "flex-1 py-2 text-xs font-bold text-gray-400 hover:text-white transition";
             authSubtitle.innerText = "Kreye yon kont VIP san pèdi tan";
             btnText.innerText = "Kreye Kont";
+            
+            // Afiche champ Non ak Telefòn nan Enskripsyon
+            fullNameGroup.classList.remove('hidden');
+            phoneGroup.classList.remove('hidden');
+            fullNameInput.required = true;
+            phoneInput.required = true;
+
             hideAlert();
         });
 
@@ -165,12 +209,15 @@
             
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('passwordInput').value.trim();
+            const fullName = fullNameInput.value.trim();
+            const phone = phoneInput.value.trim();
             
+            const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             btnText.innerText = "N ap trete...";
 
             if (isLogin) {
-                // TANTE KONEKSYON
+                // TANTE KONEKSYON (Sèvi ak Email ak Modpas sèlman)
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: email,
                     password: password
@@ -187,10 +234,16 @@
                     }, 1000);
                 }
             } else {
-                // TANTE ENSKRIPSYON
+                // TANTE ENSKRIPSYON (Sèvi ak Email, Modpas + Sove Non ak Nimewo)
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
-                    password: password
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                            phone_number: phone
+                        }
+                    }
                 });
 
                 if (error) {
@@ -206,7 +259,7 @@
             }
         });
 
-        // Si itilizatè a deja konekte anvan, voye l dirèkteman sou dashboard.html
+        // Verifikasyon si itilizatè a te deja konekte anvan
         async function checkExistingSession() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
