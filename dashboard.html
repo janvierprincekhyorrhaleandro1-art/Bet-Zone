@@ -39,24 +39,23 @@
     <!-- NAVBAR DASHBOARD -->
     <nav class="w-full px-4 sm:px-6 py-4 flex justify-between items-center border-b border-brand-border glass-panel sticky top-0 z-40">
         
-        <!-- EZON GÒCH: KOURÒN + LOGO + PLAN -->
-        <div class="flex items-center gap-3">
-            <!-- KOURÒN AN -->
+        <!-- EZON GÒCH: KOURÒN + LOGO BETZONE -->
+        <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">
                 <i class="fa-solid fa-crown"></i>
             </div>
-
-            <!-- LOGO BETZONE -->
             <span class="font-extrabold text-base sm:text-lg text-white tracking-wide">BET<span class="text-emerald-400">ZONE</span></span>
-
-            <!-- KARE PLAN USER AN -->
-            <div class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 uppercase tracking-wider hidden sm:flex items-center gap-1.5">
-                <span id="userPlan">VIP STANDARD</span>
-            </div>
         </div>
 
-        <!-- EZON DWA: AVATAR USER (AK 2 LÈT) + BOUTÒN DEKONEKSYON -->
+        <!-- EZON DWA: KARE PLAN + AVATAR USER + DEKONEKSYON -->
         <div class="flex items-center gap-3">
+            
+            <!-- TI KARE PLAN USER AN (BÒ KOTE AVATAR A) -->
+            <div class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-gem text-[10px] hidden sm:inline"></i>
+                <span id="userPlan">VIP STANDARD</span>
+            </div>
+
             <!-- TI WON AVATAR ITILIZATÈ A (VOYE W SOU PROFILE) -->
             <a href="profile.html" title="Ale nan Profil" class="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-extrabold text-xs hover:scale-105 transition shadow-lg shadow-emerald-500/10">
                 <span id="userInitials">--</span>
@@ -73,11 +72,12 @@
     <!-- KONTENI PRENSIPAL DASHBOARD -->
     <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8">
         
-        <!-- BYENVENI BANNER -->
+        <!-- BYENVENI BANNER (AK NON USER AN) -->
         <div class="p-6 rounded-3xl bg-gradient-to-r from-emerald-950/40 via-brand-card to-brand-card border border-emerald-500/30 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
                 <span class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">Espace Membre VIP</span>
-                <h1 class="text-2xl md:text-3xl font-extrabold text-white mt-2">Benvini sou Dashboard ou, <span id="userNameDisplay" class="text-emerald-400">...</span>! 👋
+                <h1 class="text-2xl md:text-3xl font-extrabold text-white mt-2">
+                    Benvini sou Dashboard ou, <span id="userNameDisplay" class="text-emerald-400">...</span>! 👋
                 </h1>
                 <p class="text-gray-400 text-xs md:text-sm mt-1">Jwenn pi bon analiz ak prediksyon spòtif ki seleksyone pou jodi a.</p>
             </div>
@@ -102,7 +102,7 @@
                     <span class="text-[11px] text-gray-400 font-medium">Laliga - Espay</span>
                 </div>
                 
-                <!-- EKIP A VS EKIP B -->
+                <!-- EKIP A VS EKIP B SOU MENM LIY AK BALON FOOTBALL -->
                 <div class="flex items-center justify-between text-sm font-bold text-white group-hover:text-emerald-400 transition my-4 px-1">
                     <span class="flex items-center gap-1.5">
                         <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
@@ -212,7 +212,11 @@
                 const user = session.user;
                 const metadata = user.user_metadata || {};
                 
-                // Kalkile 2 lèt non user an
+                // 1. Ekstrè ak afiche non user an nan bannè a
+                let displayName = metadata.full_name || user.email.split('@')[0];
+                document.getElementById('userNameDisplay').innerText = displayName;
+
+                // 2. Kalkile 2 lèt pou avatar an
                 let initials = "BZ";
                 if (metadata.full_name && metadata.full_name.trim() !== "") {
                     const names = metadata.full_name.trim().split(" ");
@@ -227,6 +231,7 @@
 
                 document.getElementById('userInitials').innerText = initials;
 
+                // 3. Afiche plan an
                 if (metadata.plan) {
                     document.getElementById('userPlan').innerText = metadata.plan;
                 }
