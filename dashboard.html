@@ -32,12 +32,15 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #05070a; color: #f1f5f9; }
         .glass-panel { background: rgba(13, 17, 23, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.2); }
+        /* Style pou scrollbar sanble dous nan lis orizontal yo */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased">
 
     <!-- NAVBAR DASHBOARD -->
-    <nav class="w-full px-4 sm:px-6 py-4 flex justify-between items-center border-b border-brand-border glass-panel sticky top-0 z-40">
+    <nav class="w-full px-4 sm:px-6 py-3 flex justify-between items-center border-b border-brand-border glass-panel sticky top-0 z-40">
         
         <!-- EZON GÒCH: KOURÒN + LOGO BETZONE -->
         <div class="flex items-center gap-2.5">
@@ -47,22 +50,28 @@
             <span class="font-extrabold text-base sm:text-lg text-white tracking-wide">BET<span class="text-emerald-400">ZONE</span></span>
         </div>
 
-        <!-- EZON DWA: KARE PLAN + AVATAR USER + DEKONEKSYON -->
-        <div class="flex items-center gap-3">
+        <!-- EZON DWA: ISTORIK + KARE PLAN + AVATAR USER + DEKONEKSYON -->
+        <div class="flex items-center gap-2.5 sm:gap-3">
             
-            <!-- TI KARE PLAN USER AN (BÒ KOTE AVATAR A) -->
-            <div class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+            <!-- BOUTÒN ISTORIK -->
+            <a href="historique.html" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-black transition text-xs font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span class="hidden sm:inline">Istorik</span>
+            </a>
+
+            <!-- TI KARE PLAN USER AN -->
+            <div class="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 uppercase tracking-wider hidden xs:flex items-center gap-1.5">
                 <i class="fa-solid fa-gem text-[10px] hidden sm:inline"></i>
                 <span id="userPlan">VIP STANDARD</span>
             </div>
 
-            <!-- TI WON AVATAR ITILIZATÈ A (VOYE W SOU PROFILE) -->
-            <a href="profile.html" title="Ale nan Profil" class="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-extrabold text-xs hover:scale-105 transition shadow-lg shadow-emerald-500/10">
+            <!-- TI WON AVATAR ITILIZATÈ A (PROFILE) -->
+            <a href="profile.html" title="Ale nan Profil" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-extrabold text-xs hover:scale-105 transition shadow-lg shadow-emerald-500/10">
                 <span id="userInitials">--</span>
             </a>
 
             <!-- BOUTÒN DEKONEKSYON -->
-            <button id="logoutBtn" class="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition text-xs font-bold flex items-center gap-1.5">
+            <button id="logoutBtn" class="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition text-xs font-bold flex items-center gap-1.5">
                 <i class="fa-solid fa-right-from-bracket"></i>
                 <span class="hidden sm:inline">Dekonekte</span>
             </button>
@@ -70,39 +79,84 @@
     </nav>
 
     <!-- KONTENI PRENSIPAL DASHBOARD -->
-    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8">
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6">
         
-        <!-- BYENVENI BANNER (AK NON USER AN) -->
-        <div class="p-6 rounded-3xl bg-gradient-to-r from-emerald-950/40 via-brand-card to-brand-card border border-emerald-500/30 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <span class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">Espace Membre VIP</span>
-                <h1 class="text-2xl md:text-3xl font-extrabold text-white mt-2">
-                    Benvini sou Dashboard ou, <span id="userNameDisplay" class="text-emerald-400">...</span>! 👋
-                </h1>
-                <p class="text-gray-400 text-xs md:text-sm mt-1">Jwenn pi bon analiz ak prediksyon spòtif ki seleksyone pou jodi a.</p>
+        <!-- BYENVENI BANNER (PI TITI & REKTANGILÈ) -->
+        <div class="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-brand-card to-brand-card border border-emerald-500/30 mb-6 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-2.5 h-8 bg-emerald-500 rounded-full hidden sm:block"></div>
+                <div>
+                    <h1 class="text-sm sm:text-base font-bold text-white">
+                        Benvini sou Dashboard ou, <span id="userNameDisplay" class="text-emerald-400 font-extrabold">...</span>! 👋
+                    </h1>
+                    <p class="text-gray-400 text-[11px] sm:text-xs">Prediksyon ak analiz spòtif seleksyone pou ou.</p>
+                </div>
             </div>
-            <div class="px-4 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center gap-2">
-                <i class="fa-solid fa-shield-check"></i>
-                <span>Kont Verifye</span>
+            <div class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold whitespace-nowrap flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-check text-xs"></i>
+                <span class="hidden xs:inline">Kont Verifye</span>
+            </div>
+        </div>
+
+        <!-- 1. LIS REKTANG CHANPYONA YO -->
+        <div class="mb-5">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-trophy text-emerald-400"></i>
+                <span>Chanpyona Yo</span>
+            </h3>
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                <button class="px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm">
+                    Tout Chanpyona
+                </button>
+                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
+                    ⚽ LaLiga
+                </button>
+                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
+                    🏆 UEFA Champions League
+                </button>
+                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
+                    🦁 Premier League
+                </button>
+                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
+                    🇮🇹 Serie A
+                </button>
+                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
+                    🇩🇪 Bundesliga
+                </button>
+                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
+                    🇫🇷 Ligue 1
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. LIS REKTANG JOU YO (DINAMIK AK JS) -->
+        <div class="mb-6">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <i class="fa-regular fa-calendar-days text-emerald-400"></i>
+                <span>Seleksyon Jou</span>
+            </h3>
+            <div id="daysList" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                <!-- JS ap jenere jou yo otomatikman la -->
             </div>
         </div>
 
         <!-- KAT PREDIKSYON VIP YO -->
-        <h2 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <i class="fa-solid fa-fire text-emerald-400"></i>
-            <span>Tikè ak Prediksyon Du Jour</span>
-        </h2>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-fire text-emerald-400"></i>
+                <span>Tikè ak Prediksyon Du Jour</span>
+            </h2>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             
             <!-- KAT 1 -->
-            <div onclick="window.location.href='match-details.html?id=1'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
+            <div onclick="window.location.href='details.html?id=1'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-xs text-gray-400 font-semibold"><i class="fa-regular fa-clock mr-1"></i> 20:00 GMT</span>
                     <span class="text-[11px] text-gray-400 font-medium">Laliga - Espay</span>
                 </div>
                 
-                <!-- EKIP A VS EKIP B SOU MENM LIY AK BALON FOOTBALL -->
                 <div class="flex items-center justify-between text-sm font-bold text-white group-hover:text-emerald-400 transition my-4 px-1">
                     <span class="flex items-center gap-1.5">
                         <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
@@ -115,7 +169,6 @@
                     </span>
                 </div>
 
-                <!-- PREDIKSYON + % POUSANTAJ -->
                 <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-4">
                     <div class="flex flex-col">
                         <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Prediksyon:</span>
@@ -128,7 +181,7 @@
             </div>
 
             <!-- KAT 2 -->
-            <div onclick="window.location.href='match-details.html?id=2'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
+            <div onclick="window.location.href='details.html?id=2'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-xs text-gray-400 font-semibold"><i class="fa-regular fa-clock mr-1"></i> 21:00 GMT</span>
                     <span class="text-[11px] text-gray-400 font-medium">Premier League - Angletè</span>
@@ -158,7 +211,7 @@
             </div>
 
             <!-- KAT 3 -->
-            <div onclick="window.location.href='match-details.html?id=3'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
+            <div onclick="window.location.href='details.html?id=3'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-xs text-gray-400 font-semibold"><i class="fa-regular fa-clock mr-1"></i> 21:00 GMT</span>
                     <span class="text-[11px] text-gray-400 font-medium">Bundesliga - Almay</span>
@@ -196,12 +249,58 @@
         &copy; 2026 Bet Zone. Tout dwa rezève.
     </footer>
 
-    <!-- SCRIPT LOGIK SUPABASE AK OTANTIFIKASYON -->
+    <!-- SCRIPT LOGIK SUPABASE AK GENERASYON JOU DINAMIK -->
     <script>
         const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // LOGIK POU AFICHE JOU YO DINAMIKMAN
+        function renderDynamicDays() {
+            const daysContainer = document.getElementById('daysList');
+            if (!daysContainer) return;
+
+            const daysOfWeek = ['Dim', 'Len', 'Mar', 'Mèk', 'Jej', 'Vand', 'Sam'];
+            const today = new Date();
+            let htmlContent = '';
+
+            // N ap fè yon boukl soti nan Eyer (-1) rive nan 4 jou apre
+            for (let i = -1; i <= 4; i++) {
+                const targetDate = new Date();
+                targetDate.setDate(today.getDate() + i);
+
+                const dayName = daysOfWeek[targetDate.getDay()];
+                const dayNumber = targetDate.getDate();
+                const monthNumber = targetDate.getMonth() + 1;
+                
+                let label = `${dayName} ${dayNumber}/${monthNumber}`;
+                let isToday = false;
+
+                if (i === -1) label = `Eyer (${dayNumber}/${monthNumber})`;
+                else if (i === 0) {
+                    label = `Jodi a (${dayNumber}/${monthNumber})`;
+                    isToday = true;
+                } else if (i === 1) label = `Denmen (${dayNumber}/${monthNumber})`;
+
+                if (isToday) {
+                    htmlContent += `
+                        <button class="px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-black animate-pulse"></span>
+                            ${label}
+                        </button>
+                    `;
+                } else {
+                    htmlContent += `
+                        <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
+                            ${label}
+                        </button>
+                    `;
+                }
+            }
+
+            daysContainer.innerHTML = htmlContent;
+        }
 
         async function checkAuth() {
             const { data: { session }, error } = await supabaseClient.auth.getSession();
@@ -212,7 +311,7 @@
                 const user = session.user;
                 const metadata = user.user_metadata || {};
                 
-                // 1. Ekstrè ak afiche non user an nan bannè a
+                // 1. Ekstrè ak afiche non user an
                 let displayName = metadata.full_name || user.email.split('@')[0];
                 document.getElementById('userNameDisplay').innerText = displayName;
 
@@ -238,6 +337,8 @@
             }
         }
 
+        // Eksecite fonksyon yo
+        renderDynamicDays();
         checkAuth();
 
         // Lojik Boutòn Dekonekte
