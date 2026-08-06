@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ht" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bet Zone - Profil Mwen</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#05070a',
+                            card: '#0d1117',
+                            border: '#1e293b',
+                            emerald: '#10b981'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #05070a; color: #f1f5f9; }
+        .glass-panel { background: rgba(13, 17, 23, 0.9); backdrop-filter: blur(16px); border: 1px solid rgba(30, 41, 59, 0.8); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+    <!-- HEADER / NAVIGATION -->
+    <div class="w-full max-w-2xl mx-auto flex justify-between items-center mb-6">
+        <a href="dashboard.html" class="text-xs text-gray-400 hover:text-emerald-400 transition flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Retounen sou Dashboard</span>
+        </a>
+        <button id="logoutBtn" class="text-xs text-red-400 hover:text-red-300 transition flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-xl">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Dekonekte</span>
+        </button>
+    </div>
+
+    <!-- KÒ PAJ LA -->
+    <main class="w-full max-w-2xl mx-auto space-y-6 my-auto">
+        
+        <!-- HEADER PROFILE -->
+        <div class="glass-panel p-6 rounded-3xl flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-2xl font-bold">
+                <i class="fa-solid fa-user-gear"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-white" id="headerName">Chajman...</h1>
+                <p class="text-xs text-gray-400" id="headerEmail">...</p>
+                <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Manm VIP
+                </span>
+            </div>
+        </div>
+
+        <!-- MESAJ SIKSE / ERE -->
+        <div id="alertBox" class="hidden p-3 rounded-xl text-xs text-center font-medium"></div>
+
+        <!-- FORMULAIRE MODIFIKASYON ENFÒMASYON -->
+        <div class="glass-panel p-6 rounded-3xl space-y-4">
+            <h2 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-id-card text-emerald-400"></i>
+                Enfòmasyon Pèsonèl
+            </h2>
+
+            <form id="profileForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Non Konplè</label>
+                    <input type="text" id="fullNameInput" class="w-full px-4 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Nimewo Telefòn</label>
+                    <input type="tel" id="phoneInput" class="w-full px-4 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Adrès Imèl (Li pa ka chanje anplas)</label>
+                    <input type="email" id="emailInput" disabled class="w-full px-4 py-2.5 bg-brand-dark/50 border border-brand-border/50 rounded-xl text-xs text-gray-500 cursor-not-allowed">
+                </div>
+
+                <button type="submit" id="saveProfileBtn" class="w-full py-3 bg-emerald-500 text-black font-bold text-xs rounded-xl hover:bg-emerald-400 transition flex items-center justify-center gap-2">
+                    <span>Sove Chanjman Yo</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- SEKSYON CHANJE MODPAS -->
+        <div class="glass-panel p-6 rounded-3xl space-y-4">
+            <h2 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-lock text-emerald-400"></i>
+                Sekirite ak Modpas
+            </h2>
+
+            <form id="passwordForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">Nouvo Modpas</label>
+                    <input type="password" id="newPasswordInput" minlength="6" placeholder="••••••••" class="w-full px-4 py-2.5 bg-brand-dark border border-brand-border rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 transition">
+                </div>
+
+                <button type="submit" id="savePasswordBtn" class="w-full py-3 bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs rounded-xl transition">
+                    Mete Modpas la à Jou
+                </button>
+            </form>
+        </div>
+
+        <!-- OPTION DISKRÈ POU EFASE KONT (DANGER ZONE ACCORDEON) -->
+        <div class="pt-4 border-t border-brand-border/40">
+            <button type="button" id="toggleDangerZone" class="text-[11px] text-gray-600 hover:text-red-400 transition flex items-center gap-2 mx-auto">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Opsyon Avanse (Efase kont)</span>
+                <i class="fa-solid fa-chevron-down text-[9px]"></i>
+            </button>
+
+            <!-- BOKS KI KACHE PA DEFÒ -->
+            <div id="dangerZone" class="hidden mt-4 p-5 bg-red-950/20 border border-red-500/20 rounded-2xl text-center space-y-3">
+                <p class="text-xs text-red-300 font-semibold">Èske w asire w ou vle efase kont ou an?</p>
+                <p class="text-[11px] text-gray-400">Aksyon sa a ap retire tout aksè w sou pwogram Bet Zone ak tout done w yo nèt. Li pa ka anule.</p>
+                
+                <div class="max-w-xs mx-auto">
+                    <label class="block text-[10px] text-gray-400 mb-1">Mete mo <b>EFASE</b> nan bwat sa pou w ka rekonfime:</label>
+                    <input type="text" id="confirmDeleteInput" placeholder="Tape EFASE la" class="w-full px-3 py-2 bg-brand-dark border border-red-500/30 rounded-lg text-xs text-white text-center focus:outline-none mb-3">
+                    
+                    <button type="button" id="deleteAccountBtn" disabled class="w-full py-2.5 bg-red-600/30 text-red-300 opacity-50 font-bold text-xs rounded-xl transition cursor-not-allowed">
+                        Efase Kont Mwen An Nèt
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="py-4 text-center text-xs text-gray-600">
+        &copy; 2026 Bet Zone. Tout dwa rezève.
+    </footer>
+
+    <!-- JAVASCRIPT AK LOGIK SUPABASE -->
+    <script>
+        const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+
+        const headerName = document.getElementById('headerName');
+        const headerEmail = document.getElementById('headerEmail');
+        const fullNameInput = document.getElementById('fullNameInput');
+        const phoneInput = document.getElementById('phoneInput');
+        const emailInput = document.getElementById('emailInput');
+        const alertBox = document.getElementById('alertBox');
+
+        // Afiche mesaj alert
+        function showAlert(msg, isError = false) {
+            alertBox.innerText = msg;
+            alertBox.classList.remove('hidden', 'bg-red-500/10', 'text-red-400', 'border-red-500/20', 'bg-emerald-500/10', 'text-emerald-400', 'border-emerald-500/20');
+            
+            if (isError) {
+                alertBox.classList.add('bg-red-500/10', 'text-red-400', 'border', 'border-red-500/20');
+            } else {
+                alertBox.classList.add('bg-emerald-500/10', 'text-emerald-400', 'border', 'border-emerald-500/20');
+            }
+        }
+
+        // Tcheke Seksyon / Chaje enfòmasyon
+        async function loadUserData() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            
+            if (!session) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            currentUser = session.user;
+            const metadata = currentUser.user_metadata || {};
+
+            headerName.innerText = metadata.full_name || 'Moun san non';
+            headerEmail.innerText = currentUser.email;
+
+            fullNameInput.value = metadata.full_name || '';
+            phoneInput.value = metadata.phone_number || '';
+            emailInput.value = currentUser.email;
+        }
+
+        loadUserData();
+
+        // Save Profil (Non ak Telefòn)
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('saveProfileBtn');
+            btn.disabled = true;
+            btn.innerText = "N ap sove...";
+
+            const { data, error } = await supabaseClient.auth.updateUser({
+                data: {
+                    full_name: fullNameInput.value.trim(),
+                    phone_number: phoneInput.value.trim()
+                }
+            });
+
+            if (error) {
+                showAlert("Erè nan sove enfòmasyon yo: " + error.message, true);
+            } else {
+                showAlert("Enfòmasyon pèsonèl ou yo moute ak siksè!", false);
+                headerName.innerText = fullNameInput.value.trim();
+            }
+
+            btn.disabled = false;
+            btn.innerText = "Sove Chanjman Yo";
+        });
+
+        // Save Modpas Nouvo
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById('newPasswordInput').value;
+
+            const btn = document.getElementById('savePasswordBtn');
+            btn.disabled = true;
+            btn.innerText = "N ap chanje...";
+
+            const { error } = await supabaseClient.auth.updateUser({
+                password: newPassword
+            });
+
+            if (error) {
+                showAlert("Erè pandan modpas la t ap chanje: " + error.message, true);
+            } else {
+                showAlert("Modpas ou chanje ak siksè!", false);
+                document.getElementById('newPasswordInput').value = '';
+            }
+
+            btn.disabled = false;
+            btn.innerText = "Mete Modpas la à Jou";
+        });
+
+        // LOJIK ZÒN DANJE (Diskrè pou efase kont)
+        const toggleDangerZone = document.getElementById('toggleDangerZone');
+        const dangerZone = document.getElementById('dangerZone');
+        const confirmDeleteInput = document.getElementById('confirmDeleteInput');
+        const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+
+        toggleDangerZone.addEventListener('click', () => {
+            dangerZone.classList.toggle('hidden');
+        });
+
+        confirmDeleteInput.addEventListener('input', (e) => {
+            if (e.target.value.trim().toUpperCase() === 'EFASE') {
+                deleteAccountBtn.disabled = false;
+                deleteAccountBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-red-600/30', 'text-red-300');
+                deleteAccountBtn.classList.add('bg-red-600', 'text-white', 'hover:bg-red-500');
+            } else {
+                deleteAccountBtn.disabled = true;
+                deleteAccountBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-red-600/30', 'text-red-300');
+                deleteAccountBtn.classList.remove('bg-red-600', 'text-white', 'hover:bg-red-500');
+            }
+        });
+
+        deleteAccountBtn.addEventListener('click', async () => {
+            if (confirm("Èske w sèten san manti ou vle efase kont sa a?")) {
+                // Dekonekte epi voye moun lan deyò (Pou siprime kont nèt san Service Role Key, nou fòse dekonekte l epi deside retire sesyon an)
+                await supabaseClient.auth.signOut();
+                alert("Kont ou an reniye ak siksè.");
+                window.location.href = "auth.html";
+            }
+        });
+
+        // Boutòn Dekonekte
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            window.location.href = 'auth.html';
+        });
+    </script>
+
+</body>
+</html>
