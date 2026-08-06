@@ -37,22 +37,30 @@
 <body class="min-h-screen flex flex-col justify-between antialiased">
 
     <!-- NAVBAR DASHBOARD -->
-    <nav class="w-full px-6 py-4 flex justify-between items-center border-b border-brand-border glass-panel sticky top-0 z-40">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">
-                <i class="fa-solid fa-crown"></i>
+    <nav class="w-full px-4 sm:px-6 py-4 flex justify-between items-center border-b border-brand-border glass-panel sticky top-0 z-40">
+        
+        <!-- EZON ANWO GÒCH: IKÒN AK LÈT + LOGO + PLAN -->
+        <div class="flex items-center gap-3">
+            <!-- 1. IKÒN AK 2 LÈT NON USER AN (KLIKE SOU LI VOYE W SOUPAJ PROFIL) -->
+            <a href="profile.html" title="Ale nan Profil" class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-extrabold text-sm hover:scale-105 transition shadow-lg shadow-emerald-500/10">
+                <span id="userInitials">--</span>
+            </a>
+
+            <!-- LOGO BETZONE -->
+            <span class="font-extrabold text-base sm:text-lg text-white tracking-wide">BET<span class="text-emerald-400">ZONE</span></span>
+
+            <!-- 2. KARE KI KONTNI PLAN USER AN -->
+            <div class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-crown text-[10px]"></i>
+                <span id="userPlan">VIP STANDARD</span>
             </div>
-            <span class="font-extrabold text-lg text-white tracking-wide">BET<span class="text-emerald-400">ZONE</span></span>
         </div>
 
-        <div class="flex items-center gap-4">
-            <div id="userBadge" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-card border border-brand-border text-xs text-gray-300">
-                <i class="fa-solid fa-user-circle text-emerald-400"></i>
-                <span id="userEmail">Okipe...</span>
-            </div>
-            <button id="logoutBtn" class="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition text-xs font-bold flex items-center gap-2">
+        <!-- EZON DWA: DEKONEKSYON -->
+        <div class="flex items-center gap-3">
+            <button id="logoutBtn" class="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition text-xs font-bold flex items-center gap-1.5">
                 <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Dekonekte</span>
+                <span class="hidden sm:inline">Dekonekte</span>
             </button>
         </div>
     </nav>
@@ -81,45 +89,93 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             
-            <!-- KAT 1 -->
-            <div class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/40 transition">
+            <!-- KAT 1 (KLIKE SOU LI VOYE W SOU MATCH DETAILS) -->
+            <div onclick="window.location.href='match-details.html?id=1'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-xs text-gray-400 font-semibold"><i class="fa-regular fa-clock mr-1"></i> 20:00 GMT</span>
-                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold">Cote: 1.85</span>
+                    <span class="text-[11px] text-gray-400 font-medium">Laliga - Espay</span>
                 </div>
-                <div class="text-sm font-bold text-white mb-1">Real Madrid vs Barcelona</div>
-                <p class="text-xs text-gray-400 mb-4">Laliga - Espay</p>
-                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center">
-                    <span class="text-xs font-bold text-gray-300">Prediksyon:</span>
-                    <span class="text-xs font-extrabold text-emerald-400">Viktwa Real Madrid & +1.5 Goal</span>
+                
+                <!-- 4. EKIP AK IKÒN BALON FOOTBALL -->
+                <div class="space-y-2 my-3">
+                    <div class="flex items-center gap-2 text-sm font-bold text-white group-hover:text-emerald-400 transition">
+                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
+                        <span>Real Madrid</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm font-bold text-white group-hover:text-emerald-400 transition">
+                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
+                        <span>Barcelona</span>
+                    </div>
+                </div>
+
+                <!-- PREDIKSYON + % POUSANTAJ -->
+                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-4">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Prediksyon:</span>
+                        <span class="text-xs font-extrabold text-emerald-400">Viktwa Real Madrid & +1.5 Goal</span>
+                    </div>
+                    <!-- 4. POUSANTAJ ( % ) BÒ KOTE TIP LAN -->
+                    <span class="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-500/30">
+                        88%
+                    </span>
                 </div>
             </div>
 
             <!-- KAT 2 -->
-            <div class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/40 transition">
+            <div onclick="window.location.href='match-details.html?id=2'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-xs text-gray-400 font-semibold"><i class="fa-regular fa-clock mr-1"></i> 21:00 GMT</span>
-                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold">Cote: 2.10</span>
+                    <span class="text-[11px] text-gray-400 font-medium">Premier League - Angletè</span>
                 </div>
-                <div class="text-sm font-bold text-white mb-1">Man City vs Arsenal</div>
-                <p class="text-xs text-gray-400 mb-4">Premier League - Angletè</p>
-                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center">
-                    <span class="text-xs font-bold text-gray-300">Prediksyon:</span>
-                    <span class="text-xs font-extrabold text-emerald-400">Les 2 Equipes Marquent (BTTS)</span>
+                
+                <div class="space-y-2 my-3">
+                    <div class="flex items-center gap-2 text-sm font-bold text-white group-hover:text-emerald-400 transition">
+                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
+                        <span>Man City</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm font-bold text-white group-hover:text-emerald-400 transition">
+                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
+                        <span>Arsenal</span>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-4">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Prediksyon:</span>
+                        <span class="text-xs font-extrabold text-emerald-400">Les 2 Equipes Marquent (BTTS)</span>
+                    </div>
+                    <span class="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-500/30">
+                        82%
+                    </span>
                 </div>
             </div>
 
             <!-- KAT 3 -->
-            <div class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/40 transition">
+            <div onclick="window.location.href='match-details.html?id=3'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
                 <div class="flex justify-between items-center mb-3">
                     <span class="text-xs text-gray-400 font-semibold"><i class="fa-regular fa-clock mr-1"></i> 21:00 GMT</span>
-                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold">Cote: 1.65</span>
+                    <span class="text-[11px] text-gray-400 font-medium">Bundesliga - Almay</span>
                 </div>
-                <div class="text-sm font-bold text-white mb-1">Bayern vs Dortmund</div>
-                <p class="text-xs text-gray-400 mb-4">Bundesliga - Almay</p>
-                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center">
-                    <span class="text-xs font-bold text-gray-300">Prediksyon:</span>
-                    <span class="text-xs font-extrabold text-emerald-400">Plus de 2.5 Goals</span>
+                
+                <div class="space-y-2 my-3">
+                    <div class="flex items-center gap-2 text-sm font-bold text-white group-hover:text-emerald-400 transition">
+                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
+                        <span>Bayern Munich</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm font-bold text-white group-hover:text-emerald-400 transition">
+                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
+                        <span>Dortmund</span>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-4">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Prediksyon:</span>
+                        <span class="text-xs font-extrabold text-emerald-400">Plus de 2.5 Goals</span>
+                    </div>
+                    <span class="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-500/30">
+                        91%
+                    </span>
                 </div>
             </div>
 
@@ -132,32 +188,49 @@
         &copy; 2026 Bet Zone. Tout dwa rezève.
     </footer>
 
-    <!-- SCRIPT LOJIK SUPABASE SEKIRITE AK DEKONEKSYON -->
+    <!-- SCRIPT LOGIK SUPABASE AK OTANTIFIKASYON -->
     <script>
-        // Enfòmasyon Supabase
         const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
         
-        // Inisyalize Supabase Client
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 1. Verifikasyon Otomatik Sekirite (Moun san kont dwe re-dirije)
+        // Verifikasyon ak chaje enfòmasyon itilizatè an
         async function checkAuth() {
             const { data: { session }, error } = await supabaseClient.auth.getSession();
 
             if (error || !session) {
-                // Si moun lan pa konekte, voye l sou auth.html
                 window.location.href = "auth.html";
             } else {
-                // Afiche email itilizatè a sou navbar la
-                document.getElementById('userEmail').innerText = session.user.email;
+                const user = session.user;
+                const metadata = user.user_metadata || {};
+                
+                // Kalkile 2 lèt non user an
+                let initials = "BZ";
+                if (metadata.full_name && metadata.full_name.trim() !== "") {
+                    const names = metadata.full_name.trim().split(" ");
+                    if (names.length >= 2) {
+                        initials = (names[0][0] + names[1][0]).toUpperCase();
+                    } else {
+                        initials = names[0].substring(0, 2).toUpperCase();
+                    }
+                } else if (user.email) {
+                    initials = user.email.substring(0, 2).toUpperCase();
+                }
+
+                // Afiche lèt yo nan ikòn an
+                document.getElementById('userInitials').innerText = initials;
+
+                // Afiche plan user an si l nan metadata
+                if (metadata.plan) {
+                    document.getElementById('userPlan').innerText = metadata.plan;
+                }
             }
         }
 
-        // Exekite verifikasyon an depi paj la chaje
         checkAuth();
 
-        // 2. Lojik pou Boutòn Dekonekte a
+        // Lojik Boutòn Dekonekte
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             const { error } = await supabaseClient.auth.signOut();
             if (!error) {
