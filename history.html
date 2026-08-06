@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ht" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bet Zone - Istorik Tip Yo</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#05070a',
+                            card: '#0d1117',
+                            border: '#1e293b',
+                            emerald: '#10b981'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #05070a; color: #f1f5f9; }
+        .glass-panel { background: rgba(13, 17, 23, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .emerald-glow { box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); }
+        .emerald-gradient-bg { background: linear-gradient(135deg, #062016 0%, #0d1117 100%); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-black">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-brand-border">
+        <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+            <a href="dashboard.html" class="flex items-center gap-2 text-xs font-bold text-gray-300 hover:text-emerald-400 transition">
+                <i class="fa-solid fa-arrow-left text-sm"></i>
+                <span>Dashboard</span>
+            </a>
+            <span class="text-xs font-bold text-gray-400">Istorik Rezilta Yo</span>
+            <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-extrabold text-[10px] border border-emerald-500/30">VIP</span>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="max-w-4xl mx-auto px-4 py-5 w-full flex-grow space-y-4">
+
+        <!-- KAD STATISTIK ISTORIK LA -->
+        <div class="p-4 rounded-2xl bg-brand-card border border-brand-border emerald-glow">
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="p-2 rounded-xl bg-black/40 border border-brand-border">
+                    <span class="text-[9px] text-gray-400 block font-semibold">Taux de Réussite</span>
+                    <span class="text-base font-black text-emerald-400">89%</span>
+                </div>
+                <div class="p-2 rounded-xl bg-black/40 border border-brand-border">
+                    <span class="text-[9px] text-gray-400 block font-semibold">Match Ganye</span>
+                    <span class="text-base font-black text-emerald-400">42</span>
+                </div>
+                <div class="p-2 rounded-xl bg-black/40 border border-brand-border">
+                    <span class="text-[9px] text-gray-400 block font-semibold">Match Pèdi</span>
+                    <span class="text-base font-black text-red-400">5</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTÈ JOU PA JOU -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-1"><i class="fa-solid fa-calendar-check text-emerald-400"></i> Dat:</span>
+            <button class="px-3 py-1 rounded-lg bg-emerald-500 text-black text-[11px] font-bold shrink-0">Yer (4 Out)</button>
+            <button class="px-3 py-1 rounded-lg bg-brand-card hover:bg-slate-800 text-gray-300 text-[11px] font-medium shrink-0 border border-brand-border">3 Out</button>
+            <button class="px-3 py-1 rounded-lg bg-brand-card hover:bg-slate-800 text-gray-300 text-[11px] font-medium shrink-0 border border-brand-border">2 Out</button>
+            <button class="px-3 py-1 rounded-lg bg-brand-card hover:bg-slate-800 text-gray-300 text-[11px] font-medium shrink-0 border border-brand-border">1 Out</button>
+        </div>
+
+        <!-- LIS MATCH ISTORIK YO -->
+        <div class="space-y-3">
+            
+            <!-- Match 1: GANYE -->
+            <div class="p-3.5 rounded-xl bg-brand-card border border-brand-border flex flex-col gap-2">
+                <div class="flex justify-between items-center text-[10px] text-gray-400 border-b border-brand-border/50 pb-1.5">
+                    <span class="font-semibold text-gray-300">UEFA Champions League</span>
+                    <span class="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        <i class="fa-solid fa-circle-check"></i> GANYE
+                    </span>
+                </div>
+                <div class="flex justify-between items-center font-bold text-xs text-white">
+                    <span>Bayern Munich</span>
+                    <span class="bg-black px-2 py-0.5 rounded text-emerald-400 font-mono border border-brand-border">3 - 1</span>
+                    <span>Arsenal</span>
+                </div>
+                <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1">
+                    <span>Tip: <strong class="text-white">Plus de 2.5 Bi</strong></span>
+                    <span>Cote: <strong class="text-emerald-400">1.65</strong></span>
+                </div>
+            </div>
+
+            <!-- Match 2: GANYE -->
+            <div class="p-3.5 rounded-xl bg-brand-card border border-brand-border flex flex-col gap-2">
+                <div class="flex justify-between items-center text-[10px] text-gray-400 border-b border-brand-border/50 pb-1.5">
+                    <span class="font-semibold text-gray-300">Premier League</span>
+                    <span class="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        <i class="fa-solid fa-circle-check"></i> GANYE
+                    </span>
+                </div>
+                <div class="flex justify-between items-center font-bold text-xs text-white">
+                    <span>Liverpool</span>
+                    <span class="bg-black px-2 py-0.5 rounded text-emerald-400 font-mono border border-brand-border">2 - 0</span>
+                    <span>Everton</span>
+                </div>
+                <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1">
+                    <span>Tip: <strong class="text-white">Victoire Liverpool (1)</strong></span>
+                    <span>Cote: <strong class="text-emerald-400">1.45</strong></span>
+                </div>
+            </div>
+
+            <!-- Match 3: PÈDI -->
+            <div class="p-3.5 rounded-xl bg-brand-card border border-brand-border flex flex-col gap-2">
+                <div class="flex justify-between items-center text-[10px] text-gray-400 border-b border-brand-border/50 pb-1.5">
+                    <span class="font-semibold text-gray-300">La Liga</span>
+                    <span class="text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">
+                        <i class="fa-solid fa-circle-xmark"></i> PÈDI
+                    </span>
+                </div>
+                <div class="flex justify-between items-center font-bold text-xs text-white">
+                    <span>Atletico Madrid</span>
+                    <span class="bg-black px-2 py-0.5 rounded text-red-400 font-mono border border-brand-border">0 - 0</span>
+                    <span>Sevilla</span>
+                </div>
+                <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1">
+                    <span>Tip: <strong class="text-white">BTTS (Oui)</strong></span>
+                    <span>Cote: <strong class="text-gray-400">1.80</strong></span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-brand-border bg-black py-4 text-center text-[11px] text-gray-500 mt-auto">
+        <p>© 2026 Bet Zone - Istorik VIP.</p>
+    </footer>
+
+</body>
+</html>

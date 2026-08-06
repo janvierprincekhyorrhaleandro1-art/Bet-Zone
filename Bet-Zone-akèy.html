@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ht" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bet Zone - Prediksyon AI ak Ekspè Espò</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#05070a',
+                            card: '#0d1117',
+                            border: '#1e293b',
+                            emerald: '#10b981',
+                            emeraldDark: '#047857'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #05070a;
+            color: #f1f5f9;
+        }
+        .glass-panel {
+            background: rgba(13, 17, 23, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+        .emerald-glow {
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
+        }
+        .emerald-gradient-bg {
+            background: linear-gradient(180deg, #062016 0%, #0d1117 100%);
+        }
+        .emerald-gradient-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .emerald-gradient-btn:hover {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+        }
+        .pulse-light {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-black">
+
+    <!-- TOP HEADER / NAVBAR -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-brand-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo: Kouròn (Crown Icon) & Adjusted Name Size -->
+            <div class="flex items-center space-x-2.5 cursor-pointer" onclick="showPage('home')">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 p-1.5">
+                    <i class="fa-solid fa-crown text-black text-sm"></i>
+                </div>
+                <div>
+                    <!-- 2. Bet Zone rann pi piti -->
+                    <span class="text-base font-bold tracking-wide text-white">Bet <span class="text-emerald-400 font-extrabold">Zone</span></span>
+                </div>
+            </div>
+
+            <!-- Main Nav Links -->
+            <nav class="hidden md:flex items-center space-x-8 text-xs font-semibold">
+                <button onclick="showPage('home')" class="text-emerald-400 flex items-center gap-1.5 hover:text-emerald-300 transition"><i class="fa-solid fa-chart-line"></i> Tablo Sèvis</button>
+                <a href="#pricing" onclick="showPage('home')" class="text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1"><i class="fa-solid fa-crown text-[10px]"></i> Plan Abònman</a>
+                <a href="#history" onclick="showPage('home')" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-history"></i> Istorik Match yo</a>
+            </nav>
+
+            <!-- User Actions: Separated Konekte & Enskri -->
+            <div class="flex items-center space-x-2.5">
+                <div id="userBadge" class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-light"></span>
+                    Kont Gratis
+                </div>
+                <button onclick="showAuthPage('login')" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-slate-900 border border-brand-border text-emerald-400 hover:bg-slate-800 transition">
+                    Konekte
+                </button>
+                <button onclick="showAuthPage('register')" class="px-3.5 py-1.5 text-xs font-bold rounded-lg emerald-gradient-btn text-black hover:brightness-110 transition shadow-md shadow-emerald-500/20">
+                    Enskri
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- PAGE 1: MAIN HOME PAGE -->
+    <div id="homePage">
+        <!-- HERO / STATS SUMMARY -->
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-4 rounded-2xl bg-brand-card border border-brand-border">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs text-gray-400 font-medium">Presizyon AI ak Ekspè</span>
+                        <i class="fa-solid fa-user-check text-emerald-400 text-sm"></i>
+                    </div>
+                    <div class="text-2xl font-black text-white mt-1">89.2%</div>
+                    <div class="text-[11px] text-emerald-400 font-medium mt-1 flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-trend-up"></i> +5.3% pa ekip ekspè yo
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-brand-card border border-brand-border">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs text-gray-400 font-medium">Tips Genyen Jodi a</span>
+                        <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                    </div>
+                    <div class="text-2xl font-black text-emerald-400 mt-1">14 / 15</div>
+                    <div class="text-[11px] text-gray-400 mt-1">Validasyon pa ekspè an chèf</div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-brand-card border border-brand-border">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs text-gray-400 font-medium">Mwayèn Kòt (Odds)</span>
+                        <i class="fa-solid fa-chart-simple text-emerald-400 text-sm"></i>
+                    </div>
+                    <div class="text-2xl font-black text-emerald-400 mt-1">1.95 - 3.10</div>
+                    <div class="text-[11px] text-emerald-300 font-medium mt-1">Seksyon Match Ekspè Valè</div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-brand-card border border-brand-border">
+                    <div class="flex justify-between items-start">
+                        <!-- 5. Ti "Ekspè" nan stats -->
+                        <span class="text-xs text-gray-400 font-medium">Ekspè & Kominote</span>
+                        <i class="fa-solid fa-user-gear text-emerald-400 text-sm"></i>
+                    </div>
+                    <div class="text-2xl font-black text-white mt-1">12 Ekspè + AI</div>
+                    <div class="text-[11px] text-emerald-400 font-medium mt-1">Ankadreman ak analiz pèsonalize</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAIN CONTENT: PREDICTIONS FEED -->
+        <main id="predictions" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <!-- 5. Mention "Ekspè" -->
+                    <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-shield text-emerald-400"></i> Match ak Analiz AI & Ekip Ekspè
+                    </h2>
+                    <p class="text-xs text-gray-400">Algoritm AI avanse ak sipò dirèk ekip ekspè teknik nou yo.</p>
+                </div>
+
+                <!-- 3. Retire chif ki anba bouton filtè yo -->
+                <div class="flex items-center gap-1.5 p-1 bg-brand-card rounded-xl border border-brand-border text-xs font-semibold w-full sm:w-auto overflow-x-auto">
+                    <button onclick="filterTips('all')" id="btn-all" class="px-3.5 py-1.5 rounded-lg emerald-gradient-btn text-black font-bold transition">
+                        Tout Match
+                    </button>
+                    <button onclick="filterTips('free')" id="btn-free" class="px-3.5 py-1.5 rounded-lg text-gray-300 hover:text-white transition">
+                        Tips Gratis
+                    </button>
+                    <button onclick="filterTips('vip')" id="btn-vip" class="px-3.5 py-1.5 rounded-lg text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1">
+                        <i class="fa-solid fa-crown text-[10px]"></i> VIP Eksklizif
+                    </button>
+                </div>
+            </div>
+
+            <!-- MATCH CARDS GRID WITH SOCCER BALL ICON -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                <!-- CARD 1: FREE TIP -->
+                <div class="match-card free p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/40 transition">
+                    <div class="flex justify-between items-center text-xs text-gray-400 mb-3 pb-3 border-b border-brand-border">
+                        <span class="flex items-center gap-1.5 font-medium text-emerald-400">
+                            <i class="fa-solid fa-trophy"></i> UEFA Champions League
+                        </span>
+                        <span class="bg-black text-gray-300 px-2 py-0.5 rounded-md font-mono text-[11px] border border-brand-border">20:00 UTC</span>
+                    </div>
+
+                    <!-- 1. Soccer ball icon (fa-soccer-ball) -->
+                    <div class="flex justify-between items-center my-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-950/50 flex items-center justify-center text-emerald-400 text-sm border border-emerald-500/30">
+                                <i class="fa-solid fa-soccer-ball"></i>
+                            </div>
+                            <span class="font-bold text-white text-sm sm:text-base">Real Madrid</span>
+                        </div>
+                        <span class="text-xs font-bold text-gray-500">VS</span>
+                        <div class="flex items-center space-x-3">
+                            <span class="font-bold text-white text-sm sm:text-base">Manchester City</span>
+                            <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-emerald-400 text-sm border border-emerald-500/30">
+                                <i class="fa-solid fa-soccer-ball"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prediction Box -->
+                    <div class="mt-4 p-3.5 rounded-xl bg-black border border-emerald-500/20 flex flex-col gap-2">
+                        <div class="flex justify-between items-center">
+                            <!-- 5. Ti ekspè -->
+                            <span class="text-xs text-gray-400 font-semibold">Prediksyon AI & Ekip Ekspè:</span>
+                            <span class="text-xs font-black px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">TIPS GRATIS</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-base font-extrabold text-white">Plis pase 2.5 bi (Over 2.5)</span>
+                            <span class="text-base font-black text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-500/30">Kòt 1.75</span>
+                        </div>
+                        
+                        <div class="mt-1">
+                            <div class="flex justify-between text-[11px] font-semibold text-gray-400 mb-1">
+                                <span>Nivo Konfyans Ekspè yo</span>
+                                <span class="text-emerald-400">92%</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden border border-gray-800">
+                                <div class="h-full emerald-gradient-btn rounded-full" style="width: 92%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 2: VIP EXCLUSIVE TIP -->
+                <div class="match-card vip p-5 rounded-2xl bg-brand-card border border-emerald-500/40 relative overflow-hidden emerald-glow">
+                    <div class="absolute top-0 right-0 emerald-gradient-btn text-black text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider flex items-center gap-1">
+                        <i class="fa-solid fa-crown"></i> VIP Gwo Valè
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs text-gray-400 mb-3 pb-3 border-b border-brand-border">
+                        <span class="flex items-center gap-1.5 font-medium text-emerald-400">
+                            <i class="fa-solid fa-trophy"></i> Premier League (Angletè)
+                        </span>
+                        <span class="bg-black text-gray-300 px-2 py-0.5 rounded-md font-mono text-[11px] border border-brand-border">18:30 UTC</span>
+                    </div>
+
+                    <!-- 1. Soccer ball icon (fa-soccer-ball) -->
+                    <div class="flex justify-between items-center my-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-950/50 flex items-center justify-center text-emerald-400 text-sm border border-emerald-500/30">
+                                <i class="fa-solid fa-soccer-ball"></i>
+                            </div>
+                            <span class="font-bold text-white text-sm sm:text-base">Arsenal</span>
+                        </div>
+                        <span class="text-xs font-bold text-gray-500">VS</span>
+                        <div class="flex items-center space-x-3">
+                            <span class="font-bold text-white text-sm sm:text-base">Chelsea</span>
+                            <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-emerald-400 text-sm border border-emerald-500/30">
+                                <i class="fa-solid fa-soccer-ball"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-4 rounded-xl bg-black/90 border border-emerald-500/30 text-center relative backdrop-blur-md">
+                        <div class="flex flex-col items-center justify-center py-2">
+                            <div class="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg mb-2 border border-emerald-500/30">
+                                <i class="fa-solid fa-lock"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-white">Prediksyon Eksklizif VIP (Kòt 2.35) Bloke</h4>
+                            <!-- 5. Mention "Ekspè" -->
+                            <p class="text-xs text-gray-400 mt-1 max-w-xs">Ekspè ak AI nou yo detekte yon gwo posiblite sou match sa a (95% Konfyans).</p>
+                            <a href="#pricing" class="mt-3 px-4 py-2 rounded-xl emerald-gradient-btn text-black font-black text-xs hover:brightness-110 transition shadow-lg shadow-emerald-500/20">
+                                Debloke ak Plan VIP
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- PRICING / ABONMAN SECTION -->
+        <section id="pricing" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+            <div class="text-center max-w-2xl mx-auto mb-12">
+                <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/30 uppercase tracking-wider">
+                    <i class="fa-solid fa-crown"></i> Plan ak Abònman Bet Zone
+                </span>
+                <h3 class="text-3xl sm:text-4xl font-black text-white mt-3">Chwazi Plan Ki <span class="text-emerald-400">Anfòm ak Ou</span></h3>
+                <p class="text-xs sm:text-sm text-gray-400 mt-2">Pran avantaj sou prediksyon AI yo ansanm ak analiz ekip ekspè nou yo. Peye ak MonCash, Natcash oswa Crypto.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+
+                <!-- PLAN 1: GRATIS -->
+                <div class="p-6 rounded-2xl bg-brand-card border border-brand-border flex flex-col justify-between hover:border-emerald-500/30 transition">
+                    <div>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Opsyon Gratis</span>
+                        <h4 class="text-xl font-black text-white mt-1">Gratis</h4>
+                        <div class="mt-3 text-3xl font-black text-emerald-400">0 HTG <span class="text-xs text-gray-400 font-normal">/ pou tout tan</span></div>
+                        
+                        <ul class="mt-6 space-y-3 text-xs text-gray-300">
+                            <li class="flex items-start gap-2.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5"></i> <span>2 - 3 pronostik pa jou</span></li>
+                            <li class="flex items-start gap-2.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5"></i> <span>Aksè nan tablo match jenerik yo</span></li>
+                            <li class="flex items-start gap-2.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5"></i> <span>Kòt de baz pou kòmanse</span></li>
+                        </ul>
+                    </div>
+                    <button onclick="showAuthPage('register')" class="mt-8 w-full py-3 rounded-xl bg-slate-900 border border-brand-border hover:bg-slate-800 text-emerald-400 font-bold text-xs transition">
+                        Kòmanse Gratis
+                    </button>
+                </div>
+
+                <!-- PLAN 2: ELITE (500 HTG / 1 MWA) -->
+                <div class="p-6 rounded-2xl bg-brand-card border border-emerald-500/40 flex flex-col justify-between hover:border-emerald-500/80 transition relative">
+                    <div>
+                        <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Peryòd 1 Mwa</span>
+                        <h4 class="text-xl font-black text-white mt-1">Elite</h4>
+                        <div class="mt-3 text-3xl font-black text-emerald-400">500 HTG <span class="text-xs text-gray-400 font-normal">/ 1 mwa</span></div>
+
+                        <ul class="mt-6 space-y-3 text-xs text-gray-200">
+                            <li class="flex items-start gap-2.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5"></i> <span>Analiz match prantansif pa ekip ekspè yo</span></li>
+                            <li class="flex items-start gap-2.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5"></i> <span>Asirans pronostik (Kouvèti & Sekirite Bets)</span></li>
+                            <li class="flex items-start gap-2.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5"></i> <span>Aksè ak TOUT 10+ Tips AI & Ekspè chak jou</span></li>
+                        </ul>
+                    </div>
+                    <button onclick="openPaymentModal('Plan Elite - 500 HTG (1 Mwa)')" class="mt-8 w-full py-3 rounded-xl border border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-400 font-bold text-xs transition">
+                        Chwazi Elite (500 HTG)
+                    </button>
+                </div>
+
+                <!-- PLAN 3: VIP (1000 HTG - 3 MWA) -->
+                <div class="p-6 rounded-2xl emerald-gradient-bg border border-emerald-500 flex flex-col justify-between relative emerald-glow">
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full emerald-gradient-btn text-black font-black text-[10px] uppercase tracking-wider shadow-lg">
+                        Plis Popilè ak Ekonomik
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-crown"></i> Offre VIP 3 Mwa
+                        </span>
+                        <h4 class="text-2xl font-black text-emerald-400 mt-1">VIP</h4>
+                        <div class="mt-3 flex items-baseline gap-2">
+                            <span class="text-3xl font-black text-emerald-400">1,000 HTG</span>
+                            <span class="text-sm text-gray-400 line-through">1,250 HTG</span>
+                            <span class="text-xs text-gray-300 font-semibold">/ 3 mwa</span>
+                        </div>
+                        <p class="text-[11px] text-emerald-300 font-medium mt-1">🎉 Premye abònman sèlman 1,000 HTG!</p>
+
+                        <ul class="mt-6 space-y-3 text-xs text-gray-100">
+                            <li class="flex items-start gap-2.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5"></i> <span>Aksè ilimite ak tout sèvis sou sit la</span></li>
+                            <li class="flex items-start gap-2.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5"></i> <span>Dènye aktyalite an dirèk sou ekip yo</span></li>
+                            <li class="flex items-start gap-2.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5"></i> <span>Asistans 24/24 pou kèlkeswa kesyon w</span></li>
+                        </ul>
+                    </div>
+                    <button onclick="openPaymentModal('Plan VIP - 1000 HTG Promo (3 Mwa)')" class="mt-8 w-full py-3.5 rounded-xl emerald-gradient-btn text-black font-black text-xs hover:brightness-110 transition shadow-lg shadow-emerald-500/20">
+                        Mwen vle vin VIP (1000 HTG)
+                    </button>
+                </div>
+
+            </div>
+        </section>
+    </div>
+
+    <!-- PAGE 2: AUTHENTICATION PAGE WITH FORGOT PASSWORD OPTION -->
+    <div id="authPage" class="hidden min-h-[80vh] flex items-center justify-center p-4 my-8">
+        <div class="bg-brand-card border border-brand-border rounded-3xl p-8 w-full max-w-md relative shadow-2xl emerald-glow">
+            <!-- Back Button -->
+            <button onclick="showPage('home')" class="mb-6 flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-emerald-400 transition">
+                <i class="fa-solid fa-arrow-left"></i> Retounen sou Paj Akèy la
+            </button>
+
+            <!-- Auth Form Switcher Tabs -->
+            <div class="flex border-b border-brand-border mb-6">
+                <button id="tabLoginBtn" onclick="switchAuthTab('login')" class="flex-1 pb-3 text-sm font-extrabold text-emerald-400 border-b-2 border-emerald-400 transition">
+                    Konekte
+                </button>
+                <button id="tabRegisterBtn" onclick="switchAuthTab('register')" class="flex-1 pb-3 text-sm font-extrabold text-gray-500 border-b-2 border-transparent transition">
+                    Enskri
+                </button>
+            </div>
+
+            <!-- LOGIN FORM WITH FORGOT PASSWORD -->
+            <form id="loginForm" onsubmit="handleAuthSubmit(event, 'Koneksyon')" class="space-y-4 text-xs">
+                <div class="text-center mb-4">
+                    <h3 class="text-xl font-extrabold text-white">Bonretou sou <span class="text-emerald-400">Bet Zone</span></h3>
+                    <p class="text-gray-400 text-[11px] mt-1">Antre enfòmasyon ou yo pou w gade prediksyon yo.</p>
+                </div>
+                <div>
+                    <label class="block text-gray-300 font-semibold mb-1">Imèl oswa Nimewo Telefòn</label>
+                    <input type="text" required placeholder="egz: user@gmail.com / +509..." class="w-full px-4 py-3 rounded-xl bg-black border border-brand-border text-white focus:outline-none focus:border-emerald-400">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-gray-300 font-semibold">Modpas</label>
+                        <!-- 4. Opsyon "Bliye modpas?" -->
+                        <a href="javascript:void(0)" onclick="handleForgotPassword()" class="text-[11px] text-emerald-400 hover:underline font-medium">Bliye modpas?</a>
+                    </div>
+                    <input type="password" required placeholder="••••••••" class="w-full px-4 py-3 rounded-xl bg-black border border-brand-border text-white focus:outline-none focus:border-emerald-400">
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-xl emerald-gradient-btn text-black font-extrabold hover:brightness-110 transition text-sm shadow-lg shadow-emerald-500/20">
+                    Konekte sou Kont Mwen
+                </button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="registerForm" onsubmit="handleAuthSubmit(event, 'Enskripsyon')" class="hidden space-y-4 text-xs">
+                <div class="text-center mb-4">
+                    <h3 class="text-xl font-extrabold text-white">Kreye Kont <span class="text-emerald-400">Bet Zone</span> Ou</h3>
+                    <p class="text-gray-400 text-[11px] mt-1">Ranpli fòm sa a pou kòmanse resevwa meyè tips yo.</p>
+                </div>
+                <div>
+                    <label class="block text-gray-300 font-semibold mb-1">Non konplè</label>
+                    <input type="text" required placeholder="Egz: Jean Baptiste" class="w-full px-4 py-3 rounded-xl bg-black border border-brand-border text-white focus:outline-none focus:border-emerald-400">
+                </div>
+                <div>
+                    <label class="block text-gray-300 font-semibold mb-1">Imèl oswa Nimewo Telefòn</label>
+                    <input type="text" required placeholder="egz: user@gmail.com / +509..." class="w-full px-4 py-3 rounded-xl bg-black border border-brand-border text-white focus:outline-none focus:border-emerald-400">
+                </div>
+                <div>
+                    <label class="block text-gray-300 font-semibold mb-1">Modpas</label>
+                    <input type="password" required placeholder="Kreye yon modpas" class="w-full px-4 py-3 rounded-xl bg-black border border-brand-border text-white focus:outline-none focus:border-emerald-400">
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-xl emerald-gradient-btn text-black font-extrabold hover:brightness-110 transition text-sm shadow-lg shadow-emerald-500/20">
+                    Kreye Kont Mwen
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-brand-border bg-black py-8 mt-auto text-center text-xs text-gray-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-center space-x-2 mb-3">
+                <div class="w-6 h-6 rounded-lg emerald-gradient-btn flex items-center justify-center text-black font-black text-xs p-1">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+                <span class="font-bold text-white text-sm">Bet Zone</span>
+            </div>
+            <p>© 2026 Bet Zone - Prediksyon AI ak Ekip Ekspè Analiz la. Tout dwa rezève.</p>
+            <p class="mt-1 text-[11px] text-gray-600">Avètisman: Pari spòtif gen ris. Joue ak matirite epi jere lajan w ak anpil atansyon.</p>
+        </div>
+    </footer>
+
+    <!-- MODAL PEMAN -->
+    <div id="paymentModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-emerald-500/40 rounded-3xl p-6 w-full max-w-md relative shadow-2xl">
+            <button onclick="closePaymentModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center gap-2 mb-2 text-emerald-400 text-xs font-bold">
+                <i class="fa-solid fa-shield-halved"></i> Peman Sekirize ak Otomatik
+            </div>
+            <h3 class="text-xl font-extrabold text-white mb-1">Debloke <span id="payPlanName" class="text-emerald-400">Plan VIP</span></h3>
+            <p class="text-xs text-gray-400 mb-6">Chwazi fason pou w peye an HTG ki pi fasil pou ou a:</p>
+
+            <div class="space-y-3 text-xs">
+                <button onclick="confirmPay('MonCash')" class="w-full p-3.5 rounded-xl bg-red-950/30 border border-red-500/40 hover:bg-red-900/40 text-white font-bold flex items-center justify-between transition">
+                    <span class="flex items-center gap-2.5">
+                        <span class="w-3 h-3 rounded-full bg-red-500"></span> Peye ak MonCash (+509)
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-gray-400"></i>
+                </button>
+
+                <button onclick="confirmPay('Natcash')" class="w-full p-3.5 rounded-xl bg-blue-950/30 border border-blue-500/40 hover:bg-blue-900/40 text-white font-bold flex items-center justify-between transition">
+                    <span class="flex items-center gap-2.5">
+                        <span class="w-3 h-3 rounded-full bg-blue-500"></span> Peye ak Natcash
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-gray-400"></i>
+                </button>
+
+                <button onclick="confirmPay('USDT Crypto')" class="w-full p-3.5 rounded-xl bg-emerald-950/30 border border-emerald-500/40 hover:bg-emerald-900/40 text-white font-bold flex items-center justify-between transition">
+                    <span class="flex items-center gap-2.5">
+                        <span class="w-3 h-3 rounded-full bg-emerald-400"></span> Crypto (USDT / Binance Pay)
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-gray-400"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        function showPage(page) {
+            if(page === 'home') {
+                document.getElementById('homePage').classList.remove('hidden');
+                document.getElementById('authPage').classList.add('hidden');
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function showAuthPage(type) {
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('authPage').classList.remove('hidden');
+            switchAuthTab(type);
+            window.scrollTo(0, 0);
+        }
+
+        function switchAuthTab(type) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const tabLoginBtn = document.getElementById('tabLoginBtn');
+            const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+
+            if(type === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                tabLoginBtn.className = "flex-1 pb-3 text-sm font-extrabold text-emerald-400 border-b-2 border-emerald-400 transition";
+                tabRegisterBtn.className = "flex-1 pb-3 text-sm font-extrabold text-gray-500 border-b-2 border-transparent transition";
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                tabRegisterBtn.className = "flex-1 pb-3 text-sm font-extrabold text-emerald-400 border-b-2 border-emerald-400 transition";
+                tabLoginBtn.className = "flex-1 pb-3 text-sm font-extrabold text-gray-500 border-b-2 border-transparent transition";
+            }
+        }
+
+        function filterTips(type) {
+            const freeCards = document.querySelectorAll('.match-card.free');
+            const vipCards = document.querySelectorAll('.match-card.vip');
+
+            document.getElementById('btn-all').className = "px-3.5 py-1.5 rounded-lg text-gray-300 hover:text-white transition";
+            document.getElementById('btn-free').className = "px-3.5 py-1.5 rounded-lg text-gray-300 hover:text-white transition";
+            document.getElementById('btn-vip').className = "px-3.5 py-1.5 rounded-lg text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1";
+
+            if(type === 'all') {
+                document.getElementById('btn-all').className = "px-3.5 py-1.5 rounded-lg emerald-gradient-btn text-black font-bold transition";
+                freeCards.forEach(c => c.style.display = 'block');
+                vipCards.forEach(c => c.style.display = 'block');
+            } else if(type === 'free') {
+                document.getElementById('btn-free').className = "px-3.5 py-1.5 rounded-lg emerald-gradient-btn text-black font-bold transition";
+                freeCards.forEach(c => c.style.display = 'block');
+                vipCards.forEach(c => c.style.display = 'none');
+            } else if(type === 'vip') {
+                document.getElementById('btn-vip').className = "px-3.5 py-1.5 rounded-lg emerald-gradient-btn text-black font-bold transition flex items-center gap-1";
+                freeCards.forEach(c => c.style.display = 'none');
+                vipCards.forEach(c => c.style.display = 'block');
+            }
+        }
+
+        function openPaymentModal(planName) {
+            document.getElementById('payPlanName').innerText = planName;
+            document.getElementById('paymentModal').classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+        }
+
+        function confirmPay(method) {
+            alert("Peman ak " + method + " ap trete!");
+            closePaymentModal();
+        }
+
+        function handleAuthSubmit(e, actionName) {
+            e.preventDefault();
+            alert(actionName + " reyalize ak siksè!");
+            showPage('home');
+        }
+
+        function handleForgotPassword() {
+            const email = prompt("Antre imèl ou oswa nimewo telefòn ou pou w resevwa yon lyen re-inisyalizasyon modpas:");
+            if (email) {
+                alert("Yon lyen pou re-inisyalize modpas ou voye sou: " + email);
+            }
+        }
+    </script>
+</body>
+</html>
