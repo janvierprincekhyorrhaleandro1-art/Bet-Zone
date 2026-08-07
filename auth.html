@@ -180,6 +180,20 @@
         const resetEmailInput = document.getElementById('resetEmailInput');
         const modalAlert = document.getElementById('modalAlert');
 
+        // FONKSYON POU JERE REDIRÈKSYON APRE KONEKSYON OSWA ENSKRIPSYON
+        function handlePostAuthRedirect() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectTarget = urlParams.get('redirect');
+            const selectedPlan = urlParams.get('plan');
+
+            if (redirectTarget === 'checkout') {
+                const planParam = selectedPlan ? `?plan=${selectedPlan}` : '';
+                window.location.href = `checkout.html${planParam}`;
+            } else {
+                window.location.href = "dashboard.html";
+            }
+        }
+
         // Swap nan mòd Konekte
         tabLogin.addEventListener('click', () => {
             isLogin = true;
@@ -257,8 +271,8 @@
                 } else {
                     showAlert("Koneksyon reyisi! N ap re-dirije w...", false);
                     setTimeout(() => {
-                        window.location.href = "dashboard.html";
-                    }, 1000);
+                        handlePostAuthRedirect();
+                    }, 800);
                 }
             } else {
                 // ENSKRIPSYON
@@ -279,10 +293,10 @@
                     btnText.innerText = "Kreye Kont";
                 } else {
                     if (data.session) {
-                        showAlert("Kont ou kreye ak siksè! N ap voye w sou Dashboard...", false);
+                        showAlert("Kont ou kreye ak siksè! N ap re-dirije w...", false);
                         setTimeout(() => {
-                            window.location.href = "dashboard.html";
-                        }, 1000);
+                            handlePostAuthRedirect();
+                        }, 800);
                     } else {
                         showAlert("Enskripsyon reyisi! Souple tcheke imèl ou pou w konfime kont lan anvan w konekte.", false);
                         submitBtn.disabled = false;
@@ -337,7 +351,7 @@
         async function checkExistingSession() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
-                window.location.href = "dashboard.html";
+                handlePostAuthRedirect();
             }
         }
         checkExistingSession();
