@@ -103,9 +103,10 @@
                     </p>
                 </div>
 
-                <a href="index.html#plans" class="w-full py-3 rounded-xl bg-emerald-500 text-black text-center text-xs font-extrabold hover:bg-emerald-400 transition block">
+                <!-- BOUTÒN MODIFYE (OPSYON 2) -->
+                <button type="button" onclick="upgradePlan('vip')" class="w-full py-3 rounded-xl bg-emerald-500 text-black text-center text-xs font-extrabold hover:bg-emerald-400 transition block">
                     Chanje oswa Upgrade Plan
-                </a>
+                </button>
             </div>
 
             <!-- PARAMÈT AK SEKIRITE (SETTINGS) -->
@@ -161,6 +162,11 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // FONKSYON POU REDIRIJE NAN CHECKOUT AK PARAMÈT PLAN AN
+        function upgradePlan(targetPlan = 'vip') {
+            window.location.href = `checkout.html?plan=${targetPlan}`;
+        }
 
         async function loadUserProfile() {
             const { data: { session }, error } = await supabaseClient.auth.getSession();
