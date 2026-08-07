@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ht" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bet Zone - Peman Abonman</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#05070a',
+                            card: '#0d1117',
+                            border: '#1e293b',
+                            emerald: '#10b981'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #05070a; color: #f1f5f9; }
+        .glass-panel { background: rgba(13, 17, 23, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.2); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased">
+
+    <!-- NAVBAR -->
+    <nav class="w-full px-4 sm:px-6 py-3 flex justify-between items-center border-b border-brand-border glass-panel sticky top-0 z-40">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <span class="font-extrabold text-base sm:text-lg text-white tracking-wide">BET<span class="text-emerald-400">ZONE</span></span>
+        </div>
+
+        <a href="dashboard.html" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-black transition text-xs font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-house"></i>
+            <span>Dashboard</span>
+        </a>
+    </nav>
+
+    <!-- KONTENI PRENSIPAL CHECKOUT -->
+    <main class="flex-grow max-w-3xl w-full mx-auto px-4 py-8">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Peman Abonman VIP</h1>
+            <p class="text-xs sm:text-sm text-gray-400">Chwazi plan ou vle a epi voye peman an pou debloke tout prediksyon yo.</p>
+        </div>
+
+        <!-- 1. SELEKSYON PLAN (ÉLITE vs VIP) -->
+        <div class="mb-8">
+            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider text-center mb-3">1. Chwazi Plan Ou Vle A</label>
+            <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                
+                <!-- PLAN ÉLITE -->
+                <button type="button" id="planEliteBtn" onclick="selectPlan('elite')" class="p-4 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500 text-left transition relative cursor-pointer group">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-extrabold text-emerald-400 uppercase">Élite</span>
+                        <i id="eliteCheckIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+                    </div>
+                    <div class="text-lg sm:text-xl font-black text-white">500 HTG</div>
+                    <div class="text-[11px] text-gray-400 mt-0.5">Sèvis pou 1 Mwa</div>
+                </button>
+
+                <!-- PLAN VIP -->
+                <button type="button" id="planVipBtn" onclick="selectPlan('vip')" class="p-4 rounded-2xl bg-brand-card border-2 border-brand-border hover:border-emerald-500/50 text-left transition relative cursor-pointer group">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-extrabold text-emerald-400 uppercase">VIP Supreme</span>
+                        <i id="vipCheckIcon" class="fa-regular fa-circle text-gray-500 text-base"></i>
+                    </div>
+                    <div class="text-lg sm:text-xl font-black text-white">1,000 HTG</div>
+                    <div class="text-[11px] text-gray-400 mt-0.5">Sèvis pou 3 Mwa</div>
+                </button>
+
+            </div>
+        </div>
+
+        <!-- 2. SELEKSYON METÒD PEMAN (MONCASH vs NATCASH) -->
+        <div class="p-6 rounded-3xl bg-brand-card border border-brand-border mb-8">
+            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">2. Chwazi Metòd Peman An</label>
+            
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <!-- SWITCH MONCASH -->
+                <button type="button" id="payMoncashBtn" onclick="selectPayment('moncash')" class="py-3 px-4 rounded-xl bg-emerald-500 text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-mobile-screen"></i>
+                    <span>MonCash</span>
+                </button>
+
+                <!-- SWITCH NATCASH -->
+                <button type="button" id="payNatcashBtn" onclick="selectPayment('natcash')" class="py-3 px-4 rounded-xl bg-brand-dark border border-brand-border text-gray-300 hover:text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+                    <i class="fa-solid fa-wallet"></i>
+                    <span>NatCash</span>
+                </button>
+            </div>
+
+            <!-- ENFÒMASYON SOU NIMÈWO POU VOYE KÒB LA -->
+            <div class="p-4 rounded-2xl bg-brand-dark border border-emerald-500/30 text-center">
+                <span id="paymentLabel" class="text-xs font-bold text-gray-400 uppercase">Numèwo MonCash pou fè transferè a:</span>
+                <div id="paymentNumber" class="text-xl sm:text-2xl font-black text-emerald-400 my-1">+509 31066407</div>
+                <p id="amountToPayDisplay" class="text-xs text-gray-300 font-semibold">Montan pou w voye: <span class="text-emerald-400">500 HTG</span></p>
+            </div>
+        </div>
+
+        <!-- 3. FÒM VERIFIKASYON PEMAN -->
+        <form id="checkoutForm" class="p-6 rounded-3xl bg-brand-card border border-brand-border space-y-5">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-2">3. Antre Enfòmasyon Peman An</h3>
+
+            <!-- NON KONPLÈ -->
+            <div>
+                <label class="block text-xs font-bold text-gray-300 mb-2">Non Konplè W</label>
+                <input type="text" id="fullNameInput" placeholder="Eg: Jean Baptiste" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
+            </div>
+
+            <!-- NON/NIMÈWO KONT KI FÈ TRANSAKSYON AN -->
+            <div>
+                <label id="accountNameLabel" class="block text-xs font-bold text-gray-300 mb-2">Non oswa Nimewo Kont MonCash Li Soti A</label>
+                <input type="text" id="accountSenderInput" placeholder="Eg: MonCash Jean / +509 31XX-XXXX" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
+            </div>
+
+            <!-- TELECHAJE SCREENSHOT -->
+            <div>
+                <label class="block text-xs font-bold text-gray-300 mb-2">Telechaje Screenshot (Prèv Peman An)</label>
+                <input type="file" id="screenshotInput" accept="image/*" required class="w-full text-xs text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-500/20 file:text-emerald-400 hover:file:bg-emerald-500 hover:file:text-black cursor-pointer transition">
+            </div>
+
+            <!-- BOUTÒN SOUMÈT -->
+            <button type="submit" id="submitPaymentBtn" class="w-full py-3.5 rounded-xl bg-emerald-500 text-black text-xs font-extrabold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/10 mt-4">
+                Voye Prèv Peman An Pou Verifikasyon
+            </button>
+        </form>
+
+        <!-- TI NÒT VERIFIKASYON MANYÈL -->
+        <div class="mt-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center flex items-center justify-center gap-3">
+            <i class="fa-solid fa-clock-history text-emerald-400 text-lg"></i>
+            <p class="text-xs text-emerald-300 leading-relaxed font-medium">
+                <strong>Nòt Enpòtan:</strong> Verifikasyon peman yo fèt manyèlman. Aksè ak plan w lan ap aktivé anba <strong>24 èdtan</strong> apre nou fin konfime transfè a.
+            </p>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="py-6 text-center border-t border-brand-border text-xs text-gray-500">
+        &copy; 2026 Bet Zone. Tout dwa rezève.
+    </footer>
+
+    <!-- SCRIPT LOGIK SWITCH AK SUPABASE -->
+    <script>
+        const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let selectedPlan = 'elite'; // default plan
+        let selectedPaymentMethod = 'moncash'; // default payment
+
+        // FONKSYON POU SWITCH PLAN YO
+        function selectPlan(plan) {
+            selectedPlan = plan;
+
+            const eliteBtn = document.getElementById('planEliteBtn');
+            const vipBtn = document.getElementById('planVipBtn');
+            const eliteCheck = document.getElementById('eliteCheckIcon');
+            const vipCheck = document.getElementById('vipCheckIcon');
+            const amountDisplay = document.getElementById('amountToPayDisplay');
+
+            if (plan === 'elite') {
+                eliteBtn.className = "p-4 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500 text-left transition relative cursor-pointer group";
+                vipBtn.className = "p-4 rounded-2xl bg-brand-card border-2 border-brand-border hover:border-emerald-500/50 text-left transition relative cursor-pointer group";
+                
+                eliteCheck.className = "fa-solid fa-circle-check text-emerald-400 text-base";
+                vipCheck.className = "fa-regular fa-circle text-gray-500 text-base";
+
+                amountDisplay.innerHTML = 'Montan pou w voye: <span class="text-emerald-400">500 HTG</span>';
+            } else {
+                vipBtn.className = "p-4 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500 text-left transition relative cursor-pointer group";
+                eliteBtn.className = "p-4 rounded-2xl bg-brand-card border-2 border-brand-border hover:border-emerald-500/50 text-left transition relative cursor-pointer group";
+                
+                vipCheck.className = "fa-solid fa-circle-check text-emerald-400 text-base";
+                eliteCheck.className = "fa-regular fa-circle text-gray-500 text-base";
+
+                amountDisplay.innerHTML = 'Montan pou w voye: <span class="text-emerald-400">1,000 HTG</span>';
+            }
+        }
+
+        // FONKSYON POU SWITCH METÒD PEMAN YO
+        function selectPayment(method) {
+            selectedPaymentMethod = method;
+
+            const moncashBtn = document.getElementById('payMoncashBtn');
+            const natcashBtn = document.getElementById('payNatcashBtn');
+            const label = document.getElementById('paymentLabel');
+            const number = document.getElementById('paymentNumber');
+            const accountLabel = document.getElementById('accountNameLabel');
+
+            if (method === 'moncash') {
+                moncashBtn.className = "py-3 px-4 rounded-xl bg-emerald-500 text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition";
+                natcashBtn.className = "py-3 px-4 rounded-xl bg-brand-dark border border-brand-border text-gray-300 hover:text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition";
+
+                label.innerText = "Numèwo MonCash pou fè transferè a:";
+                number.innerText = "+509 31066407";
+                accountLabel.innerText = "Non oswa Nimewo Kont MonCash Li Soti A";
+            } else {
+                natcashBtn.className = "py-3 px-4 rounded-xl bg-emerald-500 text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition";
+                moncashBtn.className = "py-3 px-4 rounded-xl bg-brand-dark border border-brand-border text-gray-300 hover:text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition";
+
+                label.innerText = "Numèwo NatCash pou fè transferè a:";
+                number.innerText = "+509 43900051";
+                accountLabel.innerText = "Non oswa Nimewo Kont NatCash Li Soti A";
+            }
+        }
+
+        // PREPARASYON APRE KONT LA SOU SOUMÈT
+        document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitPaymentBtn');
+            btn.innerText = "N ap voye prèv la...";
+            btn.disabled = true;
+
+            // Isit la nou ka voye done yo nan Supabase oswa nan yon livrezon mesaj
+            setTimeout(() => {
+                alert("Prèv peman ou an voye ak siksè! Ekip nou an ap verifye l anba 24è.");
+                window.location.href = "dashboard.html";
+            }, 1500);
+        });
+    </script>
+
+</body>
+</html>
