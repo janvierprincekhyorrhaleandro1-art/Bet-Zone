@@ -236,6 +236,16 @@
                 window.location.href = "dashboard.html";
             }, 1500);
         });
+
+        // LEKTI PLAN KI NAN URL LA SI L GENYEN
+        const urlParams = new URLSearchParams(window.location.search);
+        const planFromUrl = urlParams.get('plan');
+
+        if (planFromUrl === 'vip') {
+            selectPlan('vip');
+        } else {
+            selectPlan('elite');
+        }
     </script>
 
 </body>
