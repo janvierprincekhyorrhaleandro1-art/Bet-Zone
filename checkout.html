@@ -76,7 +76,7 @@
             <!-- PLAN VIP -->
             <button type="button" id="planVipBtn" onclick="selectPlan('vip')" class="p-4 rounded-2xl bg-brand-card border-2 border-brand-border hover:border-emerald-500/50 text-left transition relative cursor-pointer group">
                 <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs font-extrabold text-emerald-400 uppercase">VIP Supreme</span>
+                    <span class="text-xs font-extrabold text-emerald-400 uppercase">VIP</span>
                     <i id="vipCheckIcon" class="fa-regular fa-circle text-gray-500 text-base"></i>
                 </div>
                 <div class="text-lg font-black text-white mono">1,000 HTG</div>
@@ -159,9 +159,15 @@
                 <input type="text" id="fullNameInput" placeholder="Non ak siyati w" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
             </div>
 
+            <!-- 1. MODIFIKASYON: ESPAS POU ID KONT BETZONE -->
             <div>
-                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 mono">Nimewo ki sou kont lan / ID Transaksyon</label>
-                <input type="text" id="accountSenderInput" placeholder="ID kont oswa referans tranzaksyon an" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
+                <label class="block text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-2 mono">ID Kont BetZone W</label>
+                <input type="text" id="betzoneIdInput" placeholder="Eg: BZ-89214 oswa ID Kont ou" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-emerald-500/50 text-white text-xs focus:outline-none focus:border-emerald-500 transition">
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 mono">Nimewo ki voye kob la / ID Transaksyon</label>
+                <input type="text" id="accountSenderInput" placeholder="Eg: 31066407 oswa Referans MonCash/NatCash" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
             </div>
 
             <div>
@@ -191,6 +197,22 @@
 
     </main>
 
+    <!-- 2. MODIFIKASYON: POP-UP KONFIRMASYON (MODAL) -->
+    <div id="successModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center z-50 px-4">
+        <div class="bg-brand-card border border-emerald-500/40 max-w-sm w-full p-6 rounded-3xl text-center shadow-2xl shadow-emerald-500/10 transform transition-all scale-100">
+            <div class="w-16 h-16 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 animate-bounce">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h3 class="text-lg font-extrabold text-white mb-2">Pèman an Voye ak Siksè!</h3>
+            <p class="text-xs text-gray-300 leading-relaxed mb-6">
+                Mèsi anpil! Ekip BetZone nan ap verifye tranzaksyon ou an. Kont ou ap aktive anba <b class="text-emerald-400">24 èdtan</b>[cite: 8].
+            </p>
+            <button onclick="redirectToDashboard()" class="w-full py-3 rounded-xl bg-emerald-500 text-black text-xs font-extrabold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/10">
+                Ale sou Dashboard
+            </button>
+        </div>
+    </div>
+
     <!-- FOOTER -->
     <footer class="py-6 text-center border-t border-brand-border text-xs text-gray-500">
         &copy; 2026 Bet Zone. Tout dwa rezève.
@@ -205,7 +227,7 @@
 
         const plans = {
             elite: { name: 'Élite', price: 500, cycle: 'Chak mwa' },
-            vip: { name: 'VIP Supreme', price: 1000, cycle: 'Chak 3 mwa' }
+            vip: { name: 'VIP', price: 1000, cycle: 'Chak 3 mwa' }
         };
 
         const methods = {
@@ -274,7 +296,11 @@
             }
         }
 
-        // ENTEGRASYON VRE SUPABASE POU UPLOAD AK RECORD
+        function redirectToDashboard() {
+            window.location.href = "dashboard.html";
+        }
+
+        // ENTEGRASYON SUPABASE AK POPUP
         document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitPaymentBtn');
@@ -306,12 +332,14 @@
 
                 // 2. Anrejistre Peman an nan Tab 'payments'
                 const fullName = document.getElementById('fullNameInput').value;
+                const betzoneId = document.getElementById('betzoneIdInput').value;
                 const accountSender = document.getElementById('accountSenderInput').value;
 
                 const { error: dbError } = await supabaseClient
                     .from('payments')
                     .insert([{
                         full_name: fullName,
+                        betzone_id: betzoneId,
                         account_sender: accountSender,
                         plan_selected: plans[activePlan].name,
                         payment_method: methods[activeMethod].name,
@@ -322,8 +350,10 @@
 
                 if (dbError) throw dbError;
 
-                alert("Prèv peman ou an voye ak siksè! N ap verifye l anba 24è.");
-                window.location.href = "dashboard.html";
+                // AFICHE POPUP LA ELO
+                const modal = document.getElementById('successModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
 
             } catch (err) {
                 alert("Erè nan voye peman an: " + err.message);
