@@ -199,7 +199,7 @@
             }).join('');
         }
 
-        // LOGIK KORİJE POU APWOUVE AK METE AJOU PROFIL LA (UPSERT)
+        // LOGIK KORİJE POU APWOUVE AK METE AJOU PROFIL LA POU DİRÈKTEMAN ITILIZE ID A
         async function updateStatus(id, newStatus, userName, userId, planSelected) {
             const actionText = newStatus === 'approved' ? 'apwouve' : 'rejte';
             if (!confirm(`Èske ou sèten ou vle ${actionText} peman pou ${userName}?`)) return;
@@ -213,7 +213,7 @@
 
                 if (payErr) throw payErr;
 
-                // 2. Si peman an apwouve, mete ajou oswa kreye profil la nan 'profiles'
+                // 2. Si peman an apwouve, mete ajou profil la dirèkteman ak `userId`
                 if (newStatus === 'approved') {
                     const cleanPlan = (planSelected || '').toLowerCase().trim();
                     const isVip = cleanPlan.includes('vip');
@@ -224,19 +224,18 @@
                     expiryDate.setDate(expiryDate.getDate() + daysToAdd);
 
                     if (userId && userId !== 'null' && userId !== 'undefined' && userId.trim() !== '') {
-                        // Kòmand UPSERT: kreye liy lan si l pa t egziste, oswa mete l ajou si l te la
+                        // Kòmand direct update ak ID a presizeman
                         const { error: profileErr } = await supabaseClient
                             .from('profiles')
-                            .upsert({
-                                id: userId,
-                                full_name: userName,
+                            .update({ 
                                 plan: targetPlan,
                                 plan_expires_at: expiryDate.toISOString()
-                            }, { onConflict: 'id' });
+                            })
+                            .eq('id', userId);
 
-                        if (profileErr) console.warn("Erè upsert profile:", profileErr.message);
+                        if (profileErr) console.warn("Erè update profile ak ID:", profileErr.message);
                     } else {
-                        // Fallback pa nom si pa gen user_id
+                        // Fallback pa non si pa gen user_id
                         const { error: profileErr } = await supabaseClient
                             .from('profiles')
                             .update({
@@ -245,7 +244,7 @@
                             })
                             .eq('full_name', userName);
 
-                        if (profileErr) console.warn("Erè update profile name:", profileErr.message);
+                        if (profileErr) console.warn("Erè update profile pa non:", profileErr.message);
                     }
                 }
 
