@@ -73,17 +73,14 @@
 
         <!-- STATISTIK MINIMALIST ANWO A -->
         <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-8">
-            <!-- ANNATANT -->
             <div class="p-3 rounded-2xl bg-brand-card border border-brand-border flex flex-col justify-center">
                 <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mono">Annatant</span>
                 <span id="pendingCount" class="text-lg sm:text-xl font-black text-amber-400 mono mt-0.5">0</span>
             </div>
-            <!-- APWOUVE JODIA -->
             <div class="p-3 rounded-2xl bg-brand-card border border-brand-border flex flex-col justify-center">
                 <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mono">Apwouve Total</span>
                 <span id="approvedCount" class="text-lg sm:text-xl font-black text-emerald-400 mono mt-0.5">0</span>
             </div>
-            <!-- TOTAL RANTRE -->
             <div class="p-3 rounded-2xl bg-brand-card border border-brand-border flex flex-col justify-center">
                 <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mono">Total Rantre</span>
                 <span id="totalAmount" class="text-lg sm:text-xl font-black text-white mono mt-0.5">0 <span class="text-xs text-gray-400 font-normal">HTG</span></span>
@@ -114,10 +111,8 @@
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // FUNCTION PRENSIPAL POU CHAJE DATA AK STATISTIK YO
         async function loadAdminData() {
             try {
-                // 1. Chaje peman ki 'pending' yo
                 const { data: pendingPayments, error: pendingErr } = await supabaseClient
                     .from('payments')
                     .select('*')
@@ -126,7 +121,6 @@
 
                 if (pendingErr) throw pendingErr;
 
-                // 2. Chaje peman ki 'approved' yo pou kalkile statistik
                 const { data: approvedPayments, error: approvedErr } = await supabaseClient
                     .from('payments')
                     .select('amount')
@@ -134,14 +128,12 @@
 
                 if (approvedErr) throw approvedErr;
 
-                // Mete ajou kontè yo
                 document.getElementById('pendingCount').innerText = pendingPayments.length;
                 document.getElementById('approvedCount').innerText = approvedPayments.length;
 
                 const totalHTG = approvedPayments.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
                 document.getElementById('totalAmount').innerHTML = `${totalHTG.toLocaleString()} <span class="text-xs text-gray-400 font-normal">HTG</span>`;
 
-                // Afiche lis soumisyon ki annatant yo
                 renderSubmissions(pendingPayments);
 
             } catch (err) {
@@ -155,7 +147,6 @@
             }
         }
 
-        // RENDERING DYNAMIC LIS SOUMISYON YO
         function renderSubmissions(payments) {
             const container = document.getElementById('submissionsList');
 
@@ -181,7 +172,7 @@
                             </a>
                             <div>
                                 <div class="flex items-center gap-2 mb-0.5">
-                                    <span class="text-sm font-bold text-white">${p.full_name}</span>
+                                    <span class="text-sm font-bold text-white">${p.full_name || 'Itilizatè'}</span>
                                     <span class="text-[10px] text-gray-500 mono">${dateFormatted}</span>
                                 </div>
                                 <div class="text-xs text-gray-400">ID / Ref (${p.payment_method}): <b class="text-gray-200 mono">${p.account_sender}</b></div>
@@ -208,7 +199,7 @@
             }).join('');
         }
 
-        // LOGIK POU APWOUVE OWA REJTE YON PEMAN AK UPDATE PLAN ITILIZATÈ A
+        // LOGIK KORİJE POU APWOUVE AK METE AJOU PROFIL LA (UPSERT)
         async function updateStatus(id, newStatus, userName, userId, planSelected) {
             const actionText = newStatus === 'approved' ? 'apwouve' : 'rejte';
             if (!confirm(`Èske ou sèten ou vle ${actionText} peman pou ${userName}?`)) return;
@@ -222,28 +213,40 @@
 
                 if (payErr) throw payErr;
 
-                // 2. Si peman an apwouve, nou mete ajou plan an nan tab 'profiles'
+                // 2. Si peman an apwouve, mete ajou oswa kreye profil la nan 'profiles'
                 if (newStatus === 'approved') {
-                    const isVip = planSelected ? planSelected.toLowerCase().includes('vip') : false;
-                    const daysToAdd = isVip ? 90 : 30; // 90 jou pou VIP, 30 jou pou Élite
+                    const cleanPlan = (planSelected || '').toLowerCase().trim();
+                    const isVip = cleanPlan.includes('vip');
+                    const targetPlan = isVip ? 'vip' : 'elite';
+                    const daysToAdd = isVip ? 90 : 30;
                     
                     const expiryDate = new Date();
                     expiryDate.setDate(expiryDate.getDate() + daysToAdd);
 
-                    let profileQuery = supabaseClient.from('profiles').update({ 
-                        plan: isVip ? 'vip' : 'elite',
-                        plan_expires_at: expiryDate.toISOString()
-                    });
-
-                    // Si userId egziste epi li pa vid, itilize l, sinon chèche pa full_name
                     if (userId && userId !== 'null' && userId !== 'undefined' && userId.trim() !== '') {
-                        profileQuery = profileQuery.eq('id', userId);
-                    } else {
-                        profileQuery = profileQuery.eq('full_name', userName);
-                    }
+                        // Kòmand UPSERT: kreye liy lan si l pa t egziste, oswa mete l ajou si l te la
+                        const { error: profileErr } = await supabaseClient
+                            .from('profiles')
+                            .upsert({
+                                id: userId,
+                                full_name: userName,
+                                plan: targetPlan,
+                                plan_expires_at: expiryDate.toISOString()
+                            }, { onConflict: 'id' });
 
-                    const { error: profileErr } = await profileQuery;
-                    if (profileErr) console.warn("Mizajou profil la pat reyalize:", profileErr.message);
+                        if (profileErr) console.warn("Erè upsert profile:", profileErr.message);
+                    } else {
+                        // Fallback pa nom si pa gen user_id
+                        const { error: profileErr } = await supabaseClient
+                            .from('profiles')
+                            .update({
+                                plan: targetPlan,
+                                plan_expires_at: expiryDate.toISOString()
+                            })
+                            .eq('full_name', userName);
+
+                        if (profileErr) console.warn("Erè update profile name:", profileErr.message);
+                    }
                 }
 
                 alert(`Peman an ${actionText} ak siksè!`);
@@ -254,7 +257,6 @@
             }
         }
 
-        // Ekzekite chajman an nan ouvèti paj la
         loadAdminData();
     </script>
 
