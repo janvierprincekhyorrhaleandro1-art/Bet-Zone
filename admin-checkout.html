@@ -223,25 +223,30 @@
                 if (payErr) throw payErr;
 
                 // 2. Si peman an apwouve, nou mete ajou plan an nan tab 'profiles'
-                if (newStatus === 'approved' && userId) {
+                if (newStatus === 'approved') {
                     const isVip = planSelected ? planSelected.toLowerCase().includes('vip') : false;
                     const daysToAdd = isVip ? 90 : 30; // 90 jou pou VIP, 30 jou pou Élite
                     
                     const expiryDate = new Date();
                     expiryDate.setDate(expiryDate.getDate() + daysToAdd);
 
-                    const { error: profileErr } = await supabaseClient
-                        .from('profiles')
-                        .update({ 
-                            plan: isVip ? 'vip' : 'elite',
-                            plan_expires_at: expiryDate.toISOString()
-                        })
-                        .eq('id', userId);
+                    let profileQuery = supabaseClient.from('profiles').update({ 
+                        plan: isVip ? 'vip' : 'elite',
+                        plan_expires_at: expiryDate.toISOString()
+                    });
 
+                    // Si userId egziste epi li pa vid, itilize l, sinon chèche pa full_name
+                    if (userId && userId !== 'null' && userId !== 'undefined' && userId.trim() !== '') {
+                        profileQuery = profileQuery.eq('id', userId);
+                    } else {
+                        profileQuery = profileQuery.eq('full_name', userName);
+                    }
+
+                    const { error: profileErr } = await profileQuery;
                     if (profileErr) console.warn("Mizajou profil la pat reyalize:", profileErr.message);
                 }
 
-                // Recharje done yo
+                alert(`Peman an ${actionText} ak siksè!`);
                 loadAdminData();
 
             } catch (err) {
@@ -254,4 +259,4 @@
     </script>
 
 </body>
-                    </html>
+</html>
