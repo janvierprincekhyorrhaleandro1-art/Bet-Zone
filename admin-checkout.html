@@ -171,7 +171,7 @@
 
             container.innerHTML = payments.map(p => {
                 const dateFormatted = new Date(p.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const isVip = p.plan_selected.toLowerCase().includes('vip');
+                const isVip = p.plan_selected ? p.plan_selected.toLowerCase().includes('vip') : false;
 
                 return `
                     <div class="p-4 rounded-2xl bg-brand-card border border-brand-border flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between" id="pay-${p.id}">
@@ -194,11 +194,11 @@
                                 ${p.plan_selected}
                             </span>
                             <div class="flex items-center gap-2">
-                                <button type="button" onclick="updateStatus('${p.id}', 'approved', '${p.full_name}')" class="px-3 py-1.5 rounded-xl bg-emerald-500 text-black font-extrabold text-xs hover:bg-emerald-400 transition flex items-center gap-1">
+                                <button type="button" onclick="updateStatus('${p.id}', 'approved', '${p.full_name}', '${p.user_id || ''}', '${p.plan_selected}')" class="px-3 py-1.5 rounded-xl bg-emerald-500 text-black font-extrabold text-xs hover:bg-emerald-400 transition flex items-center gap-1">
                                     <i class="fa-solid fa-check"></i>
                                     <span>Apwouve</span>
                                 </button>
-                                <button type="button" onclick="updateStatus('${p.id}', 'rejected', '${p.full_name}')" class="px-3 py-1.5 rounded-xl bg-brand-dark border border-brand-border text-gray-400 hover:text-red-400 hover:border-red-500/40 transition text-xs font-bold">
+                                <button type="button" onclick="updateStatus('${p.id}', 'rejected', '${p.full_name}', '${p.user_id || ''}', '${p.plan_selected}')" class="px-3 py-1.5 rounded-xl bg-brand-dark border border-brand-border text-gray-400 hover:text-red-400 hover:border-red-500/40 transition text-xs font-bold">
                                     Rejte
                                 </button>
                             </div>
@@ -208,20 +208,40 @@
             }).join('');
         }
 
-        // LORIK POU APWOUVE OWA REJTE YON PEMAN NAN DATABASE LA
-        async function updateStatus(id, newStatus, userName) {
+        // LOGIK POU APWOUVE OWA REJTE YON PEMAN AK UPDATE PLAN ITILIZATÈ A
+        async function updateStatus(id, newStatus, userName, userId, planSelected) {
             const actionText = newStatus === 'approved' ? 'apwouve' : 'rejte';
             if (!confirm(`Èske ou sèten ou vle ${actionText} peman pou ${userName}?`)) return;
 
             try {
-                const { error } = await supabaseClient
+                // 1. Update status nan tab 'payments'
+                const { error: payErr } = await supabaseClient
                     .from('payments')
                     .update({ status: newStatus })
                     .eq('id', id);
 
-                if (error) throw error;
+                if (payErr) throw payErr;
 
-                // Recharje done yo pou statistik ak lis la ka vinn a jou an tan reyèl
+                // 2. Si peman an apwouve, nou mete ajou plan an nan tab 'profiles'
+                if (newStatus === 'approved' && userId) {
+                    const isVip = planSelected ? planSelected.toLowerCase().includes('vip') : false;
+                    const daysToAdd = isVip ? 90 : 30; // 90 jou pou VIP, 30 jou pou Élite
+                    
+                    const expiryDate = new Date();
+                    expiryDate.setDate(expiryDate.getDate() + daysToAdd);
+
+                    const { error: profileErr } = await supabaseClient
+                        .from('profiles')
+                        .update({ 
+                            plan: isVip ? 'vip' : 'elite',
+                            plan_expires_at: expiryDate.toISOString()
+                        })
+                        .eq('id', userId);
+
+                    if (profileErr) console.warn("Mizajou profil la pat reyalize:", profileErr.message);
+                }
+
+                // Recharje done yo
                 loadAdminData();
 
             } catch (err) {
@@ -234,4 +254,4 @@
     </script>
 
 </body>
-</html>
+                    </html>
