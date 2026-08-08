@@ -165,7 +165,6 @@
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // FONKSYON POU REDIRIJE NAN CHECKOUT
         function upgradePlan() {
             window.location.href = "checkout.html";
         }
@@ -180,32 +179,44 @@
 
             const user = session.user;
 
-            // 1. Display Email & Created Date
+            // 1. Afiche Email ak Dat Enskripsyon
             document.getElementById('profileEmail').innerText = user.email;
             if (user.created_at) {
                 const dateObj = new Date(user.created_at);
                 document.getElementById('createdAtDisplay').innerText = dateObj.toLocaleDateString('ht-HT');
             }
 
-            // 2. CHAJMAN ENFÒMASYON AK PLAN SOTI NAN TAB 'profiles'
             const currentPlanBadge = document.getElementById('currentPlanBadge');
             const planBox = document.getElementById('planBox');
             const planExpiryDate = document.getElementById('planExpiryDate');
             const planInfoText = document.getElementById('planInfoText');
 
             try {
-                const { data: profile, error: profileErr } = await supabaseClient
+                // Li soti nan tab profiles
+                let { data: profile, error: profileErr } = await supabaseClient
                     .from('profiles')
                     .select('*')
                     .eq('id', user.id)
                     .maybeSingle();
 
-                // Mete non konplè soti nan tab profiles la
+                // Si liy lan pa egziste ditou nan tab profiles la, kreye l
+                if (!profile) {
+                    const fallbackPlan = user.user_metadata?.plan || 'free';
+                    const { data: newProfile } = await supabaseClient
+                        .from('profiles')
+                        .insert([{ id: user.id, full_name: user.user_metadata?.full_name || '', plan: fallbackPlan }])
+                        .select()
+                        .maybeSingle();
+                    
+                    profile = newProfile || { plan: fallbackPlan, full_name: user.user_metadata?.full_name };
+                }
+
+                // Mete non konplè
                 const fullName = (profile && profile.full_name) ? profile.full_name : (user.user_metadata?.full_name || user.email.split('@')[0]);
                 document.getElementById('profileFullName').innerText = fullName;
                 document.getElementById('fullNameInput').value = fullName;
 
-                // Initials
+                // Initials Avatar
                 let initials = "BZ";
                 if (fullName && fullName.trim() !== "") {
                     const names = fullName.trim().split(" ");
@@ -215,46 +226,40 @@
                 }
                 document.getElementById('profileInitials').innerText = initials;
 
-                // JESTYON PLAN AKTYÈL LA (ÉLITE / VIP / FREE)
-                if (profile && profile.plan) {
-                    const currentPlan = profile.plan.toLowerCase().trim();
-                    const isExpired = profile.plan_expires_at && new Date(profile.plan_expires_at) < new Date();
+                // DETEKSYON PLAN (Gade nan profile prensipal oswa nan user_metadata kòm backup)
+                const detectedPlan = (profile?.plan || user.user_metadata?.plan || 'free').toLowerCase().trim();
+                const expDateVal = profile?.plan_expires_at || user.user_metadata?.plan_expires_at;
+                const isExpired = expDateVal && new Date(expDateVal) < new Date();
 
-                    if (isExpired) {
-                        currentPlanBadge.innerText = "PLAN EKSPİRE";
-                        currentPlanBadge.className = "text-lg font-black text-red-400 uppercase mt-0.5";
-                        planBox.className = "p-4 rounded-2xl bg-red-500/10 border border-red-500/30 mb-4";
-                        planInfoText.innerText = "Abònman ou an ekspire. Tanpri renouvle plan ou pou w ka kontinye aksede ak tout prediksyon yo.";
-                    } else if (currentPlan === 'elite') {
-                        currentPlanBadge.innerText = "PLAN ÉLITE 🌟";
-                        currentPlanBadge.className = "text-lg font-black text-emerald-400 uppercase mt-0.5";
-                        planBox.className = "p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 mb-4";
-                        planInfoText.innerText = "Ou gen aksè ak tout tike ak prediksyon kouran sou plan Élite la.";
-                    } else if (currentPlan === 'vip') {
-                        currentPlanBadge.innerText = "PLAN VIP 👑";
-                        currentPlanBadge.className = "text-lg font-black text-purple-400 uppercase mt-0.5";
-                        planBox.className = "p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 mb-4";
-                        planInfoText.innerText = "Ou gen aksè konplè ak tout tike VIP, gwo kòt epi prediksyon avanse yo.";
-                    } else {
-                        currentPlanBadge.innerText = "PLAN GRATIS";
-                        currentPlanBadge.className = "text-lg font-black text-gray-400 uppercase mt-0.5";
-                        planBox.className = "p-4 rounded-2xl bg-gray-500/10 border border-brand-border mb-4";
-                        planInfoText.innerText = "Ou sou plan gratis la kounye a. Upgrade pou w ka debloke tout tike VIP ak prediksyon avanse yo.";
-                    }
-
-                    // Afiche dat l ap ekspire si gen yon dat epi l pa gratis
-                    if (profile.plan_expires_at && !isExpired && currentPlan !== 'free') {
-                        const expDate = new Date(profile.plan_expires_at).toLocaleDateString('ht-HT');
-                        planExpiryDate.innerText = `L ap ekspire le: ${expDate}`;
-                        planExpiryDate.classList.remove('hidden');
-                    } else {
-                        planExpiryDate.classList.add('hidden');
-                    }
+                if (isExpired) {
+                    currentPlanBadge.innerText = "PLAN EKSPİRE";
+                    currentPlanBadge.className = "text-lg font-black text-red-400 uppercase mt-0.5";
+                    planBox.className = "p-4 rounded-2xl bg-red-500/10 border border-red-500/30 mb-4";
+                    planInfoText.innerText = "Abònman ou an ekspire. Tanpri renouvle plan ou pou w ka kontinye aksede ak tout prediksyon yo.";
+                } else if (detectedPlan === 'elite') {
+                    currentPlanBadge.innerText = "PLAN ÉLITE 🌟";
+                    currentPlanBadge.className = "text-lg font-black text-emerald-400 uppercase mt-0.5";
+                    planBox.className = "p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 mb-4";
+                    planInfoText.innerText = "Ou gen aksè ak tout tike ak prediksyon kouran sou plan Élite la.";
+                } else if (detectedPlan === 'vip') {
+                    currentPlanBadge.innerText = "PLAN VIP 👑";
+                    currentPlanBadge.className = "text-lg font-black text-purple-400 uppercase mt-0.5";
+                    planBox.className = "p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 mb-4";
+                    planInfoText.innerText = "Ou gen aksè konplè ak tout tike VIP, gwo kòt epi prediksyon avanse yo.";
                 } else {
                     currentPlanBadge.innerText = "PLAN GRATIS";
                     currentPlanBadge.className = "text-lg font-black text-gray-400 uppercase mt-0.5";
                     planBox.className = "p-4 rounded-2xl bg-gray-500/10 border border-brand-border mb-4";
                     planInfoText.innerText = "Ou sou plan gratis la kounye a. Upgrade pou w ka debloke tout tike VIP ak prediksyon avanse yo.";
+                }
+
+                // Dat Ekspirasyon
+                if (expDateVal && !isExpired && detectedPlan !== 'free') {
+                    const expDate = new Date(expDateVal).toLocaleDateString('ht-HT');
+                    planExpiryDate.innerText = `L ap ekspire le: ${expDate}`;
+                    planExpiryDate.classList.remove('hidden');
+                } else {
+                    planExpiryDate.classList.add('hidden');
                 }
 
             } catch (err) {
@@ -263,7 +268,7 @@
             }
         }
 
-        // Mettre à jour le nom (Nan Supabase Auth & nan tab Profiles)
+        // Update Non
         document.getElementById('updateNameForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const newName = document.getElementById('fullNameInput').value;
@@ -273,12 +278,10 @@
 
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
-                // Update nan Auth Metadata
                 await supabaseClient.auth.updateUser({
                     data: { full_name: newName }
                 });
 
-                // Update nan Tab Profiles
                 const { error } = await supabaseClient
                     .from('profiles')
                     .update({ full_name: newName })
@@ -295,7 +298,7 @@
             btn.innerText = "Mete Non an ajou";
         });
 
-        // Chanje Modpas
+        // Update Modpas
         document.getElementById('updatePasswordForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const newPass = document.getElementById('newPasswordInput').value;
@@ -315,7 +318,7 @@
             btn.innerText = "Chanje Modpas La";
         });
 
-        // Dekoneksyon
+        // Logout
         document.getElementById('logoutProfileBtn').addEventListener('click', async () => {
             const { error } = await supabaseClient.auth.signOut();
             if (!error) window.location.href = "auth.html";
