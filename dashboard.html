@@ -50,7 +50,7 @@
         </div>
 
         <!-- EZON DWA: ISTORIK + KARE PLAN + AVATAR USER + DEKONEKSYON -->
-        <div class="flex items-center gap-2.5 sm:gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
             
             <!-- BOUTÒN ISTORIK -->
             <a href="historique.html" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-black transition text-xs font-bold flex items-center gap-1.5">
@@ -59,7 +59,7 @@
             </a>
 
             <!-- TI KARE PLAN USER AN (DINAMIK) -->
-            <div id="userPlanBadge" class="hidden xs:flex items-center">
+            <div id="userPlanBadge" class="flex items-center">
                 <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase tracking-wider">
                     ...
                 </span>
@@ -311,79 +311,72 @@
             }
 
             const user = session.user;
-            const metadata = user.user_metadata || {};
-            
-            // 1. Ekstrè ak afiche non user an
-            let displayName = metadata.full_name || user.email.split('@')[0];
-            document.getElementById('userNameDisplay').innerText = displayName;
 
-            // 2. Kalkile 2 lèt pou avatar an
-            let initials = "BZ";
-            if (metadata.full_name && metadata.full_name.trim() !== "") {
-                const names = metadata.full_name.trim().split(" ");
-                if (names.length >= 2) {
-                    initials = (names[0][0] + names[1][0]).toUpperCase();
-                } else {
-                    initials = names[0].substring(0, 2).toUpperCase();
-                }
-            } else if (user.email) {
-                initials = user.email.substring(0, 2).toUpperCase();
-            }
-            document.getElementById('userInitials').innerText = initials;
-
-            // 3. Chaje plan aktyèl la soti nan tab 'profiles' nan Supabase
+            // 1. Chaje enfòmasyon nan tab 'profiles'
             const planBadge = document.getElementById('userPlanBadge');
 
             try {
                 const { data: profile, error: profileErr } = await supabaseClient
                     .from('profiles')
-                    .select('plan, plan_expires_at')
+                    .select('full_name, plan, plan_expires_at')
                     .eq('id', user.id)
                     .maybeSingle();
 
-                if (profile && profile.plan) {
-                    const isExpired = profile.plan_expires_at && new Date(profile.plan_expires_at) < new Date();
-                    const currentPlan = profile.plan.toLowerCase().trim();
+                if (profileErr) console.error("Erè profile:", profileErr);
 
-                    if (isExpired || currentPlan === 'free') {
-                        planBadge.innerHTML = `
-                            <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase tracking-wider">
-                                PLAN GRATUIT
-                            </span>
-                        `;
-                    } else if (currentPlan === 'elite') {
-                        planBadge.innerHTML = `
-                            <span class="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
-                                <i class="fa-solid fa-star text-[10px]"></i>
-                                PLAN ÉLITE
-                            </span>
-                        `;
-                    } else if (currentPlan === 'vip') {
-                        planBadge.innerHTML = `
-                            <span class="px-2.5 py-1 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
-                                <i class="fa-solid fa-crown text-[10px]"></i>
-                                PLAN VIP
-                            </span>
-                        `;
-                    } else {
-                        planBadge.innerHTML = `
-                            <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase tracking-wider">
-                                PLAN GRATUIT
-                            </span>
-                        `;
-                    }
+                // Ekstrè ak afiche non user an
+                let displayName = profile?.full_name || user.user_metadata?.full_name || user.email.split('@')[0];
+                document.getElementById('userNameDisplay').innerText = displayName;
+
+                // Kalkile 2 lèt pou avatar an
+                let initials = "BZ";
+                if (displayName && displayName.trim() !== "") {
+                    const names = displayName.trim().split(" ");
+                    initials = names.length >= 2 ? (names[0][0] + names[1][0]).toUpperCase() : names[0].substring(0, 2).toUpperCase();
+                } else if (user.email) {
+                    initials = user.email.substring(0, 2).toUpperCase();
+                }
+                document.getElementById('userInitials').innerText = initials;
+
+                // DETEKSYON PLAN
+                const rawPlan = profile?.plan || user.user_metadata?.plan || 'free';
+                const currentPlan = rawPlan.toString().toLowerCase().trim();
+                const expDateVal = profile?.plan_expires_at || user.user_metadata?.plan_expires_at;
+                const isExpired = expDateVal && new Date(expDateVal) < new Date();
+
+                if (isExpired) {
+                    planBadge.innerHTML = `
+                        <span class="px-2.5 py-1 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] font-extrabold uppercase tracking-wider">
+                            EKSPİRE
+                        </span>
+                    `;
+                } else if (currentPlan.includes('elite')) {
+                    planBadge.innerHTML = `
+                        <span class="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-star text-[10px]"></i>
+                            ÉLITE
+                        </span>
+                    `;
+                } else if (currentPlan.includes('vip')) {
+                    planBadge.innerHTML = `
+                        <span class="px-2.5 py-1 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-crown text-[10px]"></i>
+                            VIP
+                        </span>
+                    `;
                 } else {
                     planBadge.innerHTML = `
-                        <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase tracking-wider">
-                            PLAN GRATUIT
+                        <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-extrabold uppercase tracking-wider">
+                            GRATIS
                         </span>
                     `;
                 }
+
             } catch (err) {
                 console.error("Erè nan chajman plan an:", err);
                 planBadge.innerHTML = `
-                    <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase tracking-wider">
-                        PLAN GRATUIT
+                    <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-extrabold uppercase tracking-wider">
+                        GRATIS
                     </span>
                 `;
             }
