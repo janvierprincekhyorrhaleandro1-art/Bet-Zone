@@ -93,18 +93,20 @@
                         <span>Plan Aktyèl</span>
                     </h2>
 
-                    <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-4">
+                    <!-- CONTAINER POU BADGE AK SITIYASYON PLAN AN -->
+                    <div id="planBox" class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-4">
                         <span class="text-[10px] text-gray-400 font-extrabold uppercase">Estatut Abonman</span>
-                        <h3 id="currentPlanBadge" class="text-lg font-black text-emerald-400 uppercase mt-0.5">VIP STANDARD</h3>
+                        <h3 id="currentPlanBadge" class="text-lg font-black text-emerald-400 uppercase mt-0.5">...</h3>
+                        <p id="planExpiryDate" class="text-[11px] text-gray-400 mt-2 hidden"></p>
                     </div>
 
-                    <p class="text-xs text-gray-400 leading-relaxed mb-6">
+                    <p id="planInfoText" class="text-xs text-gray-400 leading-relaxed mb-6">
                         Aksè an fonksyone byen. Ou ka chanje nivo plan w lan nenpòt ki lè pou w debloke plis avantaj.
                     </p>
                 </div>
 
-                <!-- BOUTÒN MODIFYE (OPSYON 2) -->
-                <button type="button" onclick="upgradePlan('vip')" class="w-full py-3 rounded-xl bg-emerald-500 text-black text-center text-xs font-extrabold hover:bg-emerald-400 transition block">
+                <!-- BOUTÒN MODIFYE -->
+                <button type="button" onclick="upgradePlan()" class="w-full py-3 rounded-xl bg-emerald-500 text-black text-center text-xs font-extrabold hover:bg-emerald-400 transition block shadow-lg shadow-emerald-500/10">
                     Chanje oswa Upgrade Plan
                 </button>
             </div>
@@ -163,9 +165,9 @@
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // FONKSYON POU REDIRIJE NAN CHECKOUT AK PARAMÈT PLAN AN
-        function upgradePlan(targetPlan = 'vip') {
-            window.location.href = `checkout.html?plan=${targetPlan}`;
+        // FONKSYON POU REDIRIJE NAN CHECKOUT
+        function upgradePlan() {
+            window.location.href = "checkout.html";
         }
 
         async function loadUserProfile() {
@@ -201,9 +203,54 @@
             }
             document.getElementById('profileInitials').innerText = initials;
 
-            // 4. Plan
-            if (metadata.plan) {
-                document.getElementById('currentPlanBadge').innerText = metadata.plan;
+            // 4. CHAJMAN PLAN AKTYÈL LA SOTI NAN TAB 'profiles'
+            const currentPlanBadge = document.getElementById('currentPlanBadge');
+            const planBox = document.getElementById('planBox');
+            const planExpiryDate = document.getElementById('planExpiryDate');
+            const planInfoText = document.getElementById('planInfoText');
+
+            try {
+                const { data: profile, error: profileErr } = await supabaseClient
+                    .from('profiles')
+                    .select('plan, plan_expires_at')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (profile && profile.plan) {
+                    const currentPlan = profile.plan.toLowerCase().trim();
+                    const isExpired = profile.plan_expires_at && new Date(profile.plan_expires_at) < new Date();
+
+                    if (isExpired || currentPlan === 'free') {
+                        currentPlanBadge.innerText = "PLAN GRATUIT";
+                        currentPlanBadge.className = "text-lg font-black text-gray-400 uppercase mt-0.5";
+                        planBox.className = "p-4 rounded-2xl bg-gray-500/10 border border-brand-border mb-4";
+                        planInfoText.innerText = "Ou sou plan gratis la kounye a. Upgrade pou w ka debloke tout tike VIP ak prediksyon avanse yo.";
+                    } else if (currentPlan === 'elite') {
+                        currentPlanBadge.innerText = "PLAN ÉLITE 🌟";
+                        currentPlanBadge.className = "text-lg font-black text-emerald-400 uppercase mt-0.5";
+                        planBox.className = "p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 mb-4";
+                    } else if (currentPlan === 'vip') {
+                        currentPlanBadge.innerText = "PLAN VIP 👑";
+                        currentPlanBadge.className = "text-lg font-black text-purple-400 uppercase mt-0.5";
+                        planBox.className = "p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 mb-4";
+                    } else {
+                        currentPlanBadge.innerText = profile.plan.toUpperCase();
+                    }
+
+                    // Afiche dat l ap ekspire si gen yon dat
+                    if (profile.plan_expires_at && !isExpired && currentPlan !== 'free') {
+                        const expDate = new Date(profile.plan_expires_at).toLocaleDateString('ht-HT');
+                        planExpiryDate.innerText = `L ap ekspire le: ${expDate}`;
+                        planExpiryDate.classList.remove('hidden');
+                    }
+                } else {
+                    currentPlanBadge.innerText = "PLAN GRATUIT";
+                    currentPlanBadge.className = "text-lg font-black text-gray-400 uppercase mt-0.5";
+                    planBox.className = "p-4 rounded-2xl bg-gray-500/10 border border-brand-border mb-4";
+                }
+            } catch (err) {
+                console.error("Erè nan chaje plan an:", err);
+                currentPlanBadge.innerText = "PLAN GRATUIT";
             }
         }
 
