@@ -28,10 +28,11 @@
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #05070a; color: #f1f5f9; }
         .glass-panel { background: rgba(13, 17, 23, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased">
@@ -60,7 +61,7 @@
     <!-- KONTENI PRENSIPAL PROFIL -->
     <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-8">
         
-        <!-- HEADER PROFIL (AVATAR + NON + PLAN) -->
+        <!-- HEADER PROFIL (AVATAR + NON + PLAN + ID) -->
         <div class="p-6 rounded-3xl bg-brand-card border border-brand-border mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
             <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
             
@@ -78,6 +79,13 @@
                         <span>Kont Verifye</span>
                     </span>
                 </div>
+                
+                <!-- ID ITILIZATÈ INIK -->
+                <div class="mb-2">
+                    <span class="text-xs text-gray-400">ID Kont: </span>
+                    <span id="userCustomId" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20 mono">BZ-.....</span>
+                </div>
+
                 <p id="profileEmail" class="text-gray-400 text-xs sm:text-sm mb-3">...</p>
                 <p class="text-gray-500 text-[11px]">Enskri depi: <span id="createdAtDisplay" class="text-gray-300 font-semibold">--/--/----</span></p>
             </div>
@@ -186,6 +194,9 @@
                 document.getElementById('createdAtDisplay').innerText = dateObj.toLocaleDateString('ht-HT');
             }
 
+            // 2. Jenere yon ID inik kout pou itilizatè a (egz: BZ-9A4B)
+            const generatedCustomId = "BZ-" + user.id.substring(0, 5).toUpperCase();
+
             const currentPlanBadge = document.getElementById('currentPlanBadge');
             const planBox = document.getElementById('planBox');
             const planExpiryDate = document.getElementById('planExpiryDate');
@@ -199,17 +210,28 @@
                     .eq('id', user.id)
                     .maybeSingle();
 
-                // Si liy lan pa egziste ditou nan tab profiles la, kreye l
-                if (!profile) {
-                    const fallbackPlan = user.user_metadata?.plan || 'free';
-                    const { data: newProfile } = await supabaseClient
+                // Si profil la pa egziste oswa pa gen custom_id, kreye l/mete l ajou (UPSERT)
+                if (!profile || !profile.custom_id) {
+                    const fallbackPlan = profile?.plan || user.user_metadata?.plan || 'free';
+                    const fallbackName = profile?.full_name || user.user_metadata?.full_name || '';
+
+                    const { data: updatedProfile } = await supabaseClient
                         .from('profiles')
-                        .insert([{ id: user.id, full_name: user.user_metadata?.full_name || '', plan: fallbackPlan }])
+                        .upsert({ 
+                            id: user.id, 
+                            full_name: fallbackName, 
+                            plan: fallbackPlan,
+                            custom_id: generatedCustomId
+                        }, { onConflict: 'id' })
                         .select()
                         .maybeSingle();
                     
-                    profile = newProfile || { plan: fallbackPlan, full_name: user.user_metadata?.full_name };
+                    profile = updatedProfile || profile;
                 }
+
+                // Afiche ID Inik la
+                const finalCustomId = profile?.custom_id || generatedCustomId;
+                document.getElementById('userCustomId').innerText = finalCustomId;
 
                 // Mete non konplè
                 const fullName = (profile && profile.full_name) ? profile.full_name : (user.user_metadata?.full_name || user.email.split('@')[0]);
@@ -226,7 +248,7 @@
                 }
                 document.getElementById('profileInitials').innerText = initials;
 
-                // DETEKSYON PLAN (Gade nan profile prensipal oswa nan user_metadata kòm backup)
+                // DETEKSYON PLAN
                 const detectedPlan = (profile?.plan || user.user_metadata?.plan || 'free').toLowerCase().trim();
                 const expDateVal = profile?.plan_expires_at || user.user_metadata?.plan_expires_at;
                 const isExpired = expDateVal && new Date(expDateVal) < new Date();
