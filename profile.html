@@ -210,31 +210,14 @@
                     .eq('id', user.id)
                     .maybeSingle();
 
-                // Si profil la pa egziste oswa pa gen custom_id, kreye l/mete l ajou (UPSERT)
-                if (!profile || !profile.custom_id) {
-                    const fallbackPlan = profile?.plan || user.user_metadata?.plan || 'free';
-                    const fallbackName = profile?.full_name || user.user_metadata?.full_name || '';
-
-                    const { data: updatedProfile } = await supabaseClient
-                        .from('profiles')
-                        .upsert({ 
-                            id: user.id, 
-                            full_name: fallbackName, 
-                            plan: fallbackPlan,
-                            custom_id: generatedCustomId
-                        }, { onConflict: 'id' })
-                        .select()
-                        .maybeSingle();
-                    
-                    profile = updatedProfile || profile;
-                }
+                if (profileErr) console.error("Erè profile:", profileErr);
 
                 // Afiche ID Inik la
                 const finalCustomId = profile?.custom_id || generatedCustomId;
                 document.getElementById('userCustomId').innerText = finalCustomId;
 
                 // Mete non konplè
-                const fullName = (profile && profile.full_name) ? profile.full_name : (user.user_metadata?.full_name || user.email.split('@')[0]);
+                const fullName = profile?.full_name || user.user_metadata?.full_name || user.email.split('@')[0];
                 document.getElementById('profileFullName').innerText = fullName;
                 document.getElementById('fullNameInput').value = fullName;
 
@@ -248,8 +231,9 @@
                 }
                 document.getElementById('profileInitials').innerText = initials;
 
-                // DETEKSYON PLAN
-                const detectedPlan = (profile?.plan || user.user_metadata?.plan || 'free').toLowerCase().trim();
+                // DETEKSYON PLAN (Ranfòse san kraze valè)
+                const rawPlan = profile?.plan || user.user_metadata?.plan || 'free';
+                const detectedPlan = rawPlan.toString().toLowerCase().trim();
                 const expDateVal = profile?.plan_expires_at || user.user_metadata?.plan_expires_at;
                 const isExpired = expDateVal && new Date(expDateVal) < new Date();
 
@@ -258,12 +242,12 @@
                     currentPlanBadge.className = "text-lg font-black text-red-400 uppercase mt-0.5";
                     planBox.className = "p-4 rounded-2xl bg-red-500/10 border border-red-500/30 mb-4";
                     planInfoText.innerText = "Abònman ou an ekspire. Tanpri renouvle plan ou pou w ka kontinye aksede ak tout prediksyon yo.";
-                } else if (detectedPlan === 'elite') {
+                } else if (detectedPlan.includes('elite')) {
                     currentPlanBadge.innerText = "PLAN ÉLITE 🌟";
                     currentPlanBadge.className = "text-lg font-black text-emerald-400 uppercase mt-0.5";
                     planBox.className = "p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 mb-4";
                     planInfoText.innerText = "Ou gen aksè ak tout tike ak prediksyon kouran sou plan Élite la.";
-                } else if (detectedPlan === 'vip') {
+                } else if (detectedPlan.includes('vip')) {
                     currentPlanBadge.innerText = "PLAN VIP 👑";
                     currentPlanBadge.className = "text-lg font-black text-purple-400 uppercase mt-0.5";
                     planBox.className = "p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 mb-4";
@@ -276,7 +260,7 @@
                 }
 
                 // Dat Ekspirasyon
-                if (expDateVal && !isExpired && detectedPlan !== 'free') {
+                if (expDateVal && !isExpired && !detectedPlan.includes('free')) {
                     const expDate = new Date(expDateVal).toLocaleDateString('ht-HT');
                     planExpiryDate.innerText = `L ap ekspire le: ${expDate}`;
                     planExpiryDate.classList.remove('hidden');
