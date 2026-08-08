@@ -332,18 +332,18 @@
             document.getElementById('userInitials').innerText = initials;
 
             // 3. Chaje plan aktyèl la soti nan tab 'profiles' nan Supabase
+            const planBadge = document.getElementById('userPlanBadge');
+
             try {
                 const { data: profile, error: profileErr } = await supabaseClient
                     .from('profiles')
                     .select('plan, plan_expires_at')
                     .eq('id', user.id)
-                    .single();
+                    .maybeSingle();
 
-                const planBadge = document.getElementById('userPlanBadge');
-
-                if (profile) {
+                if (profile && profile.plan) {
                     const isExpired = profile.plan_expires_at && new Date(profile.plan_expires_at) < new Date();
-                    const currentPlan = (profile.plan || 'free').toLowerCase();
+                    const currentPlan = profile.plan.toLowerCase().trim();
 
                     if (isExpired || currentPlan === 'free') {
                         planBadge.innerHTML = `
@@ -365,7 +365,41 @@
                                 PLAN VIP
                             </span>
                         `;
+                    } else {
+                        planBadge.innerHTML = `
+                            <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase tracking-wider">
+                                PLAN GRATUIT
+                            </span>
+                        `;
                     }
                 } else {
-                    // Fallback si profil la pa anrejistre ankò
-                    plan
+                    planBadge.innerHTML = `
+                        <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase tracking-wider">
+                            PLAN GRATUIT
+                        </span>
+                    `;
+                }
+            } catch (err) {
+                console.error("Erè nan chajman plan an:", err);
+                planBadge.innerHTML = `
+                    <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase tracking-wider">
+                        PLAN GRATUIT
+                    </span>
+                `;
+            }
+        }
+
+        // LOGIK DEKONEKSYON
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            window.location.href = "auth.html";
+        });
+
+        // INIT PAJ LA
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDynamicDays();
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
