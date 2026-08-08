@@ -28,10 +28,11 @@
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #05070a; color: #f1f5f9; }
         .glass-panel { background: rgba(13, 17, 23, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased">
@@ -52,101 +53,140 @@
     </nav>
 
     <!-- KONTENI PRENSIPAL CHECKOUT -->
-    <main class="flex-grow max-w-3xl w-full mx-auto px-4 py-8">
+    <main class="flex-grow max-w-xl w-full mx-auto px-4 py-8">
         
         <div class="text-center mb-8">
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Peman Abonman VIP</h1>
-            <p class="text-xs sm:text-sm text-gray-400">Chwazi plan ou vle a epi voye peman an pou debloke tout prediksyon yo.</p>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Konfime Abònman</h1>
+            <p class="text-xs sm:text-sm text-gray-400">Chwazi plan ou, peye ak MonCash oswa NatCash, epi voye prèv peman an.</p>
         </div>
 
-        <!-- 1. SELEKSYON PLAN (ÉLITE vs VIP) -->
-        <div class="mb-8">
-            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider text-center mb-3">1. Chwazi Plan Ou Vle A</label>
-            <div class="grid grid-cols-2 gap-3 sm:gap-4">
-                
-                <!-- PLAN ÉLITE -->
-                <button type="button" id="planEliteBtn" onclick="selectPlan('elite')" class="p-4 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500 text-left transition relative cursor-pointer group">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-xs font-extrabold text-emerald-400 uppercase">Elite</span>
-                        <i id="eliteCheckIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <!-- 1. CHWAZI PLAN -->
+        <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 mono">// CHWAZI PLAN</div>
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <!-- PLAN ÉLITE -->
+            <button type="button" id="planEliteBtn" onclick="selectPlan('elite')" class="p-4 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500 text-left transition relative cursor-pointer group">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-extrabold text-emerald-400 uppercase">Élite</span>
+                    <i id="eliteCheckIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+                </div>
+                <div class="text-lg font-black text-white mono">500 HTG</div>
+                <div class="text-[11px] text-gray-400 mt-0.5">Sèvis pou 1 Mwa</div>
+            </button>
+
+            <!-- PLAN VIP -->
+            <button type="button" id="planVipBtn" onclick="selectPlan('vip')" class="p-4 rounded-2xl bg-brand-card border-2 border-brand-border hover:border-emerald-500/50 text-left transition relative cursor-pointer group">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-extrabold text-emerald-400 uppercase">VIP Supreme</span>
+                    <i id="vipCheckIcon" class="fa-regular fa-circle text-gray-500 text-base"></i>
+                </div>
+                <div class="text-lg font-black text-white mono">1,000 HTG</div>
+                <div class="text-[11px] text-gray-400 mt-0.5">Sèvis pou 3 Mwa</div>
+            </button>
+        </div>
+
+        <!-- REZIME LÒD LA -->
+        <div class="p-5 rounded-2xl bg-brand-card border border-brand-border mb-6 space-y-3">
+            <div class="flex justify-between items-center text-xs text-gray-400">
+                <span>Plan chwazi:</span>
+                <span id="sumPlan" class="font-bold text-white mono">Élite</span>
+            </div>
+            <div class="flex justify-between items-center text-xs text-gray-400">
+                <span>Sik faktirasyon:</span>
+                <span id="sumCycle" class="font-medium text-gray-300 mono">Chak mwa</span>
+            </div>
+            <div class="pt-3 border-t border-brand-border flex justify-between items-center">
+                <span class="text-xs font-bold text-white">Total pou Voye:</span>
+                <span id="sumTotal" class="text-xl font-black text-emerald-400 mono">500 HTG</span>
+            </div>
+        </div>
+
+        <!-- 2. METÒD PEMAN -->
+        <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 mono">// METÒD PEMAN</div>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <button type="button" id="methMoncash" onclick="selectMethod('moncash')" class="py-3 px-4 rounded-xl bg-emerald-500 text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+                <i class="fa-solid fa-mobile-screen"></i>
+                <span>MonCash</span>
+            </button>
+
+            <button type="button" id="methNatcash" onclick="selectMethod('natcash')" class="py-3 px-4 rounded-xl bg-brand-card border border-brand-border text-gray-300 hover:text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+                <i class="fa-solid fa-wallet"></i>
+                <span>NatCash</span>
+            </button>
+        </div>
+
+        <!-- BWAT ENSTRIKSYON PEMAN -->
+        <div class="p-5 rounded-2xl bg-brand-card border border-emerald-500/40 mb-6 space-y-4">
+            <div class="flex items-center gap-3">
+                <div id="payLogo" class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-sm font-black">
+                    MC
+                </div>
+                <div>
+                    <b id="payName" class="text-sm text-white block">Peman MonCash</b>
+                    <span class="text-[11px] text-gray-400">Transfè manyèl — verifye anba 24è</span>
+                </div>
+            </div>
+
+            <!-- ETAP 1 -->
+            <div class="flex gap-3 items-start">
+                <div class="w-6 h-6 rounded-full bg-brand-dark border border-brand-border text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 mono">1</div>
+                <div class="text-xs text-gray-300 leading-relaxed">
+                    Voye <b id="stepAmount" class="text-emerald-400 mono">500 HTG</b> nan nimewo <span id="stepMethodName" class="font-bold">MonCash</span> sa a:
+                    <div class="p-3 mt-2 rounded-xl bg-brand-dark border border-brand-border flex justify-between items-center">
+                        <span id="phoneNum" class="text-emerald-400 font-bold text-sm mono">+509 31066407</span>
+                        <button type="button" onclick="copyPhone()" class="text-[10px] text-gray-400 hover:text-white uppercase font-bold tracking-wider mono">Kopye</button>
                     </div>
-                    <div class="text-lg sm:text-xl font-black text-white">500 HTG</div>
-                    <div class="text-[11px] text-gray-400 mt-0.5">Sèvis pou 1 Mwa</div>
-                </button>
+                </div>
+            </div>
 
-                <!-- PLAN VIP -->
-                <button type="button" id="planVipBtn" onclick="selectPlan('vip')" class="p-4 rounded-2xl bg-brand-card border-2 border-brand-border hover:border-emerald-500/50 text-left transition relative cursor-pointer group">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-xs font-extrabold text-emerald-400 uppercase">VIP </span>
-                        <i id="vipCheckIcon" class="fa-regular fa-circle text-gray-500 text-base"></i>
-                    </div>
-                    <div class="text-lg sm:text-xl font-black text-white">1,000 HTG</div>
-                    <div class="text-[11px] text-gray-400 mt-0.5">Sèvis pou 3 Mwa</div>
-                </button>
+            <!-- ETAP 2 -->
+            <div class="flex gap-3 items-center">
+                <div class="w-6 h-6 rounded-full bg-brand-dark border border-brand-border text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0 mono">2</div>
+                <div class="text-xs text-gray-300">Pran yon <b>screenshot</b> konfirmasyon transfè a.</div>
+            </div>
 
+            <!-- ETAP 3 -->
+            <div class="flex gap-3 items-center">
+                <div class="w-6 h-6 rounded-full bg-brand-dark border border-brand-border text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0 mono">3</div>
+                <div class="text-xs text-gray-300">Ranpli fòm anba a epi voye prèv la.</div>
             </div>
         </div>
 
-        <!-- 2. SELEKSYON METÒD PEMAN (MONCASH vs NATCASH) -->
-        <div class="p-6 rounded-3xl bg-brand-card border border-brand-border mb-8">
-            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">2. Chwazi Metòd Peman An</label>
-            
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <!-- SWITCH MONCASH -->
-                <button type="button" id="payMoncashBtn" onclick="selectPayment('moncash')" class="py-3 px-4 rounded-xl bg-emerald-500 text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
-                    <i class="fa-solid fa-mobile-screen"></i>
-                    <span>MonCash</span>
-                </button>
-
-                <!-- SWITCH NATCASH -->
-                <button type="button" id="payNatcashBtn" onclick="selectPayment('natcash')" class="py-3 px-4 rounded-xl bg-brand-dark border border-brand-border text-gray-300 hover:text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
-                    <i class="fa-solid fa-wallet"></i>
-                    <span>NatCash</span>
-                </button>
-            </div>
-
-            <!-- ENFÒMASYON SOU NIMÈWO POU VOYE KÒB LA -->
-            <div class="p-4 rounded-2xl bg-brand-dark border border-emerald-500/30 text-center">
-                <span id="paymentLabel" class="text-xs font-bold text-gray-400 uppercase">Nimewo MonCash pou fè transfè a:</span>
-                <div id="paymentNumber" class="text-xl sm:text-2xl font-black text-emerald-400 my-1">+509 31066407</div>
-                <p id="amountToPayDisplay" class="text-xs text-gray-300 font-semibold">Montan pou w voye: <span class="text-emerald-400">500 HTG</span></p>
-            </div>
-        </div>
-
-        <!-- 3. FÒM VERIFIKASYON PEMAN -->
-        <form id="checkoutForm" class="p-6 rounded-3xl bg-brand-card border border-brand-border space-y-5">
-            <h3 class="text-sm font-bold text-white uppercase tracking-wider mb-2">3. Antre Enfòmasyon Peman An</h3>
-
-            <!-- NON KONPLÈ -->
+        <!-- 3. FÒM KONFIRMASYON -->
+        <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 mono">// KONFIRME PEMAN OU</div>
+        <form id="checkoutForm" class="p-6 rounded-3xl bg-brand-card border border-brand-border space-y-4 mb-6">
             <div>
-                <label class="block text-xs font-bold text-gray-300 mb-2">Non Konplè W</label>
-                <input type="text" id="fullNameInput" placeholder="Eg: Jean Baptiste" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
+                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 mono">Non Konplè W</label>
+                <input type="text" id="fullNameInput" placeholder="Non ak siyati w" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
             </div>
 
-            <!-- NON/NIMÈWO KONT KI FÈ TRANSAKSYON AN -->
             <div>
-                <label id="accountNameLabel" class="block text-xs font-bold text-gray-300 mb-2">Non oswa Nimewo Kont MonCash Li Soti A</label>
-                <input type="text" id="accountSenderInput" placeholder="Eg: MonCash Jean / +509 31XX-XXXX" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
+                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 mono">ID Kont / Nimewo Transaksyon</label>
+                <input type="text" id="accountSenderInput" placeholder="ID kont oswa referans tranzaksyon an" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
             </div>
 
-            <!-- TELECHAJE SCREENSHOT -->
             <div>
-                <label class="block text-xs font-bold text-gray-300 mb-2">Telechaje Screenshot (Prèv Peman An)</label>
-                <input type="file" id="screenshotInput" accept="image/*" required class="w-full text-xs text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-500/20 file:text-emerald-400 hover:file:bg-emerald-500 hover:file:text-black cursor-pointer transition">
+                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 mono">Screenshot Peman An</label>
+                <label for="proofUpload" class="block border-2 border-dashed border-brand-border hover:border-emerald-500/50 rounded-2xl p-6 text-center bg-brand-dark cursor-pointer transition">
+                    <i class="fa-solid fa-paperclip text-emerald-400 text-xl mb-2 block"></i>
+                    <span id="fileNameDisplay" class="text-xs text-white block mb-1">Klike pou telechaje screenshot la</span>
+                    <span class="text-[10px] text-gray-500 block">PNG, JPG oswa JPEG</span>
+                    <input type="file" id="proofUpload" accept="image/*" required class="hidden" onchange="updateFileName(this)">
+                </label>
             </div>
 
-            <!-- BOUTÒN SOUMÈT -->
-            <button type="submit" id="submitPaymentBtn" class="w-full py-3.5 rounded-xl bg-emerald-500 text-black text-xs font-extrabold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/10 mt-4">
-                Voye Prèv Peman An Pou Verifikasyon
+            <button type="submit" id="submitPaymentBtn" class="w-full py-3.5 rounded-xl bg-emerald-500 text-black text-xs font-extrabold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/10 mt-2">
+                Voye Prèv Peman
             </button>
         </form>
 
-        <!-- TI NÒT VERIFIKASYON MANYÈL -->
-        <div class="mt-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center flex items-center justify-center gap-3">
-            <i class="fa-solid fa-clock-history text-emerald-400 text-lg"></i>
-            <p class="text-xs text-emerald-300 leading-relaxed font-medium">
-                <strong>Nòt Enpòtan:</strong> Verifikasyon peman yo fèt manyèlman. Aksè ak plan w lan ap aktivé anba <strong>24 èdtan</strong> apre nou fin konfime transfè a.
-            </p>
+        <div class="flex items-start gap-2.5 text-xs text-gray-400 mb-6 leading-relaxed">
+            <i class="fa-solid fa-clock text-emerald-400 text-sm mt-0.5"></i>
+            <span>Ekip nou an ap verifye peman an manyèlman epi aktive abònman ou nan mwens pase 24è.</span>
+        </div>
+
+        <div class="text-center text-[11px] text-gray-500 leading-relaxed">
+            Yon fwa konfime, ou ka jere abònman ou nan paj profil ou an.<br>
+            Lè w voye, ou aksepte <a href="#" class="text-emerald-400 hover:underline">Kondisyon Sèvis</a> nou yo.
         </div>
 
     </main>
@@ -163,81 +203,90 @@
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let selectedPlan = 'elite'; // default plan
-        let selectedPaymentMethod = 'moncash'; // default payment
+        const plans = {
+            elite: { name: 'Élite', price: '500 HTG', cycle: 'Chak mwa' },
+            vip: { name: 'VIP Supreme', price: '1,000 HTG', cycle: 'Chak 3 mwa' }
+        };
 
-        // FONKSYON POU SWITCH PLAN YO
-        function selectPlan(plan) {
-            selectedPlan = plan;
+        const methods = {
+            moncash: { name: 'MonCash', logo: 'MC', phone: '+509 31066407' },
+            natcash: { name: 'NatCash', logo: 'NC', phone: '+509 43900051' }
+        };
 
+        let activePlan = 'elite';
+        let activeMethod = 'moncash';
+
+        function selectPlan(key) {
+            activePlan = key;
             const eliteBtn = document.getElementById('planEliteBtn');
             const vipBtn = document.getElementById('planVipBtn');
             const eliteCheck = document.getElementById('eliteCheckIcon');
             const vipCheck = document.getElementById('vipCheckIcon');
-            const amountDisplay = document.getElementById('amountToPayDisplay');
 
-            if (plan === 'elite') {
+            if (key === 'elite') {
                 eliteBtn.className = "p-4 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500 text-left transition relative cursor-pointer group";
                 vipBtn.className = "p-4 rounded-2xl bg-brand-card border-2 border-brand-border hover:border-emerald-500/50 text-left transition relative cursor-pointer group";
-                
                 eliteCheck.className = "fa-solid fa-circle-check text-emerald-400 text-base";
                 vipCheck.className = "fa-regular fa-circle text-gray-500 text-base";
-
-                amountDisplay.innerHTML = 'Montan pou w voye: <span class="text-emerald-400">500 HTG</span>';
             } else {
                 vipBtn.className = "p-4 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500 text-left transition relative cursor-pointer group";
                 eliteBtn.className = "p-4 rounded-2xl bg-brand-card border-2 border-brand-border hover:border-emerald-500/50 text-left transition relative cursor-pointer group";
-                
                 vipCheck.className = "fa-solid fa-circle-check text-emerald-400 text-base";
                 eliteCheck.className = "fa-regular fa-circle text-gray-500 text-base";
-
-                amountDisplay.innerHTML = 'Montan pou w voye: <span class="text-emerald-400">1,000 HTG</span>';
             }
+
+            const p = plans[key];
+            document.getElementById('sumPlan').textContent = p.name;
+            document.getElementById('sumCycle').textContent = p.cycle;
+            document.getElementById('sumTotal').textContent = p.price;
+            document.getElementById('stepAmount').textContent = p.price;
         }
 
-        // FONKSYON POU SWITCH METÒD PEMAN YO
-        function selectPayment(method) {
-            selectedPaymentMethod = method;
+        function selectMethod(key) {
+            activeMethod = key;
+            const moncashBtn = document.getElementById('methMoncash');
+            const natcashBtn = document.getElementById('methNatcash');
 
-            const moncashBtn = document.getElementById('payMoncashBtn');
-            const natcashBtn = document.getElementById('payNatcashBtn');
-            const label = document.getElementById('paymentLabel');
-            const number = document.getElementById('paymentNumber');
-            const accountLabel = document.getElementById('accountNameLabel');
-
-            if (method === 'moncash') {
+            if (key === 'moncash') {
                 moncashBtn.className = "py-3 px-4 rounded-xl bg-emerald-500 text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition";
-                natcashBtn.className = "py-3 px-4 rounded-xl bg-brand-dark border border-brand-border text-gray-300 hover:text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition";
-
-                label.innerText = "Numèwo MonCash pou fè transferè a:";
-                number.innerText = "+509 31066407";
-                accountLabel.innerText = "Non oswa Nimewo Kont MonCash Li Soti A";
+                natcashBtn.className = "py-3 px-4 rounded-xl bg-brand-card border border-brand-border text-gray-300 hover:text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition";
             } else {
                 natcashBtn.className = "py-3 px-4 rounded-xl bg-emerald-500 text-black font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition";
-                moncashBtn.className = "py-3 px-4 rounded-xl bg-brand-dark border border-brand-border text-gray-300 hover:text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition";
+                moncashBtn.className = "py-3 px-4 rounded-xl bg-brand-card border border-brand-border text-gray-300 hover:text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition";
+            }
 
-                label.innerText = "Numèwo NatCash pou fè transferè a:";
-                number.innerText = "+509 43900051";
-                accountLabel.innerText = "Non oswa Nimewo Kont NatCash Li Soti A";
+            const m = methods[key];
+            document.getElementById('payLogo').textContent = m.logo;
+            document.getElementById('payName').textContent = 'Peman ' + m.name;
+            document.getElementById('stepMethodName').textContent = m.name;
+            document.getElementById('phoneNum').textContent = m.phone;
+        }
+
+        function copyPhone() {
+            const phone = document.getElementById('phoneNum').innerText;
+            navigator.clipboard.writeText(phone);
+            alert("Nimewo a kopye: " + phone);
+        }
+
+        function updateFileName(input) {
+            if (input.files && input.files[0]) {
+                document.getElementById('fileNameDisplay').innerText = input.files[0].name;
             }
         }
 
-        // PREPARASYON APRE KONT LA SOU SOUMÈT
         document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const btn = document.getElementById('submitPaymentBtn');
             btn.innerText = "N ap voye prèv la...";
             btn.disabled = true;
 
-            // Isit la nou ka voye done yo nan Supabase oswa nan yon livrezon mesaj
             setTimeout(() => {
                 alert("Prèv peman ou an voye ak siksè! Ekip nou an ap verifye l anba 24è.");
                 window.location.href = "dashboard.html";
             }, 1500);
         });
 
-        // LEKTI PLAN KI NAN URL LA SI L GENYEN
+        // Tcheke si URL la gen paramèt plan
         const urlParams = new URLSearchParams(window.location.search);
         const planFromUrl = urlParams.get('plan');
 
