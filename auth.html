@@ -327,8 +327,9 @@
             sendResetBtn.disabled = true;
             sendResetBtn.innerText = "N ap voye...";
 
+            // KONFIGIRASYON VOYE LYEN RESET LA NAN VERCEL
             const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin + '/reset-password.html',
+                redirectTo: 'https://bet-zone-theta.vercel.app/reset-password.html',
             });
 
             if (error) {
