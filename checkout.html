@@ -66,7 +66,7 @@
             <!-- PLAN ÉLITE -->
             <button type="button" id="planEliteBtn" onclick="selectPlan('elite')" class="p-4 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500 text-left transition relative cursor-pointer group">
                 <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs font-extrabold text-emerald-400 uppercase">Elite</span>
+                    <span class="text-xs font-extrabold text-emerald-400 uppercase">Élite</span>
                     <i id="eliteCheckIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
                 </div>
                 <div class="text-lg font-black text-white mono">500 HTG</div>
@@ -76,7 +76,7 @@
             <!-- PLAN VIP -->
             <button type="button" id="planVipBtn" onclick="selectPlan('vip')" class="p-4 rounded-2xl bg-brand-card border-2 border-brand-border hover:border-emerald-500/50 text-left transition relative cursor-pointer group">
                 <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs font-extrabold text-emerald-400 uppercase">VIP </span>
+                    <span class="text-xs font-extrabold text-emerald-400 uppercase">VIP Supreme</span>
                     <i id="vipCheckIcon" class="fa-regular fa-circle text-gray-500 text-base"></i>
                 </div>
                 <div class="text-lg font-black text-white mono">1,000 HTG</div>
@@ -160,7 +160,7 @@
             </div>
 
             <div>
-                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 mono"> Nimewo ki kont lan </label>
+                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 mono">Nimewo ki sou kont lan / ID Transaksyon</label>
                 <input type="text" id="accountSenderInput" placeholder="ID kont oswa referans tranzaksyon an" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
             </div>
 
@@ -204,8 +204,8 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const plans = {
-            elite: { name: 'Élite', price: '500 HTG', cycle: 'Chak mwa' },
-            vip: { name: 'VIP Supreme', price: '1,000 HTG', cycle: 'Chak 3 mwa' }
+            elite: { name: 'Élite', price: 500, cycle: 'Chak mwa' },
+            vip: { name: 'VIP Supreme', price: 1000, cycle: 'Chak 3 mwa' }
         };
 
         const methods = {
@@ -238,8 +238,8 @@
             const p = plans[key];
             document.getElementById('sumPlan').textContent = p.name;
             document.getElementById('sumCycle').textContent = p.cycle;
-            document.getElementById('sumTotal').textContent = p.price;
-            document.getElementById('stepAmount').textContent = p.price;
+            document.getElementById('sumTotal').textContent = p.price + ' HTG';
+            document.getElementById('stepAmount').textContent = p.price + ' HTG';
         }
 
         function selectMethod(key) {
@@ -274,16 +274,62 @@
             }
         }
 
+        // ENTEGRASYON VRE SUPABASE POU UPLOAD AK RECORD
         document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitPaymentBtn');
             btn.innerText = "N ap voye prèv la...";
             btn.disabled = true;
 
-            setTimeout(() => {
-                alert("Prèv peman ou an voye ak siksè! Ekip nou an ap verifye l anba 24è.");
+            try {
+                const fileInput = document.getElementById('proofUpload');
+                const file = fileInput.files[0];
+                
+                if (!file) throw new Error("Tanpri chwazi yon screenshot.");
+
+                // 1. Upload Screenshot nan Storage 'proofs'
+                const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+                const { data: storageData, error: storageError } = await supabaseClient
+                    .storage
+                    .from('proofs')
+                    .upload(fileName, file);
+
+                if (storageError) throw storageError;
+
+                // Jwenn URL piblik imaj sa a
+                const { data: publicUrlData } = supabaseClient
+                    .storage
+                    .from('proofs')
+                    .getPublicUrl(fileName);
+
+                const proofUrl = publicUrlData.publicUrl;
+
+                // 2. Anrejistre Peman an nan Tab 'payments'
+                const fullName = document.getElementById('fullNameInput').value;
+                const accountSender = document.getElementById('accountSenderInput').value;
+
+                const { error: dbError } = await supabaseClient
+                    .from('payments')
+                    .insert([{
+                        full_name: fullName,
+                        account_sender: accountSender,
+                        plan_selected: plans[activePlan].name,
+                        payment_method: methods[activeMethod].name,
+                        amount: plans[activePlan].price,
+                        proof_url: proofUrl,
+                        status: 'pending'
+                    }]);
+
+                if (dbError) throw dbError;
+
+                alert("Prèv peman ou an voye ak siksè! N ap verifye l anba 24è.");
                 window.location.href = "dashboard.html";
-            }, 1500);
+
+            } catch (err) {
+                alert("Erè nan voye peman an: " + err.message);
+                btn.innerText = "Voye Prèv Peman";
+                btn.disabled = false;
+            }
         });
 
         // Tcheke si URL la gen paramèt plan
