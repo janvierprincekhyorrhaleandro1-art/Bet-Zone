@@ -99,6 +99,27 @@
 
     </main>
 
+    <!-- POP-UP MODAL CONFIRMATION ADMIN -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center z-50 px-4">
+        <div class="bg-brand-card border border-brand-border max-w-sm w-full p-6 rounded-3xl text-center shadow-2xl transition-all">
+            <div id="modalIconContainer" class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 border">
+                <!-- Icon dinamik via JS -->
+            </div>
+            <h3 id="modalTitle" class="text-base sm:text-lg font-extrabold text-white mb-1">Konfime Aksyon</h3>
+            <p id="modalDescription" class="text-xs text-gray-400 leading-relaxed mb-6">
+                Èske ou sèten ou vle fè aksyon sa a?
+            </p>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeConfirmModal()" class="py-2.5 rounded-xl bg-brand-dark border border-brand-border text-gray-300 text-xs font-bold hover:text-white transition">
+                    Anule
+                </button>
+                <button id="modalConfirmBtn" onclick="executeStatusUpdate()" class="py-2.5 rounded-xl text-black text-xs font-extrabold transition">
+                    Konfime
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- FOOTER -->
     <footer class="py-6 text-center border-t border-brand-border text-xs text-gray-500">
         &copy; 2026 Bet Zone. Tout dwa rezève.
@@ -110,6 +131,9 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Varib pou kenbe enfòmasyon peman anvan konfimasyon
+        let selectedPaymentData = null;
 
         async function loadAdminData() {
             try {
@@ -173,6 +197,7 @@
                             <div>
                                 <div class="flex items-center gap-2 mb-0.5">
                                     <span class="text-sm font-bold text-white">${p.full_name || 'Itilizatè'}</span>
+                                    ${p.betzone_id ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold mono">ID: ${p.betzone_id}</span>` : ''}
                                     <span class="text-[10px] text-gray-500 mono">${dateFormatted}</span>
                                 </div>
                                 <div class="text-xs text-gray-400">ID / Ref (${p.payment_method}): <b class="text-gray-200 mono">${p.account_sender}</b></div>
@@ -185,11 +210,11 @@
                                 ${p.plan_selected}
                             </span>
                             <div class="flex items-center gap-2">
-                                <button type="button" onclick="updateStatus('${p.id}', 'approved', '${p.full_name}', '${p.user_id || ''}', '${p.plan_selected}')" class="px-3 py-1.5 rounded-xl bg-emerald-500 text-black font-extrabold text-xs hover:bg-emerald-400 transition flex items-center gap-1">
+                                <button type="button" onclick="openConfirmModal('${p.id}', 'approved', '${p.full_name}', '${p.user_id || ''}', '${p.plan_selected}')" class="px-3 py-1.5 rounded-xl bg-emerald-500 text-black font-extrabold text-xs hover:bg-emerald-400 transition flex items-center gap-1">
                                     <i class="fa-solid fa-check"></i>
                                     <span>Apwouve</span>
                                 </button>
-                                <button type="button" onclick="updateStatus('${p.id}', 'rejected', '${p.full_name}', '${p.user_id || ''}', '${p.plan_selected}')" class="px-3 py-1.5 rounded-xl bg-brand-dark border border-brand-border text-gray-400 hover:text-red-400 hover:border-red-500/40 transition text-xs font-bold">
+                                <button type="button" onclick="openConfirmModal('${p.id}', 'rejected', '${p.full_name}', '${p.user_id || ''}', '${p.plan_selected}')" class="px-3 py-1.5 rounded-xl bg-brand-dark border border-brand-border text-gray-400 hover:text-red-400 hover:border-red-500/40 transition text-xs font-bold">
                                     Rejte
                                 </button>
                             </div>
@@ -199,22 +224,63 @@
             }).join('');
         }
 
-        // LOGIK KORİJE POU APWOUVE AK METE AJOU PROFIL LA POU DİRÈKTEMAN ITILIZE ID A
-        async function updateStatus(id, newStatus, userName, userId, planSelected) {
-            const actionText = newStatus === 'approved' ? 'apwouve' : 'rejte';
-            if (!confirm(`Èske ou sèten ou vle ${actionText} peman pou ${userName}?`)) return;
+        // FUNKSYON POU OUVRI MODAL KONFIRMASYON AN
+        function openConfirmModal(id, status, userName, userId, planSelected) {
+            selectedPaymentData = { id, status, userName, userId, planSelected };
+            
+            const modal = document.getElementById('confirmModal');
+            const iconContainer = document.getElementById('modalIconContainer');
+            const title = document.getElementById('modalTitle');
+            const desc = document.getElementById('modalDescription');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+
+            if (status === 'approved') {
+                iconContainer.className = "w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 bg-emerald-500/20 border border-emerald-500/40 text-emerald-400";
+                iconContainer.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+                title.innerText = "Apwouve Peman";
+                desc.innerHTML = `Ou pral valide peman pou <b class="text-white">${userName}</b> epi aktive plan <b class="text-emerald-400">${planSelected}</b> an.`;
+                confirmBtn.className = "py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-extrabold transition shadow-lg shadow-emerald-500/10";
+                confirmBtn.innerText = "Wi, Apwouve";
+            } else {
+                iconContainer.className = "w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 bg-red-500/20 border border-red-500/40 text-red-400";
+                iconContainer.innerHTML = `<i class="fa-solid fa-circle-xmark"></i>`;
+                title.innerText = "Rejte Peman";
+                desc.innerHTML = `Èske ou sèten ou vle rejte demann peman <b class="text-white">${userName}</b> an?`;
+                confirmBtn.className = "py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-white text-xs font-extrabold transition shadow-lg shadow-red-500/10";
+                confirmBtn.innerText = "Wi, Rejte";
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            selectedPaymentData = null;
+        }
+
+        // LOGIK POU EKZEKITE MIZAJOU NAN SUPABASE
+        async function executeStatusUpdate() {
+            if (!selectedPaymentData) return;
+
+            const { id, status, userName, userId, planSelected } = selectedPaymentData;
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            confirmBtn.innerText = "N ap trete...";
+            confirmBtn.disabled = true;
 
             try {
                 // 1. Update status nan tab 'payments'
                 const { error: payErr } = await supabaseClient
                     .from('payments')
-                    .update({ status: newStatus })
+                    .update({ status: status })
                     .eq('id', id);
 
                 if (payErr) throw payErr;
 
-                // 2. Si peman an apwouve, mete ajou profil la dirèkteman ak `userId`
-                if (newStatus === 'approved') {
+                // 2. Si peman an apwouve, mete ajou profil la dirèkteman
+                if (status === 'approved') {
                     const cleanPlan = (planSelected || '').toLowerCase().trim();
                     const isVip = cleanPlan.includes('vip');
                     const targetPlan = isVip ? 'vip' : 'elite';
@@ -224,7 +290,6 @@
                     expiryDate.setDate(expiryDate.getDate() + daysToAdd);
 
                     if (userId && userId !== 'null' && userId !== 'undefined' && userId.trim() !== '') {
-                        // Kòmand direct update ak ID a presizeman
                         const { error: profileErr } = await supabaseClient
                             .from('profiles')
                             .update({ 
@@ -235,7 +300,6 @@
 
                         if (profileErr) console.warn("Erè update profile ak ID:", profileErr.message);
                     } else {
-                        // Fallback pa non si pa gen user_id
                         const { error: profileErr } = await supabaseClient
                             .from('profiles')
                             .update({
@@ -248,11 +312,12 @@
                     }
                 }
 
-                alert(`Peman an ${actionText} ak siksè!`);
+                closeConfirmModal();
                 loadAdminData();
 
             } catch (err) {
                 alert("Erè nan mizajou status la: " + err.message);
+                confirmBtn.disabled = false;
             }
         }
 
