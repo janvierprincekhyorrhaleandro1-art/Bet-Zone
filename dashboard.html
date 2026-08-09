@@ -49,9 +49,15 @@
             <span class="font-extrabold text-base sm:text-lg text-white tracking-wide">BET<span class="text-emerald-400">ZONE</span></span>
         </div>
 
-        <!-- EZON DWA: ISTORIK + KARE PLAN + AVATAR USER + DEKONEKSYON -->
+        <!-- EZON DWA: BOUTÒN BALON (MATCHS) + ISTORIK + PLAN + DEKONEKSYON -->
         <div class="flex items-center gap-2 sm:gap-3">
             
+            <!-- BOUTÒN BALON (TOUT MATCH YO) -->
+            <a href="dashboard.html" class="px-3 py-1.5 rounded-xl bg-emerald-500 text-black hover:bg-emerald-400 transition text-xs font-extrabold flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-futbol text-xs"></i>
+                <span class="hidden sm:inline">Matchs</span>
+            </a>
+
             <!-- BOUTÒN ISTORIK -->
             <a href="historique.html" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-black transition text-xs font-bold flex items-center gap-1.5">
                 <i class="fa-solid fa-clock-rotate-left"></i>
@@ -64,11 +70,6 @@
                     ...
                 </span>
             </div>
-
-            <!-- TI WON AVATAR ITILIZATÈ A -->
-            <a href="profile.html" title="Ale nan Profil" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-extrabold text-xs hover:scale-105 transition shadow-lg shadow-emerald-500/10">
-                <span id="userInitials">--</span>
-            </a>
 
             <!-- BOUTÒN DEKONEKSYON -->
             <button id="logoutBtn" class="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition text-xs font-bold flex items-center gap-1.5">
@@ -148,7 +149,7 @@
             </h2>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             
             <!-- KAT 1 -->
             <div onclick="window.location.href='details.html?id=1'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
@@ -240,6 +241,23 @@
                 </div>
             </div>
 
+        </div>
+
+        <!-- NOVO BOUTÒN/KAT PROFIL NAN ANBA DASHBOARD LA -->
+        <div class="p-5 rounded-2xl bg-brand-card border border-brand-border flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3 text-center sm:text-left">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-extrabold text-base shadow-md">
+                    <span id="userInitials">--</span>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-white">Jere Kont ak Profil Ou</h4>
+                    <p class="text-xs text-gray-400">Mete aksè w ajou, gade detay sou abònman w ak paramètres yo.</p>
+                </div>
+            </div>
+            <a href="profile.html" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 text-black hover:bg-emerald-400 transition text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10">
+                <i class="fa-solid fa-user-gear"></i>
+                <span>Ale nan Profil</span>
+            </a>
         </div>
 
     </main>
