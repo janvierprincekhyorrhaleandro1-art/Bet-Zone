@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bet Zone - Detay Match</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -22,211 +23,462 @@
             }
         }
     </script>
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #05070a; color: #f1f5f9; }
         .glass-panel { background: rgba(13, 17, 23, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.2); }
-        .emerald-glow { box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); }
-        .emerald-gradient-bg { background: linear-gradient(135deg, #062016 0%, #0d1117 100%); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .tab-btn.active {
+            color: #10b981;
+            border-bottom-color: #10b981;
+            background-color: rgba(16, 185, 129, 0.05);
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-black">
+<body class="min-h-screen flex flex-col justify-between antialiased">
 
-    <!-- HEADER -->
-    <header class="sticky top-0 z-50 glass-panel border-b border-brand-border">
-        <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
-            <a href="dashboard.html" class="flex items-center gap-2 text-xs font-bold text-gray-300 hover:text-emerald-400 transition">
-                <i class="fa-solid fa-arrow-left text-sm"></i>
-                <span>Retounen</span>
+    <!-- NAVBAR -->
+    <nav class="w-full px-4 sm:px-6 py-3 flex justify-between items-center border-b border-brand-border glass-panel sticky top-0 z-40">
+        <div class="flex items-center gap-2.5">
+            <a href="dashboard.html" class="w-8 h-8 rounded-xl bg-brand-card border border-brand-border flex items-center justify-center text-gray-400 hover:text-white transition">
+                <i class="fa-solid fa-arrow-left text-xs"></i>
             </a>
-            <span class="text-xs font-bold text-gray-400">Analiz Detaye IA</span>
-            <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-extrabold text-[10px] border border-emerald-500/30">VIP</span>
-        </div>
-    </header>
-
-    <!-- MAIN CONTENT -->
-    <div class="max-w-4xl mx-auto px-4 py-5 w-full flex-grow space-y-4">
-
-        <!-- BANNER MATCH AK PREDIKSYON -->
-        <div class="p-4 rounded-2xl bg-brand-card border border-brand-border emerald-glow">
-            <div class="flex justify-between items-center text-[10px] text-gray-400 pb-3 border-b border-brand-border">
-                <span class="font-bold text-emerald-400 flex items-center gap-1">
-                    <i class="fa-solid fa-trophy"></i> UEFA Champions League
-                </span>
-                <span class="bg-black px-2 py-0.5 rounded text-gray-300 font-mono">Jodi a • 20:00</span>
-            </div>
-
-            <div class="flex justify-between items-center my-4 px-2">
-                <div class="text-center w-1/3">
-                    <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-slate-800 border border-brand-border flex items-center justify-center font-bold text-sm text-emerald-400">RMA</div>
-                    <h2 class="text-xs sm:text-sm font-bold text-white">Real Madrid</h2>
-                    <span class="text-[9px] text-gray-400">(Lakay)</span>
-                </div>
-                <div class="text-center">
-                    <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-black text-xs">VS</span>
-                </div>
-                <div class="text-center w-1/3">
-                    <div class="w-12 h-12 mx-auto mb-2 rounded-full bg-slate-800 border border-brand-border flex items-center justify-center font-bold text-sm text-emerald-400">MCI</div>
-                    <h2 class="text-xs sm:text-sm font-bold text-white">Manchester City</h2>
-                    <span class="text-[9px] text-gray-400">(Deyò)</span>
-                </div>
-            </div>
-
-            <div class="mt-4 p-3 rounded-xl emerald-gradient-bg border border-emerald-500/40 flex justify-between items-center">
-                <div>
-                    <span class="text-[9px] font-bold text-emerald-400 uppercase tracking-wider block">Prediksyon IA Zone:</span>
-                    <span class="text-sm font-extrabold text-white">2 Ekip Ap Sipòte Bi (BTTS - Oui)</span>
-                </div>
-                <div class="text-right">
-                    <span class="text-[9px] text-gray-400 block font-semibold">Nivo Konfyans</span>
-                    <span class="px-2.5 py-0.5 rounded bg-emerald-500 text-black font-extrabold text-xs inline-block mt-0.5">88%</span>
-                </div>
-            </div>
+            <span class="font-extrabold text-base sm:text-lg text-white tracking-wide">BET<span class="text-emerald-400">ZONE</span></span>
         </div>
 
-        <!-- MWAYÈN BI & MITAN / FEN MATCH (GRID 2 KANPE) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            
-            <!-- Mwayèn Bi pa Match -->
-            <div class="p-3.5 rounded-2xl bg-brand-card border border-brand-border">
-                <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                    <i class="fa-solid fa-futbol"></i> Mwayèn Bi Pa Match
-                </h3>
-                <div class="space-y-2 text-xs">
-                    <div class="flex justify-between items-center pb-1 border-b border-brand-border/50">
-                        <span class="text-gray-400">Bi Make (Lakay vs Deyò)</span>
-                        <span class="font-bold text-white">2.4 <span class="text-gray-500">|</span> 2.1</span>
-                    </div>
-                    <div class="flex justify-between items-center pb-1 border-b border-brand-border/50">
-                        <span class="text-gray-400">Bi Encassé (Lakay vs Deyò)</span>
-                        <span class="font-bold text-white">0.8 <span class="text-gray-500">|</span> 1.2</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-400">Match ak +2.5 Bi</span>
-                        <span class="font-bold text-emerald-400">80% nan sezon an</span>
-                    </div>
-                </div>
-            </div>
+        <div class="flex items-center gap-2">
+            <button onclick="navigator.clipboard.writeText(window.location.href); alert('Lyen match la kopye!');" class="p-2 rounded-xl bg-brand-card border border-brand-border text-gray-300 hover:text-emerald-400 transition text-xs font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-share-nodes"></i>
+                <span class="hidden sm:inline">Pataje</span>
+            </button>
+        </div>
+    </nav>
 
-            <!-- Mitan / Fen Match (HT / FT) -->
-            <div class="p-3.5 rounded-2xl bg-brand-card border border-brand-border">
-                <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                    <i class="fa-solid fa-clock"></i> Mitan / Fen Match (HT/FT)
-                </h3>
-                <div class="space-y-2 text-xs">
-                    <div class="flex justify-between items-center pb-1 border-b border-brand-border/50">
-                        <span class="text-gray-400">Ganye nan 1er Mitan</span>
-                        <span class="font-bold text-white">Real Madrid (60%)</span>
-                    </div>
-                    <div class="flex justify-between items-center pb-1 border-b border-brand-border/50">
-                        <span class="text-gray-400">Plis Bi Mitan</span>
-                        <span class="font-bold text-white">2èm Mitan (65%)</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-400">Tandans Rebondisman</span>
-                        <span class="font-bold text-emerald-400">Man City make 70% nan 2MT</span>
-                    </div>
-                </div>
-            </div>
+    <!-- KONTENI PRENSIPAL -->
+    <main class="flex-grow max-w-3xl w-full mx-auto px-4 py-6 space-y-6">
 
+        <!-- HEADER MATCH & STATUS -->
+        <div class="flex justify-between items-center text-xs">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="font-bold text-gray-300 uppercase tracking-wider mono">UEFA Champions League</span>
+            </div>
+            <span class="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[10px] uppercase mono">
+                Annatant (21:00)
+            </span>
         </div>
 
-        <!-- GENYEN / PÈDI (LAKAY VS DEYÒ) -->
-        <div class="p-4 rounded-2xl bg-brand-card border border-brand-border">
-            <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <i class="fa-solid fa-chart-pie text-emerald-400"></i> Bilan Lakay ak Deyò
-            </h3>
-            <div class="grid grid-cols-2 gap-4 text-center text-xs">
-                <!-- Real Madrid Lakay -->
-                <div class="p-2.5 rounded-xl bg-black/40 border border-brand-border">
-                    <span class="text-[10px] text-gray-400 block mb-1">Real Madrid (Lakay)</span>
-                    <div class="flex justify-center gap-2 font-bold">
-                        <span class="text-emerald-400">8 Genyen</span>
-                        <span class="text-yellow-400">2 Nul</span>
-                        <span class="text-red-400">0 Pèdi</span>
+        <!-- SCOREBOARD CARD -->
+        <div class="p-6 rounded-3xl bg-brand-card border border-brand-border relative overflow-hidden">
+            <div class="flex items-center justify-between gap-4">
+                
+                <!-- HOME TEAM -->
+                <div class="flex-1 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand-dark border border-brand-border p-3 flex items-center justify-center mb-2 shadow-inner">
+                        <img id="homeLogo" src="https://media.api-sports.io/football/teams/541.png" alt="Real Madrid" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Real+Madrid&background=10b981&color=fff';">
                     </div>
+                    <h2 id="homeTeamName" class="text-sm sm:text-base font-extrabold text-white">Real Madrid</h2>
+                    <span class="text-[10px] text-gray-500 font-medium">Lakay</span>
                 </div>
-                <!-- Man City Deyò -->
-                <div class="p-2.5 rounded-xl bg-black/40 border border-brand-border">
-                    <span class="text-[10px] text-gray-400 block mb-1">Man City (Deyò)</span>
-                    <div class="flex justify-center gap-2 font-bold">
-                        <span class="text-emerald-400">6 Genyen</span>
-                        <span class="text-yellow-400">2 Nul</span>
-                        <span class="text-red-400">2 Pèdi</span>
+
+                <!-- VS / SCORE -->
+                <div class="flex flex-col items-center justify-center shrink-0">
+                    <span class="text-2xl sm:text-3xl font-black text-emerald-400 mono tracking-widest">VS</span>
+                    <span class="text-[10px] font-bold text-gray-400 mt-1 mono">8 Out 2026</span>
+                </div>
+
+                <!-- AWAY TEAM -->
+                <div class="flex-1 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand-dark border border-brand-border p-3 flex items-center justify-center mb-2 shadow-inner">
+                        <img id="awayLogo" src="https://media.api-sports.io/football/teams/50.png" alt="Man City" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Man+City&background=10b981&color=fff';">
                     </div>
+                    <h2 id="awayTeamName" class="text-sm sm:text-base font-extrabold text-white">Man City</h2>
+                    <span class="text-[10px] text-gray-500 font-medium">Deyò</span>
                 </div>
+
             </div>
         </div>
 
-        <!-- 11 POSIBS (LINEUPS) -->
-        <div class="p-4 rounded-2xl bg-brand-card border border-brand-border">
-            <h3 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <i class="fa-solid fa-users text-emerald-400"></i> 11 Probables (Formations)
-            </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <!-- Real Madrid 11 -->
-                <div class="p-3 rounded-xl bg-black/40 border border-brand-border">
-                    <div class="flex justify-between font-bold text-emerald-400 mb-2 border-b border-brand-border/60 pb-1">
-                        <span>Real Madrid</span>
-                        <span class="text-[10px] text-gray-400">4-3-3</span>
+        <!-- BANDE ORIZONTAL POU TABS (MENU OPTION YO) -->
+        <div class="flex border-b border-brand-border overflow-x-auto no-scrollbar gap-2 bg-brand-card/50 p-1 rounded-2xl">
+            <button onclick="switchTab('tab-pronostik')" id="btn-tab-pronostik" class="tab-btn active flex-1 py-2.5 px-4 text-xs font-bold text-gray-400 border-b-2 border-transparent transition whitespace-nowrap text-center rounded-xl">
+                <i class="fa-solid fa-bullseye mr-1.5"></i>Pronostik Ofisyèl
+            </button>
+            <button onclick="switchTab('tab-analiz')" id="btn-tab-analiz" class="tab-btn flex-1 py-2.5 px-4 text-xs font-bold text-gray-400 border-b-2 border-transparent transition whitespace-nowrap text-center rounded-xl">
+                <i class="fa-solid fa-robot mr-1.5"></i>Analiz Match (IA)
+            </button>
+            <button onclick="switchTab('tab-aktyalite')" id="btn-tab-aktyalite" class="tab-btn flex-1 py-2.5 px-4 text-xs font-bold text-gray-400 border-b-2 border-transparent transition whitespace-nowrap text-center rounded-xl">
+                <i class="fa-solid fa-newspaper mr-1.5"></i>Dènye Aktyalite
+            </button>
+        </div>
+
+        <!-- SEKSYON TAB CONTENT -->
+        <div id="tab-content">
+
+            <!-- A) PRONOSTIK OFISYÈL -->
+            <div id="tab-pronostik" class="tab-pane space-y-4">
+                <div class="p-5 sm:p-6 rounded-3xl bg-brand-card border border-brand-border">
+                    <div class="flex justify-between items-center mb-4 pb-3 border-b border-brand-border">
+                        <span class="text-xs font-extrabold text-white uppercase tracking-wider mono">// PRONOSTIK DETAYE</span>
+                        <span class="px-2.5 py-0.5 rounded-md bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[10px] font-bold uppercase mono">
+                            Plan VIP
+                        </span>
                     </div>
-                    <p class="text-[11px] text-gray-300 leading-relaxed">
-                        Lunin; Vázquez, Rüdiger, Nacho, Mendy; Valverde, Camavinga, Kroos; Bellingham, Rodrygo, Vinícius Jr.
+
+                    <!-- TABLO PRONOSTIK LA (SANS KÒT / ODDS) -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-brand-dark text-gray-400 uppercase font-mono text-[10px]">
+                                <tr>
+                                    <th class="p-3 rounded-l-xl">Opsyon / Tips</th>
+                                    <th class="p-3">Konfyans (%)</th>
+                                    <th class="p-3 rounded-r-xl">Ris</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-brand-border text-gray-200">
+                                <tr>
+                                    <td class="p-3 font-bold text-emerald-400">Victoire Real Madrid (1)</td>
+                                    <td class="p-3 mono font-bold text-amber-400">85%</td>
+                                    <td class="p-3"><span class="px-2 py-0.5 text-[10px] bg-emerald-500/10 text-emerald-400 rounded-md border border-emerald-500/20 font-bold">Faible</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-gray-300">Plus de 2.5 Buts</td>
+                                    <td class="p-3 mono font-bold text-amber-400">78%</td>
+                                    <td class="p-3"><span class="px-2 py-0.5 text-[10px] bg-emerald-500/10 text-emerald-400 rounded-md border border-emerald-500/20 font-bold">Faible</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-gray-300">Les deux équipes marqueront (BTTS)</td>
+                                    <td class="p-3 mono font-bold text-amber-400">90%</td>
+                                    <td class="p-3"><span class="px-2 py-0.5 text-[10px] bg-emerald-500/10 text-emerald-400 rounded-md border border-emerald-500/20 font-bold">Très Faible</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- B) ANALIZ MATCH (IA) -->
+            <div id="tab-analiz" class="tab-pane hidden space-y-4">
+                
+                <!-- ANALIZ IA EXPLICASYON -->
+                <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
+                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-3 mono flex items-center gap-2">
+                        <i class="fa-solid fa-brain text-emerald-400"></i>
+                        <span>Analiz Entelijans Atifisyèl (IA)</span>
+                    </h3>
+                    <p class="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                        Daprè kalkil done aktyèl yo, Real Madrid gen yon avantaj taktik sou 10 dènye match lakay li yo kote li sonkri yon mwayèn 2.3 bi pa match. Manchester City afiche yon defans fragil aletranje sou dènye sòti yo akòz blesi nan aks santral la.
                     </p>
                 </div>
-                <!-- Man City 11 -->
-                <div class="p-3 rounded-xl bg-black/40 border border-brand-border">
-                    <div class="flex justify-between font-bold text-emerald-400 mb-2 border-b border-brand-border/60 pb-1">
-                        <span>Manchester City</span>
-                        <span class="text-[10px] text-gray-400">3-2-4-1</span>
+
+                <!-- BILAN LAKAY AK DEYÒ -->
+                <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
+                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-4 mono flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-emerald-400"></i>
+                        <span>Bilan Lakay vs Deyò</span>
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-xs">
+                        <!-- REAL MADRID LAKAY -->
+                        <div class="p-3.5 rounded-2xl bg-brand-dark border border-brand-border space-y-2">
+                            <span class="font-extrabold text-white block border-b border-brand-border pb-1">Real Madrid (Lakay)</span>
+                            <div class="flex justify-between text-gray-400"><span>Genyen:</span> <span class="font-bold text-emerald-400">8</span></div>
+                            <div class="flex justify-between text-gray-400"><span>Nul:</span> <span class="font-bold text-amber-400">1</span></div>
+                            <div class="flex justify-between text-gray-400"><span>Pèdi:</span> <span class="font-bold text-red-400">1</span></div>
+                        </div>
+
+                        <!-- MAN CITY DEYÒ -->
+                        <div class="p-3.5 rounded-2xl bg-brand-dark border border-brand-border space-y-2">
+                            <span class="font-extrabold text-white block border-b border-brand-border pb-1">Man City (Deyò)</span>
+                            <div class="flex justify-between text-gray-400"><span>Genyen:</span> <span class="font-bold text-emerald-400">5</span></div>
+                            <div class="flex justify-between text-gray-400"><span>Nul:</span> <span class="font-bold text-amber-400">2</span></div>
+                            <div class="flex justify-between text-gray-400"><span>Pèdi:</span> <span class="font-bold text-red-400">3</span></div>
+                        </div>
                     </div>
-                    <p class="text-[11px] text-gray-300 leading-relaxed">
-                        Ederson; Akanji, Días, Gvardiol; Rodri, Stones; Bernardo, Foden, De Bruyne, Grealish; Haaland.
-                    </p>
                 </div>
+
+                <!-- FÒM AKTYÈL -->
+                <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
+                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-3 mono flex items-center gap-2">
+                        <i class="fa-solid fa-gauge-high text-emerald-400"></i>
+                        <span>Fòm Aktyèl (Dènye 5 Match)</span>
+                    </h3>
+
+                    <div class="space-y-3 text-xs">
+                        <div class="flex justify-between items-center p-2.5 rounded-xl bg-brand-dark border border-brand-border">
+                            <span class="font-bold text-white">Real Madrid</span>
+                            <div class="flex gap-1 mono font-bold text-[10px]">
+                                <span class="w-5 h-5 rounded flex items-center justify-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">W</span>
+                                <span class="w-5 h-5 rounded flex items-center justify-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">W</span>
+                                <span class="w-5 h-5 rounded flex items-center justify-center bg-amber-500/20 text-amber-400 border border-amber-500/30">D</span>
+                                <span class="w-5 h-5 rounded flex items-center justify-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">W</span>
+                                <span class="w-5 h-5 rounded flex items-center justify-center bg-red-500/20 text-red-400 border border-red-500/30">L</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center p-2.5 rounded-xl bg-brand-dark border border-brand-border">
+                            <span class="font-bold text-white">Man City</span>
+                            <div class="flex gap-1 mono font-bold text-[10px]">
+                                <span class="w-5 h-5 rounded flex items-center justify-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">W</span>
+                                <span class="w-5 h-5 rounded flex items-center justify-center bg-amber-500/20 text-amber-400 border border-amber-500/30">D</span>
+                                <span class="w-5 h-5 rounded flex items-center justify-center bg-red-500/20 text-red-400 border border-red-500/30">L</span>
+                                <span class="w-5 h-5 rounded flex items-center justify-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">W</span>
+                                <span class="w-5 h-5 rounded flex items-center justify-center bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">W</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- H2H KONFWONTASYON DIREK -->
+                <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
+                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-3 mono flex items-center gap-2">
+                        <i class="fa-solid fa-handshake-simple text-emerald-400"></i>
+                        <span>Dènye Konfwontasyon (H2H)</span>
+                    </h3>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between items-center p-2 rounded-xl bg-brand-dark text-gray-300">
+                            <span>Real Madrid 3 - 1 Man City</span>
+                            <span class="text-[10px] font-mono text-gray-500">12 Mèrs 2025</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded-xl bg-brand-dark text-gray-300">
+                            <span>Man City 1 - 1 Real Madrid</span>
+                            <span class="text-[10px] font-mono text-gray-500">18 Nov 2024</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
+
+            <!-- C) DÈNYE AKTYALITE -->
+            <div id="tab-aktyalite" class="tab-pane hidden space-y-4">
+                
+                <!-- COMPOSITION 3D (22 JWÈ SOU TEREN) -->
+                <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
+                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-3 mono flex items-center gap-2">
+                        <i class="fa-solid fa-users text-emerald-400"></i>
+                        <span> 11 PROBAB POU KÒMANSE </span>
+                    </h3>
+
+                    <!-- CONTAINER TEREN 3D CSS -->
+                    <div class="relative w-full h-[620px] rounded-3xl overflow-hidden border border-emerald-500/30 shadow-2xl bg-black p-2">
+                        <div class="relative w-full h-full rounded-2xl overflow-hidden border border-emerald-400/40 shadow-2xl"
+                             style="background: radial-gradient(circle, #059669 0%, #065f46 60%, #022c22 100%);">
+                          
+                          <!-- LIY AK SIFAS TEREN AN -->
+                          <div class="absolute inset-2 border-2 border-white/40 rounded-sm pointer-events-none"></div>
+                          <div class="absolute inset-x-2 top-1/2 -translate-y-1/2 border-b-2 border-white/40 pointer-events-none"></div>
+                          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 border-2 border-white/40 rounded-full pointer-events-none"></div>
+                          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full pointer-events-none"></div>
+                          
+                          <!-- KAN ANWO AK ANBA -->
+                          <div class="absolute top-2 left-1/2 -translate-x-1/2 w-40 h-16 border-b-2 border-x-2 border-white/40 pointer-events-none"></div>
+                          <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-40 h-16 border-t-2 border-x-2 border-white/40 pointer-events-none"></div>
+
+                          <!-- OVERLAY JWÈ YO (DINAMIK AVÈK PERSPEKTIV 3D) -->
+                          <div class="absolute inset-0 p-3 flex flex-col justify-between z-10"
+                               style="transform: perspective(900px) rotateX(16deg); transform-origin: center center;">
+                              
+                              <!-- EKIP 1: LAKAY (ANWO) -->
+                              <div id="homeTeamPitch" class="h-1/2 flex flex-col justify-between pt-1"></div>
+
+                              <!-- EKIP 2: DEYÒ (ANBA) -->
+                              <div id="awayTeamPitch" class="h-1/2 flex flex-col justify-between pb-1"></div>
+
+                          </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LISTE JWÈ KI PA P JWE (SANCTION / BLESI) -->
+                <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
+                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-3 mono flex items-center gap-2">
+                        <i class="fa-solid fa-user-xmark text-red-400"></i>
+                        <span>Jwè ki Absan (Blesi / Sanksyon)</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
+                            <span class="font-extrabold text-emerald-400 block">Real Madrid</span>
+                            <div class="flex items-center justify-between text-gray-300">
+                                <span>D. Alaba</span>
+                                <span class="text-[10px] text-red-400 font-bold"><i class="fa-solid fa-kit-medical mr-1"></i>Blese</span>
+                            </div>
+                            <div class="flex items-center justify-between text-gray-300">
+                                <span>E. Camavinga</span>
+                                <span class="text-[10px] text-amber-400 font-bold"><i class="fa-solid fa-circle-exclamation mr-1"></i>Sanksyon</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
+                            <span class="font-extrabold text-blue-400 block">Man City</span>
+                            <div class="flex items-center justify-between text-gray-300">
+                                <span>N. Ake</span>
+                                <span class="text-[10px] text-red-400 font-bold"><i class="fa-solid fa-kit-medical mr-1"></i>Blese</span>
+                            </div>
+                            <div class="flex items-center justify-between text-gray-300">
+                                <span>O. Bobb</span>
+                                <span class="text-[10px] text-red-400 font-bold"><i class="fa-solid fa-kit-medical mr-1"></i>Blese</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TI BWAT KONSÈY ANBA -->
+                <div class="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                        <i class="fa-solid fa-lightbulb text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-emerald-400">Rekòmandasyon Aktyalite</h4>
+                        <p class="text-[11px] text-gray-400">Atansyon ak absans Camavinga nan milye Real la, sa ka bay Man City plis espas nan kòmansman match la.</p>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
 
-        <!-- ABSAN & SANKSYON -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="p-3.5 rounded-2xl bg-brand-card border border-brand-border">
-                <h4 class="text-xs font-bold text-white mb-2 pb-1 border-b border-brand-border flex justify-between">
-                    <span>Real Madrid Absan</span>
-                    <span class="text-[10px] text-gray-400">Forme: <strong class="text-emerald-400">W-W-D-W-L</strong></span>
-                </h4>
-                <ul class="text-[11px] text-gray-300 space-y-1">
-                    <li class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> E. Militão (Blese)</li>
-                    <li class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span> D. Carvajal (Sispann)</li>
-                </ul>
-            </div>
-            <div class="p-3.5 rounded-2xl bg-brand-card border border-brand-border">
-                <h4 class="text-xs font-bold text-white mb-2 pb-1 border-b border-brand-border flex justify-between">
-                    <span>Man City Absan</span>
-                    <span class="text-[10px] text-gray-400">Forme: <strong class="text-emerald-400">W-W-W-D-W</strong></span>
-                </h4>
-                <ul class="text-[11px] text-gray-300 space-y-1">
-                    <li class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> K. De Bruyne (Dout)</li>
-                    <li class="flex items-center gap-1.5 text-gray-500"><i class="fa-solid fa-check text-[9px] text-emerald-400"></i> Pa gen sispansyon</li>
-                </ul>
-            </div>
-        </div>
+    </main>
 
-        <!-- ANALIZ ROBOT IA -->
-        <div class="p-4 rounded-2xl bg-brand-card border border-brand-border">
-            <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <i class="fa-solid fa-robot"></i> Sintèz Analiz IA
-            </h3>
-            <p class="text-xs text-gray-300 leading-relaxed">
-                Real Madrid envansib lakay li sezon sa a, men Man City kenbe yon mwayèn 2.1 bi pa match nan déplacement. Piske de ekip yo gen yon atak trè pwisan ak yon mwayèn plis pase 2 bi pa match, opsyon ki pi ansekirite a se <strong>BTTS (2 Ekip ap make)</strong> ak yon konfyans ki fiks nan 88%.
-            </p>
-        </div>
-
-    </div>
-
-    <footer class="border-t border-brand-border bg-black py-4 text-center text-[11px] text-gray-500 mt-auto">
-        <p>© 2026 Bet Zone - Analiz Match VIP.</p>
+    <!-- FOOTER -->
+    <footer class="py-6 text-center border-t border-brand-border text-xs text-gray-500">
+        &copy; 2026 Bet Zone. Tout dwa rezève.
     </footer>
+
+    <!-- SCRIPT POU SWITCH TAB YO AK RANN JWÈ YO DINAMIKMAN -->
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById('btn-' + tabId).classList.add('active');
+        }
+
+        // --- MOTE DINAMIK POU AFICHE COMPOSITION JWÈ YO (AI INTEGRATION) ---
+        const matchData = {
+            home: {
+                name: "Real Madrid",
+                dotColor: "bg-emerald-400 ring-2 ring-white",
+                badgeBg: "bg-black/90 text-emerald-300 border-emerald-400/50",
+                badgePlayer: "bg-black/80 text-white border-white/20",
+                lineup: {
+                    gk: ["Courtois"],
+                    df: ["Carvajal", "Militão", "Rüdiger", "Mendy"],
+                    mc: ["Valverde", "Tchouaméni", "Bellingham"],
+                    fw: ["Rodrygo", "Mbappé", "Vinícius Jr"]
+                }
+            },
+            away: {
+                name: "Man City",
+                dotColor: "bg-sky-400 ring-2 ring-white",
+                badgeBg: "bg-black/90 text-sky-300 border-sky-400/50",
+                badgePlayer: "bg-black/80 text-sky-100 border-sky-400/40",
+                lineup: {
+                    fw: ["Haaland"],
+                    cam: ["Foden", "De Bruyne", "Doku"],
+                    cdm: ["Rodri", "Bernardo"],
+                    df: ["Walker", "Dias", "Akanji", "Gvardiol"],
+                    gk: ["Ederson"]
+                }
+            }
+        };
+
+        function renderPitchLineup(data) {
+            // Render Home Team (Top Pitch)
+            const homeContainer = document.getElementById('homeTeamPitch');
+            if (homeContainer && data.home) {
+                const h = data.home;
+                homeContainer.innerHTML = `
+                    <div class="flex justify-center">
+                        <div class="flex flex-col items-center">
+                            <div class="w-2.5 h-2.5 rounded-full ${h.dotColor} shadow-lg mb-0.5"></div>
+                            <span class="${h.badgeBg} text-[9px] font-bold px-2 py-0.5 rounded-full border shadow-md">${h.lineup.gk[0]}</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between px-2">
+                        ${h.lineup.df.map(p => `
+                            <div class="flex flex-col items-center">
+                                <div class="w-2 h-2 rounded-full bg-white shadow-md mb-0.5"></div>
+                                <span class="${h.badgePlayer} text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex justify-around px-6">
+                        ${h.lineup.mc.map(p => `
+                            <div class="flex flex-col items-center">
+                                <div class="w-2 h-2 rounded-full bg-white shadow-md mb-0.5"></div>
+                                <span class="${h.badgePlayer} text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex justify-between px-4">
+                        ${h.lineup.fw.map(p => `
+                            <div class="flex flex-col items-center">
+                                <div class="w-2 h-2 rounded-full bg-white shadow-md mb-0.5"></div>
+                                <span class="${h.badgePlayer} text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Render Away Team (Bottom Pitch)
+            const awayContainer = document.getElementById('awayTeamPitch');
+            if (awayContainer && data.away) {
+                const a = data.away;
+                awayContainer.innerHTML = `
+                    <div class="flex justify-center">
+                        ${a.lineup.fw.map(p => `
+                            <div class="flex flex-col items-center">
+                                <span class="${a.badgePlayer} text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
+                                <div class="w-2 h-2 rounded-full bg-sky-400 shadow-md mt-0.5"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex justify-between px-4">
+                        ${a.lineup.cam.map(p => `
+                            <div class="flex flex-col items-center">
+                                <span class="${a.badgePlayer} text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
+                                <div class="w-2 h-2 rounded-full bg-sky-400 shadow-md mt-0.5"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex justify-around px-10">
+                        ${a.lineup.cdm.map(p => `
+                            <div class="flex flex-col items-center">
+                                <span class="${a.badgePlayer} text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
+                                <div class="w-2 h-2 rounded-full bg-sky-400 shadow-md mt-0.5"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex justify-between px-2">
+                        ${a.lineup.df.map(p => `
+                            <div class="flex flex-col items-center">
+                                <span class="${a.badgePlayer} text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
+                                <div class="w-2 h-2 rounded-full bg-sky-400 shadow-md mt-0.5"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="flex justify-center">
+                        <div class="flex flex-col items-center">
+                            <span class="${a.badgeBg} text-[9px] font-bold px-2 py-0.5 rounded-full border shadow-md">${a.lineup.gk[0]}</span>
+                            <div class="w-2.5 h-2.5 rounded-full ${a.dotColor} shadow-lg mt-0.5"></div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Lese efè dinamik la lè paj la fin chaje
+        window.addEventListener('DOMContentLoaded', () => {
+            renderPitchLineup(matchData);
+        });
+    </script>
 
 </body>
 </html>
