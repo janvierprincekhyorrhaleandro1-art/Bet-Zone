@@ -54,6 +54,21 @@
           to { opacity: 1; transform: scale(1); }
         }
     </style>
+
+    <!-- PREFETCH SCRIPT -->
+    <script>
+        document.querySelectorAll('a[href]').forEach(link => {
+            link.addEventListener('touchstart', () => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('#')) {
+                    const rect = document.createElement('link');
+                    rect.rel = 'prefetch';
+                    rect.href = href;
+                    document.head.appendChild(rect);
+                }
+            }, { passive: true });
+        });
+    </script>
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased pb-24">
 
@@ -216,21 +231,6 @@
 
         </nav>
     </div>
-
-    <!-- PREFETCH SCRIPT -->
-    <script>
-        document.querySelectorAll('a[href]').forEach(link => {
-            link.addEventListener('touchstart', () => {
-                const href = link.getAttribute('href');
-                if (href && !href.startsWith('#')) {
-                    const rect = document.createElement('link');
-                    rect.rel = 'prefetch';
-                    rect.href = href;
-                    document.head.appendChild(rect);
-                }
-            }, { passive: true });
-        });
-    </script>
 
     <!-- SCRIPT LOGIK SUPABASE -->
     <script>
