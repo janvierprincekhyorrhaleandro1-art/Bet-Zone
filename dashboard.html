@@ -35,6 +35,25 @@
         .glass-nav { background: rgba(13, 17, 23, 0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* VIEW TRANSITIONS API */
+        @view-transition {
+          navigation: auto;
+        }
+        ::view-transition-old(root) {
+          animation: 200ms ease-out both fade-out;
+        }
+        ::view-transition-new(root) {
+          animation: 250ms ease-in both fade-in;
+        }
+        @keyframes fade-out {
+          from { opacity: 1; transform: scale(1); }
+          to { opacity: 0; transform: scale(0.98); }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: scale(1.02); }
+          to { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased pb-24">
@@ -269,6 +288,21 @@
 
         </nav>
     </div>
+
+    <!-- PREFETCH SCRIPT -->
+    <script>
+        document.querySelectorAll('a[href]').forEach(link => {
+            link.addEventListener('touchstart', () => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('#')) {
+                    const rect = document.createElement('link');
+                    rect.rel = 'prefetch';
+                    rect.href = href;
+                    document.head.appendChild(rect);
+                }
+            }, { passive: true });
+        });
+    </script>
 
     <!-- SCRIPT LOGIK SUPABASE AK GENERASYON JOU DINAMIK -->
     <script>

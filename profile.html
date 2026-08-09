@@ -32,10 +32,30 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #05070a; color: #f1f5f9; }
         .glass-panel { background: rgba(13, 17, 23, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .glass-nav { background: rgba(13, 17, 23, 0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
         .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* VIEW TRANSITIONS API */
+        @view-transition {
+          navigation: auto;
+        }
+        ::view-transition-old(root) {
+          animation: 200ms ease-out both fade-out;
+        }
+        ::view-transition-new(root) {
+          animation: 250ms ease-in both fade-in;
+        }
+        @keyframes fade-out {
+          from { opacity: 1; transform: scale(1); }
+          to { opacity: 0; transform: scale(0.98); }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: scale(1.02); }
+          to { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between antialiased">
+<body class="min-h-screen flex flex-col justify-between antialiased pb-24">
 
     <!-- NAVBAR -->
     <nav class="w-full px-4 sm:px-6 py-3 flex justify-between items-center border-b border-brand-border glass-panel sticky top-0 z-40">
@@ -162,9 +182,55 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="py-6 text-center border-t border-brand-border text-xs text-gray-500">
+    <footer class="py-6 text-center border-t border-brand-border text-xs text-gray-500 mb-16">
         &copy; 2026 Bet Zone. Tout dwa rezève.
     </footer>
+
+    <!-- BOTTOM NAVIGATION BAR (STYLE FLOATING ROUNDED iOS 26) -->
+    <div class="fixed bottom-4 left-0 right-0 z-50 px-4 pointer-events-none">
+        <nav class="max-w-xs mx-auto glass-nav border border-emerald-500/30 rounded-full px-5 py-2 flex justify-between items-center shadow-2xl shadow-emerald-950/50 pointer-events-auto">
+            
+            <!-- 1. BOUTÒN BALON / MATCHS -->
+            <a href="dashboard.html" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-emerald-400 font-medium transition">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-futbol"></i>
+                </div>
+                <span class="text-[10px]">Matchs</span>
+            </a>
+
+            <!-- 2. BOUTÒN ISTORIK -->
+            <a href="historique.html" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-emerald-400 font-medium transition">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <span class="text-[10px]">Istorik</span>
+            </a>
+
+            <!-- 3. BOUTÒN PROFIL -->
+            <a href="profile.html" class="flex flex-col items-center gap-0.5 text-emerald-400 font-bold transition">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-sm shadow-sm">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <span class="text-[10px]">Profil</span>
+            </a>
+
+        </nav>
+    </div>
+
+    <!-- PREFETCH SCRIPT -->
+    <script>
+        document.querySelectorAll('a[href]').forEach(link => {
+            link.addEventListener('touchstart', () => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('#')) {
+                    const rect = document.createElement('link');
+                    rect.rel = 'prefetch';
+                    rect.href = href;
+                    document.head.appendChild(rect);
+                }
+            }, { passive: true });
+        });
+    </script>
 
     <!-- SCRIPT LOGIK SUPABASE -->
     <script>
