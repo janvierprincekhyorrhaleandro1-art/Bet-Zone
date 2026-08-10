@@ -1,7 +1,6 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const app = express();
 app.use(express.json());
@@ -14,7 +13,6 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -54,7 +52,7 @@ app.get('/cron/sync-matches', async (req, res) => {
             if (existingMatch) {
                 activeMatch = existingMatch;
             } else {
-                // 2. Insérer match la
+                // 2. Insérer match la si l pa la
                 const { data: insertedMatch, error: insertErr } = await supabase
                     .from("matches")
                     .insert([{
@@ -86,12 +84,12 @@ app.get('/cron/sync-matches', async (req, res) => {
                 continue;
             }
 
-            // 4. Rele Gemini (sèvi ak "gemini-1.5-flash-latest" oswa "gemini-1.5-flash")
+            // 4. Rele Gemini dirèkteman via HTTP Fetch (evite erè SDK ak modèl 404)
             const prompt = `
-            Analize match balondfen sa a: ${homeTeam} vs ${awayTeam}.
+            Analize match sa a: ${homeTeam} vs ${awayTeam}.
             Ekri yon analiz ak pronostik an kreyòl ayisyen.
             
-            Reponn SÈLMAN nan fòma JSON sa a presizman:
+            Reponn SÈLMAN anndan fòma JSON sa a presizman:
             {
               "option_name": "Victoire ${homeTeam}",
               "confidence": 75,
@@ -101,43 +99,44 @@ app.get('/cron/sync-matches', async (req, res) => {
             }
             `;
 
-            let aiResult = null;
-            
-            // Essai 1: gemini-1.5-flash-latest
             try {
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-                aiResult = await model.generateContent(prompt);
-            } catch (err1) {
-                // Essai 2 (Fallback): gemini-1.5-flash
-                try {
-                    const modelFallback = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                    aiResult = await modelFallback.generateContent(prompt);
-                } catch (err2) {
-                    errors.push(`Gemini Quota Err (${homeTeam}): ${err2.message}`);
+                const geminiRes = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }]
+                        })
+                    }
+                );
+
+                const geminiData = await geminiRes.json();
+
+                if (geminiData.error) {
+                    errors.push(`Gemini API Err (${homeTeam}): ${geminiData.error.message}`);
                     continue;
                 }
-            }
 
-            if (aiResult) {
-                try {
-                    const rawText = aiResult.response.text();
-                    const cleanJson = rawText.replace(/```json|```/g, "").trim();
-                    const aiData = JSON.parse(cleanJson);
+                const rawText = geminiData.candidates[0].content.parts[0].text;
+                const cleanJson = rawText.replace(/```json|```/g, "").trim();
+                const aiData = JSON.parse(cleanJson);
 
-                    await supabase.from("predictions").insert([{
-                        match_id: activeMatch.id,
-                        option_name: aiData.option_name,
-                        confidence: aiData.confidence,
-                        risk_level: aiData.risk_level,
-                        ai_analysis_text: aiData.ai_analysis_text,
-                        lineup_json: aiData.lineup_json
-                    }]);
+                // Anrejistre prediksyon an nan Supabase
+                await supabase.from("predictions").insert([{
+                    match_id: activeMatch.id,
+                    option_name: aiData.option_name,
+                    confidence: aiData.confidence,
+                    risk_level: aiData.risk_level,
+                    ai_analysis_text: aiData.ai_analysis_text,
+                    lineup_json: aiData.lineup_json
+                }]);
 
-                    count++;
-                    await sleep(3000); // Ti pause 3 segonn
-                } catch (parseErr) {
-                    errors.push(`JSON Parse Err (${homeTeam}): ${parseErr.message}`);
-                }
+                count++;
+                await sleep(2000); // Paus 2 segonn
+
+            } catch (err) {
+                errors.push(`Gemini Catch Err (${homeTeam}): ${err.message}`);
             }
         }
 
