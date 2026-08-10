@@ -40,7 +40,7 @@ app.get('/cron/sync-matches', async (req, res) => {
 
             let activeMatch = null;
 
-            // 1. Tcheke si match la deja nan baz de done a
+            // 1. Tcheke si match la nan baz de done a
             const { data: existingMatch } = await supabase
                 .from("matches")
                 .select("*")
@@ -52,7 +52,7 @@ app.get('/cron/sync-matches', async (req, res) => {
             if (existingMatch) {
                 activeMatch = existingMatch;
             } else {
-                // 2. Antre match la nan Supabase
+                // 2. Insérer match la
                 const { data: insertedMatch, error: insertErr } = await supabase
                     .from("matches")
                     .insert([{
@@ -66,28 +66,28 @@ app.get('/cron/sync-matches', async (req, res) => {
                     .single();
 
                 if (insertErr) {
-                    errors.push(`Insert Err (${homeTeam} vs ${awayTeam}): ${insertErr.message}`);
+                    errors.push(`Insert Err (${homeTeam}): ${insertErr.message}`);
                     continue;
                 }
                 activeMatch = insertedMatch;
             }
 
-            // 3. Rele Gemini ak modèl "gemini-1.5-flash"
+            // 3. Rele Gemini ak modèl "gemini-2.0-flash"
             try {
                 const model = genAI.getGenerativeModel({
-                    model: "gemini-1.5-flash"
+                    model: "gemini-2.0-flash"
                 });
 
                 const prompt = `
                 Analize match balondfen sa a: ${homeTeam} vs ${awayTeam}.
                 Ekri yon analiz ak pronostik an kreyòl ayisyen.
                 
-                Reponn SÈLMAN anndan fòma JSON sa a presizman:
+                Reponn SÈLMAN nan fòma JSON sa a presizman:
                 {
                   "option_name": "Victoire ${homeTeam}",
                   "confidence": 75,
                   "risk_level": "Moyen",
-                  "ai_analysis_text": "Ekip ${homeTeam} an gen yon bon fòm ak 3 viktwa sou 5 dènye match...",
+                  "ai_analysis_text": "Ekip ${homeTeam} an gen yon bon fòm...",
                   "lineup_json": { "home": [], "away": [] }
                 }
                 `;
@@ -97,7 +97,7 @@ app.get('/cron/sync-matches', async (req, res) => {
                 const cleanJson = rawText.replace(/```json|```/g, "").trim();
                 const aiData = JSON.parse(cleanJson);
 
-                // Anrejistre prediksyon an
+                // Enregistre prediksyon an
                 await supabase.from("predictions").insert([{
                     match_id: activeMatch.id,
                     option_name: aiData.option_name,
