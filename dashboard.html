@@ -55,28 +55,11 @@
           to { opacity: 1; transform: scale(1); }
         }
     </style>
-
-    <!-- PREFETCH SCRIPT -->
-    <script>
-        document.querySelectorAll('a[href]').forEach(link => {
-            link.addEventListener('touchstart', () => {
-                const href = link.getAttribute('href');
-                if (href && !href.startsWith('#')) {
-                    const rect = document.createElement('link');
-                    rect.rel = 'prefetch';
-                    rect.href = href;
-                    document.head.appendChild(rect);
-                }
-            }, { passive: true });
-        });
-    </script>
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased pb-24">
 
     <!-- NAVBAR DASHBOARD -->
     <nav class="w-full px-4 sm:px-6 py-3 flex justify-between items-center border-b border-brand-border glass-panel sticky top-0 z-40">
-        
-        <!-- EZON GÒCH: LOGO BETZONE -->
         <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">
                 <i class="fa-solid fa-crown"></i>
@@ -84,17 +67,13 @@
             <span class="font-extrabold text-base sm:text-lg text-white tracking-wide">BET<span class="text-emerald-400">ZONE</span></span>
         </div>
 
-        <!-- EZON DWA: PLAN AK DEKONEKSYON -->
         <div class="flex items-center gap-2 sm:gap-3">
-            
-            <!-- TI KARE PLAN USER AN (DINAMIK) -->
             <div id="userPlanBadge" class="flex items-center">
                 <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase tracking-wider">
                     ...
                 </span>
             </div>
 
-            <!-- BOUTÒN DEKONEKSYON -->
             <button id="logoutBtn" class="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition text-xs font-bold flex items-center gap-1.5">
                 <i class="fa-solid fa-right-from-bracket"></i>
                 <span class="hidden sm:inline">Dekonekte</span>
@@ -129,39 +108,21 @@
                 <span>Chanpyona Yo</span>
             </h3>
             <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                <button class="px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm">
-                    Tout Chanpyona
-                </button>
-                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
-                    🇪🇸 LaLiga
-                </button>
-                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
-                    🏆 UEFA Champions League
-                </button>
-                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
-                    🏴 Premier League
-                </button>
-                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
-                    🇮🇹 Serie A
-                </button>
-                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
-                    🇩🇪 Bundesliga
-                </button>
-                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
-                    🇫🇷 Ligue 1
-                </button>
+                <button class="px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm">Tout Chanpyona</button>
+                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">🇪🇸 LaLiga</button>
+                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">🏆 UEFA Champions League</button>
+                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">🏴 Premier League</button>
+                <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">🇮🇹 Serie A</button>
             </div>
         </div>
 
-        <!-- 2. LIS JOU YO (DINAMIK) -->
+        <!-- 2. LIS JOU YO -->
         <div class="mb-6">
             <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <i class="fa-regular fa-calendar-days text-emerald-400"></i>
                 <span>Seleksyon Jou</span>
             </h3>
-            <div id="daysList" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                <!-- JS ap jenere jou yo otomatikman la -->
-            </div>
+            <div id="daysList" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"></div>
         </div>
 
         <!-- KAT PREDIKSYON YO -->
@@ -172,98 +133,8 @@
             </h2>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            
-            <!-- KAT 1 -->
-            <div onclick="window.location.href='details.html?id=1'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
-                <div class="flex justify-between items-center mb-3">
-                    <span class="text-xs text-gray-400 font-semibold"><i class="fa-regular fa-clock mr-1"></i> 20:00 GMT</span>
-                    <span class="text-[11px] text-gray-400 font-medium">Laliga - Espay</span>
-                </div>
-                
-                <div class="flex items-center justify-between text-sm font-bold text-white group-hover:text-emerald-400 transition my-4 px-1">
-                    <span class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
-                        Real Madrid
-                    </span>
-                    <span class="text-xs text-gray-500 font-extrabold px-2">VS</span>
-                    <span class="flex items-center gap-1.5">
-                        Barcelona
-                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
-                    </span>
-                </div>
-
-                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-4">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Prediksyon:</span>
-                        <span class="text-xs font-extrabold text-emerald-400">Viktwa Real Madrid & +1.5 Goal</span>
-                    </div>
-                    <span class="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-500/30">
-                        88%
-                    </span>
-                </div>
-            </div>
-
-            <!-- KAT 2 -->
-            <div onclick="window.location.href='details.html?id=2'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
-                <div class="flex justify-between items-center mb-3">
-                    <span class="text-xs text-gray-400 font-semibold"><i class="fa-regular fa-clock mr-1"></i> 21:00 GMT</span>
-                    <span class="text-[11px] text-gray-400 font-medium">Premier League - Angletè</span>
-                </div>
-                
-                <div class="flex items-center justify-between text-sm font-bold text-white group-hover:text-emerald-400 transition my-4 px-1">
-                    <span class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
-                        Man City
-                    </span>
-                    <span class="text-xs text-gray-500 font-extrabold px-2">VS</span>
-                    <span class="flex items-center gap-1.5">
-                        Arsenal
-                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
-                    </span>
-                </div>
-
-                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-4">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Prediksyon:</span>
-                        <span class="text-xs font-extrabold text-emerald-400">Les 2 Equipes Marquent (BTTS)</span>
-                    </div>
-                    <span class="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-500/30">
-                        82%
-                    </span>
-                </div>
-            </div>
-
-            <!-- KAT 3 -->
-            <div onclick="window.location.href='details.html?id=3'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm hover:shadow-emerald-500/5">
-                <div class="flex justify-between items-center mb-3">
-                    <span class="text-xs text-gray-400 font-semibold"><i class="fa-regular fa-clock mr-1"></i> 21:00 GMT</span>
-                    <span class="text-[11px] text-gray-400 font-medium">Bundesliga - Almay</span>
-                </div>
-                
-                <div class="flex items-center justify-between text-sm font-bold text-white group-hover:text-emerald-400 transition my-4 px-1">
-                    <span class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
-                        Bayern Munich
-                    </span>
-                    <span class="text-xs text-gray-500 font-extrabold px-2">VS</span>
-                    <span class="flex items-center gap-1.5">
-                        Dortmund
-                        <i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>
-                    </span>
-                </div>
-
-                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-4">
-                    <div class="flex flex-col">
-                        <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Prediksyon:</span>
-                        <span class="text-xs font-extrabold text-emerald-400">Plus de 2.5 Goals</span>
-                    </div>
-                    <span class="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-500/30">
-                        91%
-                    </span>
-                </div>
-            </div>
-
+        <div id="matchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dinamikman ranpli atravè JS selon plan user an -->
         </div>
 
     </main>
@@ -273,167 +144,159 @@
         &copy; 2026 Bet Zone. Tout dwa rezève.
     </footer>
 
-    <!-- BOTTOM NAVIGATION BAR (STYLE FLOATING ROUNDED iOS 26) -->
+    <!-- BOTTOM NAV -->
     <div class="fixed bottom-4 left-0 right-0 z-50 px-4 pointer-events-none">
         <nav class="max-w-xs mx-auto glass-nav border border-emerald-500/30 rounded-full px-5 py-2 flex justify-between items-center shadow-2xl shadow-emerald-950/50 pointer-events-auto">
-            
-            <!-- 1. BOUTÒN BALON / MATCHS -->
             <a href="dashboard.html" class="flex flex-col items-center gap-0.5 text-emerald-400 font-bold transition">
                 <div class="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-sm shadow-sm">
                     <i class="fa-solid fa-futbol"></i>
                 </div>
                 <span class="text-[10px]">Matchs</span>
             </a>
-
-            <!-- 2. BOUTÒN ISTORIK -->
             <a href="historique.html" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-emerald-400 font-medium transition">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm">
                     <i class="fa-solid fa-clock-rotate-left"></i>
                 </div>
                 <span class="text-[10px]">Istorik</span>
             </a>
-
-            <!-- 3. BOUTÒN PROFIL -->
             <a href="profile.html" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-emerald-400 font-medium transition">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm">
                     <i class="fa-solid fa-user"></i>
                 </div>
                 <span class="text-[10px]">Profil</span>
             </a>
-
         </nav>
     </div>
 
-    <!-- SCRIPT LOGIK SUPABASE AK GENERASYON JOU DINAMIK -->
+    <!-- SCRIPT SUPABASE AK KONTWÒL PLAN -->
     <script>
         const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
-        
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // LOGIK POU AFICHE JOU YO DINAMIKMAN
+        const sampleMatches = [
+            { id: 1, league: 'LaLiga - Espay', time: '20:00 GMT', teamA: 'Real Madrid', teamB: 'Barcelona', victory: 'Viktwa Real Madrid', percent: '88%', analysis: '+1.5 Goal ak gwo konfyans' },
+            { id: 2, league: 'Premier League - Angletè', time: '21:00 GMT', teamA: 'Man City', teamB: 'Arsenal', victory: 'Viktwa Man City', percent: '82%', analysis: 'Les 2 Equipes Marquent (BTTS)' },
+            { id: 3, league: 'Bundesliga - Almay', time: '21:00 GMT', teamA: 'Bayern Munich', teamB: 'Dortmund', victory: 'Viktwa Bayern Munich', percent: '91%', analysis: 'Plus de 2.5 Goals' }
+        ];
+
         function renderDynamicDays() {
             const daysContainer = document.getElementById('daysList');
             if (!daysContainer) return;
-
             const daysOfWeek = ['Dim', 'Len', 'Mar', 'Mèk', 'Jej', 'Vand', 'Sam'];
             const today = new Date();
             let htmlContent = '';
-
             for (let i = -1; i <= 4; i++) {
                 const targetDate = new Date();
                 targetDate.setDate(today.getDate() + i);
-
                 const dayName = daysOfWeek[targetDate.getDay()];
                 const dayNumber = targetDate.getDate();
                 const monthNumber = targetDate.getMonth() + 1;
-                
                 let label = `${dayName} ${dayNumber}/${monthNumber}`;
                 let isToday = false;
-
                 if (i === -1) label = `Eyer (${dayNumber}/${monthNumber})`;
-                else if (i === 0) {
-                    label = `Jodi a (${dayNumber}/${monthNumber})`;
-                    isToday = true;
-                } else if (i === 1) label = `Denmen (${dayNumber}/${monthNumber})`;
+                else if (i === 0) { label = `Jodi a (${dayNumber}/${monthNumber})`; isToday = true; }
+                else if (i === 1) label = `Denmen (${dayNumber}/${monthNumber})`;
 
                 if (isToday) {
-                    htmlContent += `
-                        <button class="px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-black animate-pulse"></span>
-                            ${label}
-                        </button>
-                    `;
+                    htmlContent += `<button class="px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-black animate-pulse"></span>${label}</button>`;
                 } else {
-                    htmlContent += `
-                        <button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">
-                            ${label}
-                        </button>
-                    `;
+                    htmlContent += `<button class="px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border hover:border-emerald-500/50 text-gray-300 text-xs font-bold whitespace-nowrap transition">${label}</button>`;
                 }
             }
-
             daysContainer.innerHTML = htmlContent;
         }
 
-        // VERIFIKASYON OTANTIFIKASYON AK CHAJMAN PLAN AKTYÈL LA
+        function renderMatches(plan) {
+            const container = document.getElementById('matchesContainer');
+            const isFree = (plan === 'free');
+
+            container.innerHTML = sampleMatches.map(m => `
+                <div onclick="window.location.href='details.html?id=${m.id}'" class="p-5 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/50 transition cursor-pointer group shadow-sm relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs text-gray-400 font-semibold"><i class="fa-regular fa-clock mr-1"></i> ${m.time}</span>
+                        <span class="text-[11px] text-gray-400 font-medium">${m.league}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm font-bold text-white group-hover:text-emerald-400 transition my-4 px-1">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-futbol text-emerald-400 text-xs"></i>${m.teamA}</span>
+                        <span class="text-xs text-gray-500 font-extrabold px-2">VS</span>
+                        <span class="flex items-center gap-1.5">${m.teamB}<i class="fa-solid fa-futbol text-emerald-400 text-xs"></i></span>
+                    </div>
+
+                    <!-- VIKTORE (GRATIS AK VIP/ELITE WÈ L) -->
+                    <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-3">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Pronostik Baziq:</span>
+                            <span class="text-xs font-extrabold text-emerald-400">${m.victory}</span>
+                        </div>
+                    </div>
+
+                    <!-- ANALIZ AK POUSANTAJ (BLURRED SI SE FREE) -->
+                    <div class="relative mt-3">
+                        <div class="p-3 rounded-xl bg-brand-dark border border-brand-border flex justify-between items-center ${isFree ? 'blur-sm select-none opacity-40' : ''}">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400">Analiz & Pousantaj:</span>
+                                <span class="text-xs font-extrabold text-gray-200">${m.analysis}</span>
+                            </div>
+                            <span class="px-2 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-500/30">${m.percent}</span>
+                        </div>
+                        ${isFree ? `
+                            <div class="absolute inset-0 flex items-center justify-center p-1 bg-black/60 backdrop-blur-[2px] rounded-xl text-center border border-amber-500/30">
+                                <span class="text-[10px] font-extrabold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                                    <i class="fa-solid fa-lock text-amber-400"></i> Achte on abonman VIP / ELITE pouw debloke analiz sa
+                                </span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
         async function checkAuth() {
             const { data: { session }, error } = await supabaseClient.auth.getSession();
-
-            if (error || !session) {
-                window.location.href = "auth.html";
-                return;
-            }
-
+            if (error || !session) { window.location.href = "auth.html"; return; }
             const user = session.user;
-
-            // 1. Chaje enfòmasyon nan tab 'profiles'
             const planBadge = document.getElementById('userPlanBadge');
 
             try {
-                const { data: profile, error: profileErr } = await supabaseClient
+                const { data: profile } = await supabaseClient
                     .from('profiles')
                     .select('full_name, plan, plan_expires_at')
                     .eq('id', user.id)
                     .maybeSingle();
 
-                if (profileErr) console.error("Erè profile:", profileErr);
-
-                // Ekstrè ak afiche non user an
                 let displayName = profile?.full_name || user.user_metadata?.full_name || user.email.split('@')[0];
                 document.getElementById('userNameDisplay').innerText = displayName;
 
-                // DETEKSYON PLAN
                 const rawPlan = profile?.plan || user.user_metadata?.plan || 'free';
-                const currentPlan = rawPlan.toString().toLowerCase().trim();
+                let currentPlan = rawPlan.toString().toLowerCase().trim();
                 const expDateVal = profile?.plan_expires_at || user.user_metadata?.plan_expires_at;
                 const isExpired = expDateVal && new Date(expDateVal) < new Date();
 
-                if (isExpired) {
-                    planBadge.innerHTML = `
-                        <span class="px-2.5 py-1 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-[11px] font-extrabold uppercase tracking-wider">
-                            EKSPİRE
-                        </span>
-                    `;
-                } else if (currentPlan.includes('elite')) {
-                    planBadge.innerHTML = `
-                        <span class="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1">
-                            <i class="fa-solid fa-star text-[10px]"></i>
-                            ÉLITE
-                        </span>
-                    `;
+                if (isExpired) currentPlan = 'free';
+
+                if (currentPlan.includes('elite')) {
+                    planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-star text-[10px]"></i> ÉLITE</span>`;
                 } else if (currentPlan.includes('vip')) {
-                    planBadge.innerHTML = `
-                        <span class="px-2.5 py-1 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1">
-                            <i class="fa-solid fa-crown text-[10px]"></i>
-                            VIP
-                        </span>
-                    `;
+                    planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-crown text-[10px]"></i> VIP</span>`;
                 } else {
-                    planBadge.innerHTML = `
-                        <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-extrabold uppercase tracking-wider">
-                            GRATIS
-                        </span>
-                    `;
+                    planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-extrabold uppercase tracking-wider">GRATIS</span>`;
                 }
 
+                renderMatches(currentPlan);
+
             } catch (err) {
-                console.error("Erè nan chajman plan an:", err);
-                planBadge.innerHTML = `
-                    <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-extrabold uppercase tracking-wider">
-                        GRATIS
-                    </span>
-                `;
+                console.error("Erè:", err);
+                renderMatches('free');
             }
         }
 
-        // LOGIK DEKONEKSYON
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             await supabaseClient.auth.signOut();
             window.location.href = "auth.html";
         });
 
-        // INIT PAJ LA
         document.addEventListener('DOMContentLoaded', () => {
             renderDynamicDays();
             checkAuth();

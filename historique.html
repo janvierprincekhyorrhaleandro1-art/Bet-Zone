@@ -32,42 +32,7 @@
         .glass-panel { background: rgba(13, 17, 23, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.2); }
         .glass-nav { background: rgba(13, 17, 23, 0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
         .emerald-glow { box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); }
-        .emerald-gradient-bg { background: linear-gradient(135deg, #062016 0%, #0d1117 100%); }
-
-        /* VIEW TRANSITIONS API */
-        @view-transition {
-          navigation: auto;
-        }
-        ::view-transition-old(root) {
-          animation: 200ms ease-out both fade-out;
-        }
-        ::view-transition-new(root) {
-          animation: 250ms ease-in both fade-in;
-        }
-        @keyframes fade-out {
-          from { opacity: 1; transform: scale(1); }
-          to { opacity: 0; transform: scale(0.98); }
-        }
-        @keyframes fade-in {
-          from { opacity: 0; transform: scale(1.02); }
-          to { opacity: 1; transform: scale(1); }
-        }
     </style>
-
-    <!-- PREFETCH SCRIPT -->
-    <script>
-        document.querySelectorAll('a[href]').forEach(link => {
-            link.addEventListener('touchstart', () => {
-                const href = link.getAttribute('href');
-                if (href && !href.startsWith('#')) {
-                    const rect = document.createElement('link');
-                    rect.rel = 'prefetch';
-                    rect.href = href;
-                    document.head.appendChild(rect);
-                }
-            }, { passive: true });
-        });
-    </script>
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-black pb-24">
 
@@ -79,7 +44,7 @@
                 <span>Dashboard</span>
             </a>
             <span class="text-xs font-bold text-gray-400">Istorik Rezilta Yo</span>
-            <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-extrabold text-[10px] border border-emerald-500/30">VIP</span>
+            <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-extrabold text-[10px] border border-emerald-500/30">BETZONE</span>
         </div>
     </header>
 
@@ -104,19 +69,10 @@
             </div>
         </div>
 
-        <!-- FILTÈ JOU PA JOU -->
-        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-1"><i class="fa-solid fa-calendar-check text-emerald-400"></i> Dat:</span>
-            <button class="px-3 py-1 rounded-lg bg-emerald-500 text-black text-[11px] font-bold shrink-0">Yer (4 Out)</button>
-            <button class="px-3 py-1 rounded-lg bg-brand-card hover:bg-slate-800 text-gray-300 text-[11px] font-medium shrink-0 border border-brand-border">3 Out</button>
-            <button class="px-3 py-1 rounded-lg bg-brand-card hover:bg-slate-800 text-gray-300 text-[11px] font-medium shrink-0 border border-brand-border">2 Out</button>
-            <button class="px-3 py-1 rounded-lg bg-brand-card hover:bg-slate-800 text-gray-300 text-[11px] font-medium shrink-0 border border-brand-border">1 Out</button>
-        </div>
-
         <!-- LIS MATCH ISTORIK YO -->
         <div class="space-y-3">
             
-            <!-- Match 1: GANYE -->
+            <!-- Match 1 -->
             <div class="p-3.5 rounded-xl bg-brand-card border border-brand-border flex flex-col gap-2">
                 <div class="flex justify-between items-center text-[10px] text-gray-400 border-b border-brand-border/50 pb-1.5">
                     <span class="font-semibold text-gray-300">UEFA Champions League</span>
@@ -129,13 +85,9 @@
                     <span class="bg-black px-2 py-0.5 rounded text-emerald-400 font-mono border border-brand-border">3 - 1</span>
                     <span>Arsenal</span>
                 </div>
-                <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1">
-                    <span>Tip: <strong class="text-white">Plus de 2.5 Bi</strong></span>
-                    <span>Cote: <strong class="text-emerald-400">1.65</strong></span>
-                </div>
             </div>
 
-            <!-- Match 2: GANYE -->
+            <!-- Match 2 -->
             <div class="p-3.5 rounded-xl bg-brand-card border border-brand-border flex flex-col gap-2">
                 <div class="flex justify-between items-center text-[10px] text-gray-400 border-b border-brand-border/50 pb-1.5">
                     <span class="font-semibold text-gray-300">Premier League</span>
@@ -148,68 +100,33 @@
                     <span class="bg-black px-2 py-0.5 rounded text-emerald-400 font-mono border border-brand-border">2 - 0</span>
                     <span>Everton</span>
                 </div>
-                <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1">
-                    <span>Tip: <strong class="text-white">Victoire Liverpool (1)</strong></span>
-                    <span>Cote: <strong class="text-emerald-400">1.45</strong></span>
-                </div>
-            </div>
-
-            <!-- Match 3: PÈDI -->
-            <div class="p-3.5 rounded-xl bg-brand-card border border-brand-border flex flex-col gap-2">
-                <div class="flex justify-between items-center text-[10px] text-gray-400 border-b border-brand-border/50 pb-1.5">
-                    <span class="font-semibold text-gray-300">La Liga</span>
-                    <span class="text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">
-                        <i class="fa-solid fa-circle-xmark"></i> PÈDI
-                    </span>
-                </div>
-                <div class="flex justify-between items-center font-bold text-xs text-white">
-                    <span>Atletico Madrid</span>
-                    <span class="bg-black px-2 py-0.5 rounded text-red-400 font-mono border border-brand-border">0 - 0</span>
-                    <span>Sevilla</span>
-                </div>
-                <div class="flex justify-between items-center text-[10px] text-gray-400 pt-1">
-                    <span>Tip: <strong class="text-white">BTTS (Oui)</strong></span>
-                    <span>Cote: <strong class="text-gray-400">1.80</strong></span>
-                </div>
             </div>
 
         </div>
 
     </div>
 
-    <!-- FOOTER -->
-    <footer class="border-t border-brand-border bg-black py-4 text-center text-[11px] text-gray-500 mb-16">
-        <p>© 2026 Bet Zone - Istorik VIP.</p>
-    </footer>
-
-    <!-- BOTTOM NAVIGATION BAR (STYLE FLOATING ROUNDED iOS 26) -->
+    <!-- BOTTOM NAVIGATION BAR -->
     <div class="fixed bottom-4 left-0 right-0 z-50 px-4 pointer-events-none">
         <nav class="max-w-xs mx-auto glass-nav border border-emerald-500/30 rounded-full px-5 py-2 flex justify-between items-center shadow-2xl shadow-emerald-950/50 pointer-events-auto">
-            
-            <!-- 1. BOUTÒN BALON / MATCHS -->
             <a href="dashboard.html" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-emerald-400 font-medium transition">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm">
                     <i class="fa-solid fa-futbol"></i>
                 </div>
                 <span class="text-[10px]">Matchs</span>
             </a>
-
-            <!-- 2. BOUTÒN ISTORIK -->
             <a href="historique.html" class="flex flex-col items-center gap-0.5 text-emerald-400 font-bold transition">
                 <div class="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-sm shadow-sm">
                     <i class="fa-solid fa-clock-rotate-left"></i>
                 </div>
                 <span class="text-[10px]">Istorik</span>
             </a>
-
-            <!-- 3. BOUTÒN PROFIL -->
             <a href="profile.html" class="flex flex-col items-center gap-0.5 text-gray-400 hover:text-emerald-400 font-medium transition">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm">
                     <i class="fa-solid fa-user"></i>
                 </div>
                 <span class="text-[10px]">Profil</span>
             </a>
-
         </nav>
     </div>
 
