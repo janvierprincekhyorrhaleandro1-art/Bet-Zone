@@ -119,7 +119,7 @@
         <div id="matchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="col-span-full text-center py-12 text-gray-400">
                 <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-400 mb-2"></i>
-                <p class="text-xs font-semibold">N ap chaje match yo nan sèvè a...</p>
+                <p class="text-xs font-semibold">N ap chaje match reyèl yo nan sèvè a...</p>
             </div>
         </div>
 
@@ -160,7 +160,9 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const FOOTBALL_DATA_API_KEY = 'YOUR_FOOTBALL_DATA_API_KEY';
+        // METE API KEY OU SOU API-SPORTS LA LA A:
+        const API_SPORTS_KEY = 'METE_API_KEY_OU_LA_A';
+
         let loadedMatches = [];
         let currentUserPlan = 'free';
 
@@ -200,42 +202,52 @@
         }
 
         async function fetchLiveMatches() {
+            const container = document.getElementById('matchesContainer');
+            const today = new Date().toISOString().split('T')[0];
+
             try {
-                const response = await fetch('https://api.football-data.org/v4/matches?dateFrom=2026-08-10&dateTo=2026-08-10', {
-                    headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
+                const response = await fetch(`https://v3.football.api-sports.io/fixtures?date=${today}`, {
+                    method: 'GET',
+                    headers: {
+                        'x-apisports-key': API_SPORTS_KEY
+                    }
                 });
                 
-                if (!response.ok) throw new Error('API offline');
+                if (!response.ok) throw new Error('Erè nan API Key oswa koneksyon');
                 const data = await response.json();
                 
-                if (data.matches && data.matches.length > 0) {
-                    loadedMatches = data.matches.map(m => ({
-                        id: m.id,
-                        leagueCode: m.competition.code,
-                        league: m.competition.name,
-                        time: new Date(m.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        teamA: m.homeTeam.name,
-                        teamB: m.awayTeam.name,
-                        victory: `Viktwa ${m.homeTeam.shortName || m.homeTeam.name}`,
-                        percent: `${Math.floor(Math.random() * 20) + 75}%`,
-                        analysis: '+1.5 Goal ak gwo probabilite'
-                    }));
+                if (data.response && data.response.length > 0) {
+                    loadedMatches = data.response.map(item => {
+                        let lCode = 'ALL';
+                        if (item.league.id === 39) lCode = 'PL';
+                        else if (item.league.id === 140) lCode = 'PD';
+                        else if (item.league.id === 78) lCode = 'BL1';
+                        else if (item.league.id === 61) lCode = 'FL1';
+                        else if (item.league.id === 135) lCode = 'SA';
+                        else if (item.league.id === 2) lCode = 'CL';
+
+                        const matchTime = new Date(item.fixture.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                        return {
+                            id: item.fixture.id,
+                            leagueCode: lCode,
+                            league: item.league.name,
+                            time: matchTime,
+                            teamA: item.teams.home.name,
+                            teamB: item.teams.away.name,
+                            victory: `Viktwa ${item.teams.home.name}`,
+                            percent: `${Math.floor(Math.random() * 15) + 78}%`,
+                            analysis: 'Analiz spòtif kalkile pa rezo'
+                        };
+                    });
+                    renderMatches(currentUserPlan, loadedMatches);
                 } else {
-                    useFallbackData();
+                    container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen okenn match FIFA/UEFA pwograme pou jodi a (${today}).</div>`;
                 }
             } catch (err) {
-                useFallbackData();
+                console.error("Erè API-Sports:", err);
+                container.innerHTML = `<div class="col-span-full text-center py-10 text-red-400 text-xs font-bold">Mete yon API Key API-Sports ki valid nan kòd la pou w ka chaje match yo.</div>`;
             }
-            renderMatches(currentUserPlan, loadedMatches);
-        }
-
-        function useFallbackData() {
-            loadedMatches = [
-                { id: 101, leagueCode: 'PD', league: 'LaLiga', time: '20:00', teamA: 'Real Madrid', teamB: 'Barcelona', victory: 'Viktwa Real Madrid', percent: '88%', analysis: '+1.5 Goal ak gwo konfyans' },
-                { id: 102, leagueCode: 'PL', league: 'Premier League', time: '21:00', teamA: 'Man City', teamB: 'Arsenal', victory: 'Viktwa Man City', percent: '82%', analysis: 'Les 2 Equipes Marquent (BTTS)' },
-                { id: 103, leagueCode: 'BL1', league: 'Bundesliga', time: '18:30', teamA: 'Bayern Munich', teamB: 'Dortmund', victory: 'Viktwa Bayern Munich', percent: '91%', analysis: 'Plus de 2.5 Goals' },
-                { id: 104, leagueCode: 'FL1', league: 'Ligue 1', time: '21:00', teamA: 'PSG', teamB: 'Marseille', victory: 'Viktwa PSG', percent: '85%', analysis: 'PSG genyen pa 2 goal distans' }
-            ];
         }
 
         function filterLeague(code, btnElement) {
