@@ -16,6 +16,9 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
+// Fonksyon pou fè yon ti pause pou pa depase quota API la
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 app.get('/cron/sync-matches', async (req, res) => {
     try {
         const response = await fetch("https://api.football-data.org/v4/matches", {
@@ -52,7 +55,7 @@ app.get('/cron/sync-matches', async (req, res) => {
             if (existingMatch) {
                 activeMatch = existingMatch;
             } else {
-                // 2. Insérer match la
+                // 2. Insérer match la si l pa la
                 const { data: insertedMatch, error: insertErr } = await supabase
                     .from("matches")
                     .insert([{
@@ -72,7 +75,20 @@ app.get('/cron/sync-matches', async (req, res) => {
                 activeMatch = insertedMatch;
             }
 
-            // 3. Rele Gemini ak modèl "gemini-2.0-flash"
+            // 3. Tcheke si gen prediksyon pou match sa a deja nan Supabase
+            const { data: existingPred } = await supabase
+                .from("predictions")
+                .select("id")
+                .eq("match_id", activeMatch.id)
+                .single();
+
+            if (existingPred) {
+                // Si l gen prediksyon deja, pa bezwen rele Gemini ankò!
+                count++;
+                continue;
+            }
+
+            // 4. Rele Gemini ak modèl "gemini-2.0-flash"
             try {
                 const model = genAI.getGenerativeModel({
                     model: "gemini-2.0-flash"
@@ -97,7 +113,7 @@ app.get('/cron/sync-matches', async (req, res) => {
                 const cleanJson = rawText.replace(/```json|```/g, "").trim();
                 const aiData = JSON.parse(cleanJson);
 
-                // Enregistre prediksyon an
+                // Anrejistre prediksyon an
                 await supabase.from("predictions").insert([{
                     match_id: activeMatch.id,
                     option_name: aiData.option_name,
@@ -108,6 +124,9 @@ app.get('/cron/sync-matches', async (req, res) => {
                 }]);
 
                 count++;
+                // Tann 3 segonn ant chak match pou pa sature quota Gemini an
+                await sleep(3000);
+
             } catch (err) {
                 errors.push(`Gemini Err (${homeTeam}): ${err.message}`);
             }
