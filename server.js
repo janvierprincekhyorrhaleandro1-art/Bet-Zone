@@ -38,23 +38,22 @@ app.get('/cron/sync-matches', async (req, res) => {
             const league = match.competition.name;
             const matchTime = match.utcDate;
 
-            // Upsert (Sove oswa mete ajou san l pa reni sa ki la deja)
-            const { data: savedMatch, error: matchErr } = await supabase
+            let activeMatch = null;
+
+            // 1. Tcheke si match la deja egziste nan baz de done a
+            const { data: existingMatch } = await supabase
                 .from("matches")
-                .upsert([{
-                    league: league,
-                    home_team: homeTeam,
-                    away_team: awayTeam,
-                    match_time: matchTime,
-                    status: match.status
-                }], { onConflict: 'league, home_team, away_team, match_time' })
-                .select()
+                .select("*")
+                .eq("home_team", homeTeam)
+                .eq("away_team", awayTeam)
+                .eq("match_time", matchTime)
                 .single();
 
-            if (matchErr) {
-                errors.push(`Match Insert Err: ${matchErr.message}`);
-                // Si upsert ba w erè akòz ti spesifikasyon, ann kouri yon insert senp
-                const { data: fallbackMatch, error: fallbackErr } = await supabase
+            if (existingMatch) {
+                activeMatch = existingMatch;
+            } else {
+                // 2. Si l pa egziste, antre l nan Supabase
+                const { data: insertedMatch, error: insertErr } = await supabase
                     .from("matches")
                     .insert([{
                         league: league,
@@ -66,41 +65,41 @@ app.get('/cron/sync-matches', async (req, res) => {
                     .select()
                     .single();
 
-                if (fallbackErr) {
-                    errors.push(`Fallback Err: ${fallbackErr.message}`);
+                if (insertErr) {
+                    errors.push(`Insert Err (${homeTeam} vs ${awayTeam}): ${insertErr.message}`);
                     continue;
                 }
+                activeMatch = insertedMatch;
             }
 
-            const activeMatch = savedMatch || fallbackMatch;
-
-            // Rele Gemini pou pronostik ak analiz
-            const model = genAI.getGenerativeModel({
-                model: "gemini-1.5-pro",
-                tools: [{ googleSearch: {} }]
-            });
-
-            const prompt = `
-            Analize match sa a: ${homeTeam} vs ${awayTeam}.
-            1. Fè rechèch sou sit 'Betmines' pou pronostik ekip k ap genyen an ak % konfyans.
-            2. Fè rechèch sou Google pou H2H, fòm 5 dènye jwèt yo, 11 jwè (line-up), ak analiz an kreyòl ayisyen.
-            
-            Reponn SÈLMAN nan fòma JSON sa a:
-            {
-              "option_name": "Victoire ${homeTeam}",
-              "confidence": 80,
-              "risk_level": "Faible",
-              "ai_analysis_text": "Tèks analiz an kreyòl...",
-              "lineup_json": { "home": [], "away": [] }
-            }
-            `;
-
+            // 3. Rele Gemini pou analiz ak prediksyon
             try {
+                const model = genAI.getGenerativeModel({
+                    model: "gemini-1.5-pro",
+                    tools: [{ googleSearch: {} }]
+                });
+
+                const prompt = `
+                Analize match sa a: ${homeTeam} vs ${awayTeam}.
+                1. Fè rechèch sou sit 'Betmines' pou pronostik ekip k ap genyen an ak % konfyans.
+                2. Fè rechèch sou Google pou H2H, fòm 5 dènye jwèt yo, 11 jwè (line-up), ak analiz an kreyòl ayisyen.
+                
+                Reponn SÈLMAN nan fòma JSON sa a:
+                {
+                  "option_name": "Victoire ${homeTeam}",
+                  "confidence": 80,
+                  "risk_level": "Faible",
+                  "ai_analysis_text": "Tèks analiz an kreyòl...",
+                  "lineup_json": { "home": [], "away": [] }
+                }
+                `;
+
                 const aiResult = await model.generateContent(prompt);
                 const rawText = aiResult.response.text();
                 const cleanJson = rawText.replace(/```json|```/g, "").trim();
                 const aiData = JSON.parse(cleanJson);
 
+                // Enregistre prediksyon an
                 await supabase.from("predictions").insert([{
                     match_id: activeMatch.id,
                     option_name: aiData.option_name,
@@ -112,7 +111,7 @@ app.get('/cron/sync-matches', async (req, res) => {
 
                 count++;
             } catch (err) {
-                errors.push(`Gemini Err: ${err.message}`);
+                errors.push(`Gemini Err (${homeTeam}): ${err.message}`);
             }
         }
 
