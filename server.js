@@ -40,7 +40,7 @@ app.get('/cron/sync-matches', async (req, res) => {
 
             let activeMatch = null;
 
-            // 1. Tcheke si match la deja egziste nan baz de done a
+            // 1. Tcheke si match la deja nan baz de done a
             const { data: existingMatch } = await supabase
                 .from("matches")
                 .select("*")
@@ -52,7 +52,7 @@ app.get('/cron/sync-matches', async (req, res) => {
             if (existingMatch) {
                 activeMatch = existingMatch;
             } else {
-                // 2. Si l pa egziste, antre l nan Supabase
+                // 2. Antre match la nan Supabase
                 const { data: insertedMatch, error: insertErr } = await supabase
                     .from("matches")
                     .insert([{
@@ -72,24 +72,22 @@ app.get('/cron/sync-matches', async (req, res) => {
                 activeMatch = insertedMatch;
             }
 
-            // 3. Rele Gemini pou analiz ak prediksyon
+            // 3. Rele Gemini ak modèl "gemini-1.5-flash"
             try {
                 const model = genAI.getGenerativeModel({
-                    model: "gemini-1.5-pro",
-                    tools: [{ googleSearch: {} }]
+                    model: "gemini-1.5-flash"
                 });
 
                 const prompt = `
-                Analize match sa a: ${homeTeam} vs ${awayTeam}.
-                1. Fè rechèch sou sit 'Betmines' pou pronostik ekip k ap genyen an ak % konfyans.
-                2. Fè rechèch sou Google pou H2H, fòm 5 dènye jwèt yo, 11 jwè (line-up), ak analiz an kreyòl ayisyen.
+                Analize match balondfen sa a: ${homeTeam} vs ${awayTeam}.
+                Ekri yon analiz ak pronostik an kreyòl ayisyen.
                 
-                Reponn SÈLMAN nan fòma JSON sa a:
+                Reponn SÈLMAN anndan fòma JSON sa a presizman:
                 {
                   "option_name": "Victoire ${homeTeam}",
-                  "confidence": 80,
-                  "risk_level": "Faible",
-                  "ai_analysis_text": "Tèks analiz an kreyòl...",
+                  "confidence": 75,
+                  "risk_level": "Moyen",
+                  "ai_analysis_text": "Ekip ${homeTeam} an gen yon bon fòm ak 3 viktwa sou 5 dènye match...",
                   "lineup_json": { "home": [], "away": [] }
                 }
                 `;
@@ -99,7 +97,7 @@ app.get('/cron/sync-matches', async (req, res) => {
                 const cleanJson = rawText.replace(/```json|```/g, "").trim();
                 const aiData = JSON.parse(cleanJson);
 
-                // Enregistre prediksyon an
+                // Anrejistre prediksyon an
                 await supabase.from("predictions").insert([{
                     match_id: activeMatch.id,
                     option_name: aiData.option_name,
