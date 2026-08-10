@@ -23,9 +23,15 @@ app.get('/cron/sync-matches', async (req, res) => {
         const response = await fetch("https://api.football-data.org/v4/matches", {
             headers: { "X-Auth-Token": FOOTBALL_DATA_TOKEN }
         });
+        
         const data = await response.json();
-        const matches = data.matches || [];
+        
+        // Si API la ba w yon erè sou kle a oswa quota
+        if (data.message) {
+            return res.status(400).json({ error: data.message });
+        }
 
+        const matches = data.matches || [];
         let count = 0;
 
         for (const match of matches) {
@@ -92,7 +98,7 @@ app.get('/cron/sync-matches', async (req, res) => {
             }
         }
 
-        res.json({ success: true, matches_processed: count });
+        res.json({ success: true, matches_processed: count, total_matches_found: matches.length });
 
     } catch (error) {
         res.status(500).json({ error: error.message });
