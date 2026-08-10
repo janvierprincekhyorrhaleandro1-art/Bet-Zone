@@ -157,7 +157,7 @@ app.get('/cron/sync-matches', async (req, res) => {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        model: "google/gemma-4-31b:free",
+                        model: "nvidia/nemotron-3-super-120b-a12b:free",
                         messages: [{ role: "user", content: prompt }],
                         response_format: { type: "json_object" }
                     })
