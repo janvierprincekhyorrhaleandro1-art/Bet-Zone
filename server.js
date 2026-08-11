@@ -7,51 +7,42 @@ const PORT = process.env.PORT || 3000;
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uiepdartkcunumajlwwg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
-const API_SPORTS_KEY = process.env.FOOTBALL_DATA_KEY || '1d6fdcd8b34649fdaf25ddbbb47ac3ac';
+const FOOTBALL_DATA_KEY = process.env.FOOTBALL_DATA_KEY || '1d6fdcd8b34649fdaf25ddbbb47ac3ac';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 async function syncDailyMatches() {
     console.log(`⏰ [${new Date().toISOString()}] Ekzekisyon senkronizasyon match...`);
     
-    // Rale dat jodi a sou fòma YYYY-MM-DD nan orè Ayiti / New York
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
     console.log(`📅 Chèche match pou dat: ${today}`);
 
     try {
-    const response = await fetch(`https://api.football-data.org/v4/matches`, {
-        headers: { 'X-Auth-Token': FOOTBALL_DATA_KEY }
-    });
+        const response = await fetch(`https://api.football-data.org/v4/matches?dateFrom=${today}&dateTo=${today}`, {
+            headers: { 'X-Auth-Token': FOOTBALL_DATA_KEY }
+        });
 
         const data = await response.json();
 
-        if (data.errors && Object.keys(data.errors).length > 0) {
-            console.error("❌ Erè ki soti nan API-Sports:", data.errors);
+        if (data.message) {
+            console.error("❌ Erè ki soti nan Football-Data.org:", data.message);
             return;
         }
 
-        if (data.response && data.response.length > 0) {
-            console.log(`⚽ Jwenn ${data.response.length} match sou API-Sports.`);
+        if (data.matches && data.matches.length > 0) {
+            console.log(`⚽ Jwenn ${data.matches.length} match sou Football-Data.org.`);
 
-            const formattedMatches = data.response.map(item => {
-                let lCode = 'ALL';
-                const id = item.league.id;
-
-                if (id === 39) lCode = 'PL';
-                else if (id === 140) lCode = 'PD';
-                else if (id === 78) lCode = 'BL1';
-                else if (id === 61) lCode = 'FL1';
-                else if (id === 135) lCode = 'SA';
-                else if (id === 2) lCode = 'CL';
+            const formattedMatches = data.matches.map(item => {
+                const code = item.competition.code || 'ALL';
 
                 return {
-                    id: item.fixture.id,
-                    league_code: lCode,
-                    league_name: item.league.name,
-                    match_time: new Date(item.fixture.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' }),
-                    team_a: item.teams.home.name,
-                    team_b: item.teams.away.name,
-                    victory: `Viktwa ${item.teams.home.name}`,
+                    id: item.id,
+                    league_code: code,
+                    league_name: item.competition.name,
+                    match_time: new Date(item.utcDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' }),
+                    team_a: item.homeTeam.name,
+                    team_b: item.awayTeam.name,
+                    victory: `Viktwa ${item.homeTeam.name}`,
                     percent: `${Math.floor(Math.random() * 15) + 78}%`,
                     analysis: 'Analiz spòtif kalkile pa rezo'
                 };
@@ -68,7 +59,7 @@ async function syncDailyMatches() {
                 console.log(`✅ ${formattedMatches.length} match anrejistre nan Supabase!`);
             }
         } else {
-            console.log("⚠️ Pa gen okenn match pou dat sa a sou API-Sports.");
+            console.log("⚠️ Pa gen okenn match pou dat sa a sou Football-Data.org.");
         }
     } catch (err) {
         console.error("❌ Erè nan fonksyon sync la:", err);
@@ -83,7 +74,8 @@ app.listen(PORT, () => {
     console.log(`🚀 Sèvè ap koute sou pò ${PORT}`);
     syncDailyMatches();
     
-    cron.schedule('* * * * *', async () => {
+    // Kouri chak 12 minit (pou toujou rete anba limit 10 requests/minit san okenn pwoblèm)
+    cron.schedule('*/12 * * * *', async () => {
         await syncDailyMatches();
     }, {
         scheduled: true,
