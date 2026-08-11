@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uiepdartkcunumajlwwg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
-const API_SPORTS_KEY = process.env.API_SPORTS_KEY || '642b2222ba559586a9a165bcd30053b4';
+const API_SPORTS_KEY = process.env.API_SPORTS_KEY || '786436f474647cfaf961b05ac11978d1';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
