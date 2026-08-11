@@ -117,7 +117,7 @@
             </h2>
         </div>
 
-        <!-- GRID MATCH YO (TITAN PI PITIT AK PI DANS) -->
+        <!-- GRID MATCH YO -->
         <div id="matchesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div class="col-span-full text-center py-10 text-gray-400">
                 <i class="fa-solid fa-circle-notch fa-spin text-xl text-emerald-400 mb-2"></i>
@@ -127,10 +127,10 @@
 
     </main>
 
-    <!-- POP-UP MODAL POU CHANPYONA -->
+    <!-- POP-UP MODAL POU CHANPYONA (STYLE DEFILMAN LONGÈ PAJ LA) -->
     <div id="leagueModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-brand-card border border-emerald-500/30 w-full max-w-sm rounded-2xl p-4 shadow-2xl">
-            <div class="flex justify-between items-center mb-3 border-b border-brand-border pb-2">
+        <div class="bg-brand-card border border-emerald-500/30 w-full max-w-sm h-[85vh] rounded-2xl p-4 shadow-2xl flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-3 border-b border-brand-border pb-2 shrink-0">
                 <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
                     <i class="fa-solid fa-trophy text-emerald-400"></i> Chwazi Chanpyona
                 </h3>
@@ -138,37 +138,36 @@
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <div class="space-y-1.5 max-h-60 overflow-y-auto no-scrollbar">
-                <button onclick="selectLeague('ALL', 'Tout Chanpyona')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+            <div class="space-y-1.5 overflow-y-auto flex-grow pr-1">
+                <button onclick="selectLeague('ALL', 'Tout Chanpyona')" class="w-full text-left px-3 py-3 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
                     <span>Tout Chanpyona</span>
-                    <i class="fa-solid fa-check text-emerald-400 text-xs hidden check-icon" id="check-ALL"></i>
                 </button>
-                <button onclick="selectLeague('PD', '🇪🇸 LaLiga')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                <button onclick="selectLeague('PD', '🇪🇸 LaLiga')" class="w-full text-left px-3 py-3 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
                     <span>🇪🇸 LaLiga</span>
                 </button>
-                <button onclick="selectLeague('PL', '🏴 Premier League')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                <button onclick="selectLeague('PL', '🏴 Premier League')" class="w-full text-left px-3 py-3 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
                     <span>🏴 Premier League</span>
                 </button>
-                <button onclick="selectLeague('BL1', '🇩🇪 Bundesliga')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                <button onclick="selectLeague('BL1', '🇩🇪 Bundesliga')" class="w-full text-left px-3 py-3 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
                     <span>🇩🇪 Bundesliga</span>
                 </button>
-                <button onclick="selectLeague('FL1', '🇫🇷 Ligue 1')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                <button onclick="selectLeague('FL1', '🇫🇷 Ligue 1')" class="w-full text-left px-3 py-3 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
                     <span>🇫🇷 Ligue 1</span>
                 </button>
-                <button onclick="selectLeague('SA', '🇮🇹 Serie A')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                <button onclick="selectLeague('SA', '🇮🇹 Serie A')" class="w-full text-left px-3 py-3 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
                     <span>🇮🇹 Serie A</span>
                 </button>
-                <button onclick="selectLeague('CL', '🏆 Champions League')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                <button onclick="selectLeague('CL', '🏆 Champions League')" class="w-full text-left px-3 py-3 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
                     <span>🏆 Champions League</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- POP-UP MODAL POU DATE -->
+    <!-- POP-UP MODAL POU DATE (STYLE DEFILMAN LONGÈ PAJ LA) -->
     <div id="dateModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-brand-card border border-emerald-500/30 w-full max-w-sm rounded-2xl p-4 shadow-2xl">
-            <div class="flex justify-between items-center mb-3 border-b border-brand-border pb-2">
+        <div class="bg-brand-card border border-emerald-500/30 w-full max-w-sm h-[85vh] rounded-2xl p-4 shadow-2xl flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-3 border-b border-brand-border pb-2 shrink-0">
                 <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
                     <i class="fa-regular fa-calendar-days text-emerald-400"></i> Chwazi Dat Match
                 </h3>
@@ -176,7 +175,7 @@
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <div id="dateModalList" class="space-y-1.5 max-h-60 overflow-y-auto no-scrollbar">
+            <div id="dateModalList" class="space-y-1.5 overflow-y-auto flex-grow pr-1">
                 <!-- Dat yo ap rantre la dinamikman -->
             </div>
         </div>
@@ -233,7 +232,8 @@
         function renderDynamicDays() {
             const dateModalList = document.getElementById('dateModalList');
             if (!dateModalList) return;
-            const daysOfWeek = ['Dim', 'Len', 'Mar', 'Mèk', 'Jej', 'Vand', 'Sam'];
+            // NON JOU YO KONPLÈ
+            const daysOfWeek = ['Dimanch', 'Lendi', 'Mardi', 'Mèkredi', 'Jedi', 'Vandredi', 'Samdi'];
             const targetToday = new Date();
             let htmlContent = '';
 
@@ -246,9 +246,9 @@
                 const dateStr = targetDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
                 let label = `${dayName} ${dayNumber}/${monthNumber}`;
-                if (i === -1) label = `Yè (${dayNumber}/${monthNumber})`;
-                else if (i === 0) label = `Jodi a (${dayNumber}/${monthNumber})`;
-                else if (i === 1) label = `Demen (${dayNumber}/${monthNumber})`;
+                if (i === -1) label = `Yè (${dayName} ${dayNumber}/${monthNumber})`;
+                else if (i === 0) label = `Jodi a (${dayName} ${dayNumber}/${monthNumber})`;
+                else if (i === 1) label = `Demen (${dayName} ${dayNumber}/${monthNumber})`;
 
                 if (i === 0) {
                     currentDayFilter = dateStr;
@@ -256,7 +256,7 @@
                 }
 
                 htmlContent += `
-                    <button onclick="selectDate('${dateStr}', '${label}')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition">
+                    <button onclick="selectDate('${dateStr}', '${label}')" class="w-full text-left px-3 py-3 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition">
                         ${label}
                     </button>
                 `;
@@ -334,7 +334,7 @@
             }
 
             container.innerHTML = list.map(m => `
-                <div onclick="window.location.href='details.html?id=${m.id}'" class="p-3 rounded-xl bg-brand-card border border-brand-border hover:border-emerald-500/40 transition cursor-pointer group shadow-sm flex flex-col justify-between">
+                <div ${!isFree ? `onclick="window.location.href='details.html?id=${m.id}'"` : ''} class="p-3 rounded-xl bg-brand-card border border-brand-border ${!isFree ? 'hover:border-emerald-500/40 cursor-pointer group' : 'cursor-default'} transition shadow-sm flex flex-col justify-between">
                     
                     <div>
                         <!-- HEAD: ORÈ + CHANPYONA -->
@@ -346,7 +346,7 @@
                         </div>
                         
                         <!-- MATCH TEAMS -->
-                        <div class="flex items-center justify-between text-xs font-bold text-white group-hover:text-emerald-400 transition my-2 px-1">
+                        <div class="flex items-center justify-between text-xs font-bold text-white ${!isFree ? 'group-hover:text-emerald-400' : ''} transition my-2 px-1">
                             <span class="truncate max-w-[40%]">${m.teamA}</span>
                             <span class="text-[9px] text-gray-500 font-extrabold px-1">VS</span>
                             <span class="truncate max-w-[40%] text-right">${m.teamB}</span>
@@ -364,13 +364,18 @@
                         </div>
                     </div>
 
-                    ${isFree ? `
-                        <div class="mt-2 pt-1.5 border-t border-brand-border/40 text-center">
+                    <!-- FOOTER AFFICHE SELON PLAN -->
+                    <div class="mt-2 pt-1.5 border-t border-brand-border/40 text-center">
+                        ${isFree ? `
                             <a href="profile.html" class="text-[9px] text-gray-400 hover:text-amber-400 transition font-medium flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-gem text-amber-400/80 text-[8px]"></i> Passer en VIP / ÉLITE pour débloquer l'analyse
                             </a>
-                        </div>
-                    ` : ''}
+                        ` : `
+                            <span class="text-[9px] text-emerald-400 font-semibold flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-chevron-right text-[8px]"></i> Appuyer pour accéder à l'analyse complet du match
+                            </span>
+                        `}
+                    </div>
 
                 </div>
             `).join('');
