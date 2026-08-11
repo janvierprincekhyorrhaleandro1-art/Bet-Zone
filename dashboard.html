@@ -82,30 +82,45 @@
             </div>
         </div>
 
-        <!-- 1. LIS CHANPYONA YO -->
-        <div class="mb-5">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <i class="fa-solid fa-trophy text-emerald-400"></i>
-                <span>Chanpyona Yo</span>
-            </h3>
-            <div id="leaguesFilter" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                <button onclick="filterLeague('ALL', this)" class="league-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm">Tout Chanpyona</button>
-                <button onclick="filterLeague('PD', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🇪🇸 LaLiga</button>
-                <button onclick="filterLeague('PL', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🏴 Premier League</button>
-                <button onclick="filterLeague('BL1', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🇩🇪 Bundesliga</button>
-                <button onclick="filterLeague('FL1', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🇫🇷 Ligue 1</button>
-                <button onclick="filterLeague('SA', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🇮🇹 Serie A</button>
-                <button onclick="filterLeague('CL', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🏆 Champions League</button>
+        <!-- BAND FILTÈ (CHANPYONA AK DATE) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <!-- 1. BAND CHANPYONA -->
+            <div>
+                <label for="leagueSelect" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-trophy text-emerald-400"></i>
+                    <span>Chanpyona</span>
+                </label>
+                <div class="relative">
+                    <select id="leagueSelect" onchange="filterLeague(this.value)" class="w-full bg-brand-card border border-brand-border text-emerald-400 text-xs font-bold rounded-xl px-4 py-3 appearance-none focus:outline-none focus:border-emerald-500 transition cursor-pointer">
+                        <option value="ALL">Tout Chanpyona</option>
+                        <option value="PD">🇪🇸 LaLiga</option>
+                        <option value="PL">🏴 Premier League</option>
+                        <option value="BL1">🇩🇪 Bundesliga</option>
+                        <option value="FL1">🇫🇷 Ligue 1</option>
+                        <option value="SA">🇮🇹 Serie A</option>
+                        <option value="CL">🏆 Champions League</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-emerald-400">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- 2. LIS JOU YO -->
-        <div class="mb-6">
-            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <i class="fa-regular fa-calendar-days text-emerald-400"></i>
-                <span>Seleksyon Jou</span>
-            </h3>
-            <div id="daysList" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+            <!-- 2. BAND DATE -->
+            <div>
+                <label for="dateSelect" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <i class="fa-regular fa-calendar-days text-emerald-400"></i>
+                    <span>Date</span>
+                </label>
+                <div class="relative">
+                    <select id="dateSelect" onchange="selectDay(this.value)" class="w-full bg-brand-card border border-brand-border text-emerald-400 text-xs font-bold rounded-xl px-4 py-3 appearance-none focus:outline-none focus:border-emerald-500 transition cursor-pointer">
+                        <!-- Dat yo ap chaje dinamikman isit la -->
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-emerald-400">
+                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- KAT PREDIKSYON YO -->
@@ -166,18 +181,18 @@
         let currentLeagueFilter = 'ALL';
 
         function renderDynamicDays() {
-            const daysContainer = document.getElementById('daysList');
-            if (!daysContainer) return;
+            const dateSelect = document.getElementById('dateSelect');
+            if (!dateSelect) return;
             const daysOfWeek = ['Dim', 'Len', 'Mar', 'Mèk', 'Jej', 'Vand', 'Sam'];
             const targetToday = new Date();
-            let htmlContent = '';
+            let optionsHtml = '';
 
             for (let i = -1; i <= 8; i++) {
                 const targetDate = new Date(targetToday);
                 targetDate.setDate(targetToday.getDate() + i);
                 const dayName = daysOfWeek[targetDate.getDay()];
-                const dayNumber = targetDate.getDate();
-                const monthNumber = targetDate.getMonth() + 1;
+                const dayNumber = String(targetDate.getDate()).padStart(2, '0');
+                const monthNumber = String(targetDate.getMonth() + 1).padStart(2, '0');
                 const dateStr = targetDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
                 let label = `${dayName} ${dayNumber}/${monthNumber}`;
@@ -185,31 +200,22 @@
                 else if (i === 0) label = `Jodi a (${dayNumber}/${monthNumber})`;
                 else if (i === 1) label = `Demen (${dayNumber}/${monthNumber})`;
 
-                if (i === 0) currentDayFilter = dateStr;
-
-                const btnClass = (i === 0)
-                    ? "day-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm transition"
-                    : "day-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition hover:text-white";
-
-                htmlContent += `<button onclick="selectDay(this, '${dateStr}')" class="${btnClass}">${label}</button>`;
+                if (i === 0) {
+                    currentDayFilter = dateStr;
+                    optionsHtml += `<option value="${dateStr}" selected>${label}</option>`;
+                } else {
+                    optionsHtml += `<option value="${dateStr}">${label}</option>`;
+                }
             }
-            daysContainer.innerHTML = htmlContent;
+            dateSelect.innerHTML = optionsHtml;
         }
 
-        function selectDay(btnElement, dateStr) {
-            document.querySelectorAll('.day-btn').forEach(btn => {
-                btn.className = "day-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition hover:text-white";
-            });
-            btnElement.className = "day-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm transition";
+        function selectDay(dateStr) {
             currentDayFilter = dateStr;
             applyFilters();
         }
 
-        function filterLeague(code, btnElement) {
-            document.querySelectorAll('.league-btn').forEach(btn => {
-                btn.className = "league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition";
-            });
-            btnElement.className = "league-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm";
+        function filterLeague(code) {
             currentLeagueFilter = code;
             applyFilters();
         }
