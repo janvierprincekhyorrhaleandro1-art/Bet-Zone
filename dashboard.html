@@ -160,9 +160,6 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // METE API KEY OU SOU API-SPORTS LA LA A:
-        const API_SPORTS_KEY = '642b2222ba559586a9a165bcd30053b4';
-
         let loadedMatches = [];
         let currentUserPlan = 'free';
 
@@ -170,7 +167,9 @@
             const daysContainer = document.getElementById('daysList');
             if (!daysContainer) return;
             const daysOfWeek = ['Dim', 'Len', 'Mar', 'Mèk', 'Jej', 'Vand', 'Sam'];
-            const targetToday = new Date('2026-08-10T00:00:00');
+            
+            // ✅ RANJE: Prann dat jodi a dinamikman olye de yon dat fizob (hardcoded)
+            const targetToday = new Date();
             let htmlContent = '';
             
             for (let i = -1; i <= 4; i++) {
@@ -202,36 +201,36 @@
         }
 
         async function fetchLiveMatches() {
-    const container = document.getElementById('matchesContainer');
-    try {
-        // Rale match yo nan table Supabase dirèkteman (san kontakte API-Sports)
-        const { data: matches, error } = await supabaseClient
-            .from('daily_matches')
-            .select('*');
+            const container = document.getElementById('matchesContainer');
+            try {
+                // Rale tout match ki anndan daily_matches san sakrifis dat
+                const { data: matches, error } = await supabaseClient
+                    .from('daily_matches')
+                    .select('*');
 
-        if (error) throw error;
+                if (error) throw error;
 
-        if (matches && matches.length > 0) {
-            loadedMatches = matches.map(m => ({
-                id: m.id,
-                leagueCode: m.league_code,
-                league: m.league_name,
-                time: m.match_time,
-                teamA: m.team_a,
-                teamB: m.team_b,
-                victory: m.victory,
-                percent: m.percent,
-                analysis: m.analysis
-            }));
+                if (matches && matches.length > 0) {
+                    loadedMatches = matches.map(m => ({
+                        id: m.id,
+                        leagueCode: m.league_code,
+                        league: m.league_name,
+                        time: m.match_time,
+                        teamA: m.team_a,
+                        teamB: m.team_b,
+                        victory: m.victory,
+                        percent: m.percent,
+                        analysis: m.analysis
+                    }));
 
-            renderMatches(currentUserPlan, loadedMatches);
-        } else {
-            container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen okenn match ki disponib pou jodi a nan baz de done a.</div>`;
-        }
-    } catch (err) {
-        console.error("Erè Supabase:", err);
-        container.innerHTML = `<div class="col-span-full text-center py-10 text-red-400 text-xs font-bold">Erè nan chajman match yo depi Supabase.</div>`;
-    }
+                    renderMatches(currentUserPlan, loadedMatches);
+                } else {
+                    container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen okenn match ki disponib pou jodi a nan baz de done a.</div>`;
+                }
+            } catch (err) {
+                console.error("Erè Supabase:", err);
+                container.innerHTML = `<div class="col-span-full text-center py-10 text-red-400 text-xs font-bold">Erè nan chajman match yo depi Supabase.</div>`;
+            }
         }
 
         function filterLeague(code, btnElement) {
@@ -261,7 +260,7 @@
                 <div onclick="window.location.href='details.html?id=${m.id}'" class="p-4 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/40 transition cursor-pointer group shadow-sm flex flex-col justify-between">
                     
                     <div>
-                        <!-- HEAD: ORÈ + CHANPYONA + KADNA ELEGANT (SI FREE) -->
+                        <!-- HEAD: ORÈ + CHANPYONA -->
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-[11px] text-gray-400 font-semibold flex items-center gap-1">
                                 <i class="fa-regular fa-clock text-emerald-400"></i> ${m.time}
@@ -295,18 +294,16 @@
                             </div>
                         </div>
 
-                        <!-- ANALIZ (BLURRED SI FREE) AK POUSANTAJ KLÈ (PA BLURRED) -->
+                        <!-- ANALIZ (BLURRED SI FREE) -->
                         <div class="p-2.5 rounded-xl bg-brand-dark border border-brand-border flex justify-between items-center mt-2">
                             <div class="flex flex-col">
                                 <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Analiz Rezo:</span>
                                 <span class="text-xs font-bold text-gray-300 ${isFree ? 'blur-sm select-none opacity-30' : ''}">${m.analysis}</span>
                             </div>
-                            <!-- POUSANTAJ KLÈ POU TOUT MOUN -->
                             <span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 font-extrabold text-xs border border-emerald-500/30">${m.percent}</span>
                         </div>
                     </div>
 
-                    <!-- TI NOTICE SOUB & ELEGANT (SI FREE) -->
                     ${isFree ? `
                         <div class="mt-3 pt-2 border-t border-brand-border/40 text-center">
                             <a href="profile.html" class="text-[10px] text-gray-400 hover:text-amber-400 transition font-medium flex items-center justify-center gap-1">
