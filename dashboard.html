@@ -162,48 +162,72 @@
 
         let loadedMatches = [];
         let currentUserPlan = 'free';
+        let currentDayFilter = null;
+        let currentLeagueFilter = 'ALL';
 
         function renderDynamicDays() {
             const daysContainer = document.getElementById('daysList');
             if (!daysContainer) return;
             const daysOfWeek = ['Dim', 'Len', 'Mar', 'Mèk', 'Jej', 'Vand', 'Sam'];
-            
-            // ✅ RANJE: Prann dat jodi a dinamikman olye de yon dat fizob (hardcoded)
             const targetToday = new Date();
             let htmlContent = '';
-            
-            for (let i = -1; i <= 4; i++) {
+
+            for (let i = -1; i <= 8; i++) {
                 const targetDate = new Date(targetToday);
                 targetDate.setDate(targetToday.getDate() + i);
                 const dayName = daysOfWeek[targetDate.getDay()];
                 const dayNumber = targetDate.getDate();
                 const monthNumber = targetDate.getMonth() + 1;
+                const dateStr = targetDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+
                 let label = `${dayName} ${dayNumber}/${monthNumber}`;
-
-                if (i === -1) label = `Eyer (${dayNumber}/${monthNumber})`;
+                if (i === -1) label = `Yè (${dayNumber}/${monthNumber})`;
                 else if (i === 0) label = `Jodi a (${dayNumber}/${monthNumber})`;
-                else if (i === 1) label = `Denmen (${dayNumber}/${monthNumber})`;
+                else if (i === 1) label = `Demen (${dayNumber}/${monthNumber})`;
 
-                const btnClass = (i === 0) 
+                if (i === 0) currentDayFilter = dateStr;
+
+                const btnClass = (i === 0)
                     ? "day-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm transition"
                     : "day-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition hover:text-white";
 
-                htmlContent += `<button onclick="selectDay(this)" class="${btnClass}">${label}</button>`;
+                htmlContent += `<button onclick="selectDay(this, '${dateStr}')" class="${btnClass}">${label}</button>`;
             }
             daysContainer.innerHTML = htmlContent;
         }
 
-        function selectDay(btnElement) {
+        function selectDay(btnElement, dateStr) {
             document.querySelectorAll('.day-btn').forEach(btn => {
                 btn.className = "day-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition hover:text-white";
             });
             btnElement.className = "day-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm transition";
+            currentDayFilter = dateStr;
+            applyFilters();
+        }
+
+        function filterLeague(code, btnElement) {
+            document.querySelectorAll('.league-btn').forEach(btn => {
+                btn.className = "league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition";
+            });
+            btnElement.className = "league-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm";
+            currentLeagueFilter = code;
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let filtered = loadedMatches;
+            if (currentDayFilter) {
+                filtered = filtered.filter(m => m.matchDate === currentDayFilter);
+            }
+            if (currentLeagueFilter !== 'ALL') {
+                filtered = filtered.filter(m => m.leagueCode === currentLeagueFilter);
+            }
+            renderMatches(currentUserPlan, filtered);
         }
 
         async function fetchLiveMatches() {
             const container = document.getElementById('matchesContainer');
             try {
-                // Rale tout match ki anndan daily_matches san sakrifis dat
                 const { data: matches, error } = await supabaseClient
                     .from('daily_matches')
                     .select('*');
@@ -215,6 +239,7 @@
                         id: m.id,
                         leagueCode: m.league_code,
                         league: m.league_name,
+                        matchDate: m.match_date,
                         time: m.match_time,
                         teamA: m.team_a,
                         teamB: m.team_b,
@@ -223,27 +248,13 @@
                         analysis: m.analysis
                     }));
 
-                    renderMatches(currentUserPlan, loadedMatches);
+                    applyFilters();
                 } else {
                     container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen okenn match ki disponib pou jodi a nan baz de done a.</div>`;
                 }
             } catch (err) {
                 console.error("Erè Supabase:", err);
                 container.innerHTML = `<div class="col-span-full text-center py-10 text-red-400 text-xs font-bold">Erè nan chajman match yo depi Supabase.</div>`;
-            }
-        }
-
-        function filterLeague(code, btnElement) {
-            document.querySelectorAll('.league-btn').forEach(btn => {
-                btn.className = "league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition";
-            });
-            btnElement.className = "league-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm";
-
-            if (code === 'ALL') {
-                renderMatches(currentUserPlan, loadedMatches);
-            } else {
-                const filtered = loadedMatches.filter(m => m.leagueCode === code);
-                renderMatches(currentUserPlan, filtered);
             }
         }
 
