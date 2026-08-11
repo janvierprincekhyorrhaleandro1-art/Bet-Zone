@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uiepdartkcunumajlwwg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
-const API_SPORTS_KEY = process.env.API_SPORTS_KEY || '786436f474647cfaf961b05ac11978d1';
+const API_SPORTS_KEY = process.env.FOOTBALL_DATA_KEY || '1d6fdcd8b34649fdaf25ddbbb47ac3ac';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -19,9 +19,9 @@ async function syncDailyMatches() {
     console.log(`📅 Chèche match pou dat: ${today}`);
 
     try {
-        const response = await fetch(`https://v3.football.api-sports.io/fixtures?date=${today}`, {
-            headers: { 'x-apisports-key': API_SPORTS_KEY }
-        });
+    const response = await fetch(`https://api.football-data.org/v4/matches`, {
+        headers: { 'X-Auth-Token': FOOTBALL_DATA_KEY }
+    });
 
         const data = await response.json();
 
