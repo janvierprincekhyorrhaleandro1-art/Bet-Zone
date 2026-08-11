@@ -41,10 +41,14 @@ async function syncDailyMatches() {
             const formattedMatches = data.matches.map(item => {
                 const code = item.competition.code || 'ALL';
 
+                // Pran dat reyèl kote match la ap jwe nan fòma YYYY-MM-DD
+                const realMatchDate = item.utcDate ? item.utcDate.split('T')[0] : today;
+
                 return {
                     id: item.id,
                     league_code: code,
                     league_name: item.competition.name,
+                    match_date: realMatchDate, // AJOUTE: Champ sa nesesè pou frontend la sible chak jou kòrèkteman
                     match_time: new Date(item.utcDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' }),
                     team_a: item.homeTeam.name,
                     team_b: item.awayTeam.name,
@@ -61,7 +65,7 @@ async function syncDailyMatches() {
             if (insErr) {
                 console.error("❌ Erè ensèsyon nan Supabase:", insErr);
             } else {
-                console.log(`✅ ${formattedMatches.length} match anrejistre nan Supabase!`);
+                console.log(`✅ ${formattedMatches.length} match anrejistre nan Supabase ak tout dat yo!`);
             }
         } else {
             console.log("⚠️ Pa gen okenn match pou peryòd sa a sou Football-Data.org.");
