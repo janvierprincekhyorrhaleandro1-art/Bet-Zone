@@ -8,10 +8,9 @@ const API_SPORTS_KEY = process.env.API_SPORTS_KEY || '642b2222ba559586a9a165bcd3
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 async function syncDailyMatches() {
-    const lèLokal = new Date().toLocaleTimeString('fr-FR', { timeZone: 'America/Port_au_Prince' });
+    const lèLokal = new Date().toLocaleTimeString('fr-FR', { timeZone: 'America/Port-au-Prince' });
     console.log(`⏰ [${lèLokal}] Mizajou match jounen an kòmanse ak API-Sports...`);
     
-    // N ap pran dat jodi a an fòma YYYY-MM-DD
     const today = new Date().toISOString().split('T')[0];
 
     try {
@@ -44,30 +43,28 @@ async function syncDailyMatches() {
                 };
             });
 
-            // Efase ansyen match yo
             await supabase.from('daily_matches').delete().neq('id', 0);
 
-            // Anrejistre nouvo match API-Sports yo
             const { error } = await supabase.from('daily_matches').insert(formattedMatches);
 
             if (error) throw error;
             console.log("✅ Match jounen an anrejistre kòrèkteman nan Supabase!");
         } else {
             await supabase.from('daily_matches').delete().neq('id', 0);
-            console.log("⚠️ Pa gen match pou jodi a nan API-Sports, table la netwaye.");
+            console.log("⚠️ Pa gen match pou jodi a, table la netwaye.");
         }
     } catch (err) {
         console.error("❌ Erè nan senkronizasyon an:", err);
     }
 }
 
-// 🚀 1. Kouri l yon fwa touswit lè Render lanse sèvè a
+// 🚀 1. Ekzekite touswit pou chaje match yo KOUNYE A
 syncDailyMatches();
 
-// ⏰ 2. Programmer l pou chak jou a 3:30 AM (America/Port_au_Prince)
-cron.schedule('30 3 * * *', async () => {
+// ⏰ 2. Cron Job sou orè Ayiti ki ranje a (America/Port-au-Prince)
+cron.schedule('* * * * *', async () => {
     await syncDailyMatches();
 }, {
     scheduled: true,
-    timezone: "America/Port_au_Prince"
+    timezone: "America/Port-au-Prince"
 });
