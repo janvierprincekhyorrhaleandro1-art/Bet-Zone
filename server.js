@@ -1,5 +1,10 @@
+const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
+
+const app = express();
+// Render ap otomatikman bay pò HTTP a nan process.env.PORT
+const PORT = process.env.PORT || 3000;
 
 const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
@@ -44,7 +49,6 @@ async function syncDailyMatches() {
             });
 
             await supabase.from('daily_matches').delete().neq('id', 0);
-
             const { error } = await supabase.from('daily_matches').insert(formattedMatches);
 
             if (error) throw error;
@@ -58,13 +62,23 @@ async function syncDailyMatches() {
     }
 }
 
-// 🚀 1. Ekzekite touswit pou chaje match yo KOUNYE A
-syncDailyMatches();
+// Route senp pou Render tcheke ak konfirme sèvè a "Live"
+app.get('/', (req, res) => {
+    res.send('BETZONE Backend active ak Cron Job!');
+});
 
-// ⏰ 2. Cron Job sou orè Ayiti ki ranje a (America/Port-au-Prince)
-cron.schedule('* * * * *', async () => {
-    await syncDailyMatches();
-}, {
-    scheduled: true,
-    timezone: "America/Port-au-Prince"
+// Demare sèvè Express la
+app.listen(PORT, () => {
+    console.log(`🚀 Sèvè ap koute sou pò ${PORT}`);
+    
+    // Ekzekite 1 fwa nan demaraj
+    syncDailyMatches();
+    
+    // Cron Job pou kouri chak minit (oswa '30 3 * * *' pou 3:30 AM)
+    cron.schedule('* * * * *', async () => {
+        await syncDailyMatches();
+    }, {
+        scheduled: true,
+        timezone: "America/Port-au-Prince"
+    });
 });
