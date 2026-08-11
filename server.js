@@ -2,15 +2,14 @@ const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
 
 const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
-// Sèvi ak SERVICE_ROLE_KEY pou w ka gen dwa efase ak antre done nan table la
-const SUPABASE_SERVICE_ROLE_KEY = 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
-const API_SPORTS_KEY = '642b2222ba559586a9a165bcd30053b4';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
+const API_SPORTS_KEY = process.env.API_SPORTS_KEY || '642b2222ba559586a9a165bcd30053b4';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 async function syncDailyMatches() {
     const lèLokal = new Date().toLocaleTimeString('fr-FR', { timeZone: 'America/Port_au_Prince' });
-    console.log(`⏰ [${lèLokal}] Mizajou match jounen an kòmanse...`);
+    console.log(`⏰ [${lèLokal}] Mizajou match jounen an kòmanse ak API-Sports...`);
     
     // N ap pran dat jodi a an fòma YYYY-MM-DD
     const today = new Date().toISOString().split('T')[0];
@@ -45,31 +44,28 @@ async function syncDailyMatches() {
                 };
             });
 
-            // 1. Efase tout ansyen match ki te rete nan table la
+            // Efase ansyen match yo
             await supabase.from('daily_matches').delete().neq('id', 0);
 
-            // 2. Anrejistre nouvo match yo
+            // Anrejistre nouvo match API-Sports yo
             const { error } = await supabase.from('daily_matches').insert(formattedMatches);
 
             if (error) throw error;
             console.log("✅ Match jounen an anrejistre kòrèkteman nan Supabase!");
         } else {
-            // Si pa gen match jodi a, l ap videw table la pou l pa afiche ansyen match eyer yo
             await supabase.from('daily_matches').delete().neq('id', 0);
-            console.log("⚠️ Pa gen match pou jodi a, table la netwaye.");
+            console.log("⚠️ Pa gen match pou jodi a nan API-Sports, table la netwaye.");
         }
     } catch (err) {
         console.error("❌ Erè nan senkronizasyon an:", err);
     }
 }
 
-// ============================================================
-// ⏰ KONFIGIRASYON CRON JOB (TÈS CHAK MINIT)
-// ============================================================
-console.log("🚀 Sèvè a ak Cron Job lan lanse. M ap tann premye ekzekisyon...");
+// 🚀 1. Kouri l yon fwa touswit lè Render lanse sèvè a
+syncDailyMatches();
 
-// Chanje '* * * * *' pa '30 3 * * *' lè w fin fè tès la pou l kouri a 3:30 AM
-cron.schedule('* * * * *', async () => {
+// ⏰ 2. Programmer l pou chak jou a 3:30 AM (America/Port_au_Prince)
+cron.schedule('30 3 * * *', async () => {
     await syncDailyMatches();
 }, {
     scheduled: true,
