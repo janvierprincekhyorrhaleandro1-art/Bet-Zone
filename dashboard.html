@@ -63,82 +63,124 @@
     </nav>
 
     <!-- KONTENI PRENSIPAL DASHBOARD -->
-    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6">
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-5">
         
         <!-- BYENVENI BANNER -->
-        <div class="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-brand-card to-brand-card border border-emerald-500/30 mb-6 flex items-center justify-between gap-3">
+        <div class="p-3 sm:p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-brand-card to-brand-card border border-emerald-500/30 mb-5 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
                 <div class="w-2.5 h-8 bg-emerald-500 rounded-full hidden sm:block"></div>
                 <div>
-                    <h1 class="text-sm sm:text-base font-bold text-white">
+                    <h1 class="text-xs sm:text-sm font-bold text-white">
                         Benvini sou Dashboard ou, <span id="userNameDisplay" class="text-emerald-400 font-extrabold">...</span>! 👋
                     </h1>
-                    <p class="text-gray-400 text-[11px] sm:text-xs">Prediksyon ak analiz spòtif an tan reyèl pou jodi a.</p>
+                    <p class="text-gray-400 text-[10px] sm:text-xs">Prediksyon ak analiz spòtif an tan reyèl.</p>
                 </div>
             </div>
-            <div class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold whitespace-nowrap flex items-center gap-1.5">
+            <div class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold whitespace-nowrap flex items-center gap-1.5">
                 <i class="fa-solid fa-shield-check text-xs"></i>
                 <span class="hidden xs:inline">Kont Verifye</span>
             </div>
         </div>
 
-        <!-- BAND FILTÈ (CHANPYONA AK DATE) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <!-- 1. BAND CHANPYONA -->
+        <!-- BAND FILTÈ KI OUVÈ POP-UP (CHANPYONA AK DATE) -->
+        <div class="grid grid-cols-2 gap-3 mb-5">
+            <!-- 1. BOUTON FILTÈ CHANPYONA -->
             <div>
-                <label for="leagueSelect" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
                     <i class="fa-solid fa-trophy text-emerald-400"></i>
                     <span>Chanpyona</span>
-                </label>
-                <div class="relative">
-                    <select id="leagueSelect" onchange="filterLeague(this.value)" class="w-full bg-brand-card border border-brand-border text-emerald-400 text-xs font-bold rounded-xl px-4 py-3 appearance-none focus:outline-none focus:border-emerald-500 transition cursor-pointer">
-                        <option value="ALL">Tout Chanpyona</option>
-                        <option value="PD">🇪🇸 LaLiga</option>
-                        <option value="PL">🏴 Premier League</option>
-                        <option value="BL1">🇩🇪 Bundesliga</option>
-                        <option value="FL1">🇫🇷 Ligue 1</option>
-                        <option value="SA">🇮🇹 Serie A</option>
-                        <option value="CL">🏆 Champions League</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-emerald-400">
-                        <i class="fa-solid fa-chevron-down text-xs"></i>
-                    </div>
-                </div>
+                </span>
+                <button onclick="openModal('leagueModal')" class="w-full bg-brand-card border border-brand-border hover:border-emerald-500/50 text-white text-xs font-bold rounded-xl px-3 py-2.5 flex items-center justify-between transition shadow-sm">
+                    <span id="selectedLeagueLabel" class="truncate text-emerald-400">Tout Chanpyona</span>
+                    <i class="fa-solid fa-chevron-down text-xs text-gray-400 ml-1"></i>
+                </button>
             </div>
 
-            <!-- 2. BAND DATE -->
+            <!-- 2. BOUTON FILTÈ DATE -->
             <div>
-                <label for="dateSelect" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
                     <i class="fa-regular fa-calendar-days text-emerald-400"></i>
                     <span>Date</span>
-                </label>
-                <div class="relative">
-                    <select id="dateSelect" onchange="selectDay(this.value)" class="w-full bg-brand-card border border-brand-border text-emerald-400 text-xs font-bold rounded-xl px-4 py-3 appearance-none focus:outline-none focus:border-emerald-500 transition cursor-pointer">
-                        <!-- Dat yo ap chaje dinamikman isit la -->
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-emerald-400">
-                        <i class="fa-solid fa-chevron-down text-xs"></i>
-                    </div>
-                </div>
+                </span>
+                <button onclick="openModal('dateModal')" class="w-full bg-brand-card border border-brand-border hover:border-emerald-500/50 text-white text-xs font-bold rounded-xl px-3 py-2.5 flex items-center justify-between transition shadow-sm">
+                    <span id="selectedDateLabel" class="truncate text-emerald-400">Jodi a</span>
+                    <i class="fa-solid fa-chevron-down text-xs text-gray-400 ml-1"></i>
+                </button>
             </div>
         </div>
 
         <!-- KAT PREDIKSYON YO -->
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+        <div class="flex justify-between items-center mb-3">
+            <h2 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
                 <i class="fa-solid fa-fire text-emerald-400"></i>
                 <span>Match ak Prediksyon</span>
             </h2>
         </div>
 
-        <div id="matchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="col-span-full text-center py-12 text-gray-400">
-                <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-400 mb-2"></i>
-                <p class="text-xs font-semibold">N ap chaje match reyèl yo nan sèvè a...</p>
+        <!-- GRID MATCH YO (TITAN PI PITIT AK PI DANS) -->
+        <div id="matchesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="col-span-full text-center py-10 text-gray-400">
+                <i class="fa-solid fa-circle-notch fa-spin text-xl text-emerald-400 mb-2"></i>
+                <p class="text-xs font-semibold">N ap chaje match yo...</p>
             </div>
         </div>
 
     </main>
+
+    <!-- POP-UP MODAL POU CHANPYONA -->
+    <div id="leagueModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-emerald-500/30 w-full max-w-sm rounded-2xl p-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-3 border-b border-brand-border pb-2">
+                <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-trophy text-emerald-400"></i> Chwazi Chanpyona
+                </h3>
+                <button onclick="closeModal('leagueModal')" class="text-gray-400 hover:text-white text-sm px-2 py-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-1.5 max-h-60 overflow-y-auto no-scrollbar">
+                <button onclick="selectLeague('ALL', 'Tout Chanpyona')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                    <span>Tout Chanpyona</span>
+                    <i class="fa-solid fa-check text-emerald-400 text-xs hidden check-icon" id="check-ALL"></i>
+                </button>
+                <button onclick="selectLeague('PD', '🇪🇸 LaLiga')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                    <span>🇪🇸 LaLiga</span>
+                </button>
+                <button onclick="selectLeague('PL', '🏴 Premier League')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                    <span>🏴 Premier League</span>
+                </button>
+                <button onclick="selectLeague('BL1', '🇩🇪 Bundesliga')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                    <span>🇩🇪 Bundesliga</span>
+                </button>
+                <button onclick="selectLeague('FL1', '🇫🇷 Ligue 1')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                    <span>🇫🇷 Ligue 1</span>
+                </button>
+                <button onclick="selectLeague('SA', '🇮🇹 Serie A')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                    <span>🇮🇹 Serie A</span>
+                </button>
+                <button onclick="selectLeague('CL', '🏆 Champions League')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition flex justify-between items-center">
+                    <span>🏆 Champions League</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POP-UP MODAL POU DATE -->
+    <div id="dateModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-brand-card border border-emerald-500/30 w-full max-w-sm rounded-2xl p-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-3 border-b border-brand-border pb-2">
+                <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-regular fa-calendar-days text-emerald-400"></i> Chwazi Dat Match
+                </h3>
+                <button onclick="closeModal('dateModal')" class="text-gray-400 hover:text-white text-sm px-2 py-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="dateModalList" class="space-y-1.5 max-h-60 overflow-y-auto no-scrollbar">
+                <!-- Dat yo ap rantre la dinamikman -->
+            </div>
+        </div>
+    </div>
 
     <!-- FOOTER -->
     <footer class="py-6 text-center border-t border-brand-border text-xs text-gray-500 mb-16">
@@ -169,7 +211,7 @@
         </nav>
     </div>
 
-    <!-- SCRIPT SUPABASE AK KONTWÒL PLAN -->
+    <!-- SCRIPT SUPABASE AK KONTWÒL -->
     <script>
         const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
@@ -180,12 +222,20 @@
         let currentDayFilter = null;
         let currentLeagueFilter = 'ALL';
 
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
         function renderDynamicDays() {
-            const dateSelect = document.getElementById('dateSelect');
-            if (!dateSelect) return;
+            const dateModalList = document.getElementById('dateModalList');
+            if (!dateModalList) return;
             const daysOfWeek = ['Dim', 'Len', 'Mar', 'Mèk', 'Jej', 'Vand', 'Sam'];
             const targetToday = new Date();
-            let optionsHtml = '';
+            let htmlContent = '';
 
             for (let i = -1; i <= 8; i++) {
                 const targetDate = new Date(targetToday);
@@ -202,21 +252,29 @@
 
                 if (i === 0) {
                     currentDayFilter = dateStr;
-                    optionsHtml += `<option value="${dateStr}" selected>${label}</option>`;
-                } else {
-                    optionsHtml += `<option value="${dateStr}">${label}</option>`;
+                    document.getElementById('selectedDateLabel').innerText = label;
                 }
+
+                htmlContent += `
+                    <button onclick="selectDate('${dateStr}', '${label}')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 transition">
+                        ${label}
+                    </button>
+                `;
             }
-            dateSelect.innerHTML = optionsHtml;
+            dateModalList.innerHTML = htmlContent;
         }
 
-        function selectDay(dateStr) {
-            currentDayFilter = dateStr;
+        function selectLeague(code, name) {
+            currentLeagueFilter = code;
+            document.getElementById('selectedLeagueLabel').innerText = name;
+            closeModal('leagueModal');
             applyFilters();
         }
 
-        function filterLeague(code) {
-            currentLeagueFilter = code;
+        function selectDate(dateStr, label) {
+            currentDayFilter = dateStr;
+            document.getElementById('selectedDateLabel').innerText = label;
+            closeModal('dateModal');
             applyFilters();
         }
 
@@ -276,57 +334,40 @@
             }
 
             container.innerHTML = list.map(m => `
-                <div onclick="window.location.href='details.html?id=${m.id}'" class="p-4 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/40 transition cursor-pointer group shadow-sm flex flex-col justify-between">
+                <div onclick="window.location.href='details.html?id=${m.id}'" class="p-3 rounded-xl bg-brand-card border border-brand-border hover:border-emerald-500/40 transition cursor-pointer group shadow-sm flex flex-col justify-between">
                     
                     <div>
                         <!-- HEAD: ORÈ + CHANPYONA -->
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-[11px] text-gray-400 font-semibold flex items-center gap-1">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-[10px] text-gray-400 font-semibold flex items-center gap-1">
                                 <i class="fa-regular fa-clock text-emerald-400"></i> ${m.time}
                             </span>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[11px] text-gray-400 font-medium">${m.league}</span>
-                                ${isFree ? `
-                                    <div class="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-[10px]" title="Accès limité">
-                                        <i class="fa-solid fa-lock"></i>
-                                    </div>
-                                ` : `
-                                    <div class="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px]">
-                                        <i class="fa-solid fa-lock-open"></i>
-                                    </div>
-                                `}
-                            </div>
+                            <span class="text-[10px] text-gray-400 font-medium truncate max-w-[120px]">${m.league}</span>
                         </div>
                         
                         <!-- MATCH TEAMS -->
-                        <div class="flex items-center justify-between text-xs sm:text-sm font-bold text-white group-hover:text-emerald-400 transition my-3 px-1">
-                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-futbol text-emerald-400 text-[10px]"></i>${m.teamA}</span>
-                            <span class="text-[10px] text-gray-600 font-extrabold px-1">VS</span>
-                            <span class="flex items-center gap-1.5">${m.teamB}<i class="fa-solid fa-futbol text-emerald-400 text-[10px]"></i></span>
+                        <div class="flex items-center justify-between text-xs font-bold text-white group-hover:text-emerald-400 transition my-2 px-1">
+                            <span class="truncate max-w-[40%]">${m.teamA}</span>
+                            <span class="text-[9px] text-gray-500 font-extrabold px-1">VS</span>
+                            <span class="truncate max-w-[40%] text-right">${m.teamB}</span>
                         </div>
 
-                        <!-- PRONOSTIK BAZIQ -->
-                        <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-2">
+                        <!-- PRONOSTIK BAZIK AK POURCENTAGE TOUPORE L -->
+                        <div class="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-2">
                             <div class="flex flex-col">
-                                <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Pronostik Baziq:</span>
+                                <span class="text-[8px] uppercase tracking-wider font-bold text-gray-400">Pronostik Bazik:</span>
                                 <span class="text-xs font-extrabold text-emerald-400">${m.victory}</span>
                             </div>
-                        </div>
-
-                        <!-- ANALIZ (BLURRED SI FREE) -->
-                        <div class="p-2.5 rounded-xl bg-brand-dark border border-brand-border flex justify-between items-center mt-2">
-                            <div class="flex flex-col">
-                                <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Analiz Rezo:</span>
-                                <span class="text-xs font-bold text-gray-300 ${isFree ? 'blur-sm select-none opacity-30' : ''}">${m.analysis}</span>
-                            </div>
-                            <span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 font-extrabold text-xs border border-emerald-500/30">${m.percent}</span>
+                            <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold text-[10px] border border-emerald-500/30">
+                                ${m.percent}
+                            </span>
                         </div>
                     </div>
 
                     ${isFree ? `
-                        <div class="mt-3 pt-2 border-t border-brand-border/40 text-center">
-                            <a href="profile.html" class="text-[10px] text-gray-400 hover:text-amber-400 transition font-medium flex items-center justify-center gap-1">
-                                <i class="fa-solid fa-gem text-amber-400/80 text-[9px]"></i> Passer en VIP / ÉLITE pour débloquer l'analyse
+                        <div class="mt-2 pt-1.5 border-t border-brand-border/40 text-center">
+                            <a href="profile.html" class="text-[9px] text-gray-400 hover:text-amber-400 transition font-medium flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-gem text-amber-400/80 text-[8px]"></i> Passer en VIP / ÉLITE pour débloquer l'analyse
                             </a>
                         </div>
                     ` : ''}
