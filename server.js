@@ -3,7 +3,6 @@ const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
 
 const app = express();
-// Render ap otomatikman bay pò HTTP a nan process.env.PORT
 const PORT = process.env.PORT || 3000;
 
 const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
@@ -13,8 +12,8 @@ const API_SPORTS_KEY = process.env.API_SPORTS_KEY || '642b2222ba559586a9a165bcd3
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 async function syncDailyMatches() {
-    const lèLokal = new Date().toLocaleTimeString('fr-FR', { timeZone: 'America/Port-au-Prince' });
-    console.log(`⏰ [${lèLokal}] Mizajou match jounen an kòmanse ak API-Sports...`);
+    const lèLokal = new Date().toLocaleTimeString('fr-FR', { timeZone: 'America/New_York' });
+    console.log(`[${lèLokal}] Mizajou match jounen an kòmanse ak API-Sports...`);
     
     const today = new Date().toISOString().split('T')[0];
 
@@ -52,33 +51,30 @@ async function syncDailyMatches() {
             const { error } = await supabase.from('daily_matches').insert(formattedMatches);
 
             if (error) throw error;
-            console.log("✅ Match jounen an anrejistre kòrèkteman nan Supabase!");
+            console.log("Match jounen an anrejistre kòrèkteman nan Supabase!");
         } else {
             await supabase.from('daily_matches').delete().neq('id', 0);
-            console.log("⚠️ Pa gen match pou jodi a, table la netwaye.");
+            console.log("Pa gen match pou jodi a, table la netwaye.");
         }
     } catch (err) {
-        console.error("❌ Erè nan senkronizasyon an:", err);
+        console.error("Erè nan senkronizasyon an:", err);
     }
 }
 
-// Route senp pou Render tcheke ak konfirme sèvè a "Live"
 app.get('/', (req, res) => {
-    res.send('BETZONE Backend active ak Cron Job!');
+    res.send('BETZONE Backend is running!');
 });
 
-// Demare sèvè Express la
 app.listen(PORT, () => {
-    console.log(`🚀 Sèvè ap koute sou pò ${PORT}`);
+    console.log(`Sèvè ap koute sou pò ${PORT}`);
     
-    // Ekzekite 1 fwa nan demaraj
     syncDailyMatches();
     
-    // Cron Job pou kouri chak minit (oswa '30 3 * * *' pou 3:30 AM)
+    // Cron job ki itilize timezone "America/New_York" (menm orè ak Ayiti)
     cron.schedule('* * * * *', async () => {
         await syncDailyMatches();
     }, {
         scheduled: true,
-        timezone: "America/Port-au-Prince"
+        timezone: "America/New_York"
     });
 });
