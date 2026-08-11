@@ -18,9 +18,12 @@ async function syncDailyMatches() {
     console.log(`📅 Chèche match pou dat: ${today}`);
 
     try {
-        const response = await fetch(`https://api.football-data.org/v4/matches?competitions=PL,PD,BL1,SA,FL1,CL&dateFrom=${today}&dateTo=${today}`, {
-    headers: { 'X-Auth-Token': FOOTBALL_DATA_KEY }
-});
+        const todayDate = new Date();
+const futureDate = new Date();
+futureDate.setDate(todayDate.getDate() + 10);
+const toDateStr = futureDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+
+const response = await fetch(`https://api.football-data.org/v4/matches?competitions=PL,PD,BL1,SA,FL1,CL&dateFrom=${today}&dateTo=${toDateStr}`, {
 
         const data = await response.json();
 
