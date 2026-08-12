@@ -63,99 +63,63 @@
     </nav>
 
     <!-- KONTENI PRENSIPAL DASHBOARD -->
-    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-5">
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-6">
         
         <!-- BYENVENI BANNER -->
-        <div class="p-3 sm:p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-brand-card to-brand-card border border-emerald-500/30 mb-5 flex items-center justify-between gap-3">
+        <div class="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-brand-card to-brand-card border border-emerald-500/30 mb-6 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
                 <div class="w-2.5 h-8 bg-emerald-500 rounded-full hidden sm:block"></div>
                 <div>
-                    <h1 class="text-xs sm:text-sm font-bold text-white">
+                    <h1 class="text-sm sm:text-base font-bold text-white">
                         Benvini sou Dashboard ou, <span id="userNameDisplay" class="text-emerald-400 font-extrabold">...</span>! 👋
                     </h1>
-                    <p class="text-gray-400 text-[10px] sm:text-xs">Prediksyon ak analiz spòtif an tan reyèl.</p>
+                    <p class="text-gray-400 text-[11px] sm:text-xs">Prediksyon ak analiz spòtif an tan reyèl pou jodi a.</p>
                 </div>
             </div>
-            <div class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold whitespace-nowrap flex items-center gap-1.5">
+            <div class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold whitespace-nowrap flex items-center gap-1.5">
                 <i class="fa-solid fa-shield-check text-xs"></i>
                 <span class="hidden xs:inline">Kont Verifye</span>
             </div>
         </div>
 
-        <!-- BAND FILTÈ KI DEFILE ANBA BOUTON YO SOU MATCH YO -->
-        <div class="grid grid-cols-2 gap-3 mb-5 relative z-30">
-            
-            <!-- 1. BOUTON & LIS DEFILANT CHANPYONA -->
-            <div class="relative">
-                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                    <i class="fa-solid fa-trophy text-emerald-400"></i>
-                    <span>Chanpyona</span>
-                </span>
-                <button onclick="toggleDropdown('leagueDropdown')" class="w-full bg-brand-card border border-brand-border hover:border-emerald-500/50 text-white text-xs font-bold rounded-xl px-3 py-2.5 flex items-center justify-between transition shadow-sm">
-                    <span id="selectedLeagueLabel" class="truncate text-emerald-400">Tout Chanpyona</span>
-                    <i class="fa-solid fa-chevron-down text-xs text-gray-400 ml-1"></i>
-                </button>
-
-                <!-- LIS DEFILANT ABSOLUTE (SOU MATCH YO) -->
-                <div id="leagueDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-brand-card border border-emerald-500/30 rounded-xl p-2 shadow-2xl space-y-1 max-h-60 overflow-y-auto no-scrollbar z-50">
-                    <button onclick="selectLeague('ALL', 'Tout Chanpyona')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 transition">
-                        Tout Chanpyona
-                    </button>
-                    <button onclick="selectLeague('PD', '🇪🇸 LaLiga')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 transition">
-                        🇪🇸 LaLiga
-                    </button>
-                    <button onclick="selectLeague('PL', '🏴 Premier League')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 transition">
-                        🏴 Premier League
-                    </button>
-                    <button onclick="selectLeague('BL1', '🇩🇪 Bundesliga')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 transition">
-                        🇩🇪 Bundesliga
-                    </button>
-                    <button onclick="selectLeague('FL1', '🇫🇷 Ligue 1')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 transition">
-                        🇫🇷 Ligue 1
-                    </button>
-                    <button onclick="selectLeague('SA', '🇮🇹 Serie A')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 transition">
-                        🇮🇹 Serie A
-                    </button>
-                    <button onclick="selectLeague('CL', '🏆 Champions League')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 transition">
-                        🏆 Champions League
-                    </button>
-                </div>
+        <!-- 1. LIS CHANPYONA YO -->
+        <div class="mb-5">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-trophy text-emerald-400"></i>
+                <span>Chanpyona Yo</span>
+            </h3>
+            <div id="leaguesFilter" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                <button onclick="filterLeague('ALL', this)" class="league-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm">Tout Chanpyona</button>
+                <button onclick="filterLeague('PD', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🇪🇸 LaLiga</button>
+                <button onclick="filterLeague('PL', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🏴 Premier League</button>
+                <button onclick="filterLeague('BL1', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🇩🇪 Bundesliga</button>
+                <button onclick="filterLeague('FL1', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🇫🇷 Ligue 1</button>
+                <button onclick="filterLeague('SA', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🇮🇹 Serie A</button>
+                <button onclick="filterLeague('CL', this)" class="league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition">🏆 Champions League</button>
             </div>
+        </div>
 
-            <!-- 2. BOUTON & LIS DEFILANT DATE -->
-            <div class="relative">
-                <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                    <i class="fa-regular fa-calendar-days text-emerald-400"></i>
-                    <span>Date</span>
-                </span>
-                <button onclick="toggleDropdown('dateDropdown')" class="w-full bg-brand-card border border-brand-border hover:border-emerald-500/50 text-white text-xs font-bold rounded-xl px-3 py-2.5 flex items-center justify-between transition shadow-sm">
-                    <span id="selectedDateLabel" class="truncate text-emerald-400">Jodi a</span>
-                    <i class="fa-solid fa-chevron-down text-xs text-gray-400 ml-1"></i>
-                </button>
-
-                <!-- LIS DEFILANT ABSOLUTE (SOU MATCH YO) -->
-                <div id="dateDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-brand-card border border-emerald-500/30 rounded-xl p-2 shadow-2xl space-y-1 max-h-60 overflow-y-auto no-scrollbar z-50">
-                    <div id="dateModalList" class="space-y-1">
-                        <!-- Dat yo ap rantre la dinamikman -->
-                    </div>
-                </div>
-            </div>
-
+        <!-- 2. LIS JOU YO -->
+        <div class="mb-6">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <i class="fa-regular fa-calendar-days text-emerald-400"></i>
+                <span>Seleksyon Jou</span>
+            </h3>
+            <div id="daysList" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"></div>
         </div>
 
         <!-- KAT PREDIKSYON YO -->
-        <div class="flex justify-between items-center mb-3">
-            <h2 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 <i class="fa-solid fa-fire text-emerald-400"></i>
                 <span>Match ak Prediksyon</span>
             </h2>
         </div>
 
-        <!-- GRID MATCH YO -->
-        <div id="matchesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
-            <div class="col-span-full text-center py-10 text-gray-400">
-                <i class="fa-solid fa-circle-notch fa-spin text-xl text-emerald-400 mb-2"></i>
-                <p class="text-xs font-semibold">N ap chaje match yo...</p>
+        <div id="matchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="col-span-full text-center py-12 text-gray-400">
+                <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-400 mb-2"></i>
+                <p class="text-xs font-semibold">N ap chaje match reyèl yo nan sèvè a...</p>
             </div>
         </div>
 
@@ -190,7 +154,7 @@
         </nav>
     </div>
 
-    <!-- SCRIPT SUPABASE AK KONTWÒL -->
+    <!-- SCRIPT SUPABASE AK KONTWÒL PLAN -->
     <script>
         const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
@@ -198,76 +162,47 @@
 
         let loadedMatches = [];
         let currentUserPlan = 'free';
-        let currentDayFilter = sessionStorage.getItem('bz_selected_date') || null;
-        let currentLeagueFilter = sessionStorage.getItem('bz_selected_league') || 'ALL';
-
-        function toggleDropdown(id) {
-            const el = document.getElementById(id);
-            el.classList.toggle('hidden');
-        }
+        let currentDayFilter = null;
+        let currentLeagueFilter = 'ALL';
 
         function renderDynamicDays() {
-            const dateModalList = document.getElementById('dateModalList');
-            if (!dateModalList) return;
-            const daysOfWeek = ['Dimanch', 'Lendi', 'Mardi', 'Mèkredi', 'Jedi', 'Vandredi', 'Samdi'];
+            const daysContainer = document.getElementById('daysList');
+            if (!daysContainer) return;
+            const daysOfWeek = ['Dim', 'Len', 'Mar', 'Mèk', 'Jej', 'Vand', 'Sam'];
+
             const targetToday = new Date();
             let htmlContent = '';
-
-            const savedDate = sessionStorage.getItem('bz_selected_date');
-            const savedDateLabel = sessionStorage.getItem('bz_selected_date_label');
 
             for (let i = -1; i <= 8; i++) {
                 const targetDate = new Date(targetToday);
                 targetDate.setDate(targetToday.getDate() + i);
                 const dayName = daysOfWeek[targetDate.getDay()];
-                const dayNumber = String(targetDate.getDate()).padStart(2, '0');
-                const monthNumber = String(targetDate.getMonth() + 1).padStart(2, '0');
+                const dayNumber = targetDate.getDate();
+                const monthNumber = targetDate.getMonth() + 1;
                 const dateStr = targetDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-
                 let label = `${dayName} ${dayNumber}/${monthNumber}`;
-                if (i === -1) label = `Yè (${dayName} ${dayNumber}/${monthNumber})`;
-                else if (i === 0) label = `Jodi a (${dayName} ${dayNumber}/${monthNumber})`;
-                else if (i === 1) label = `Demen (${dayName} ${dayNumber}/${monthNumber})`;
 
-                if (i === 0 && !savedDate) {
-                    currentDayFilter = dateStr;
-                    document.getElementById('selectedDateLabel').innerText = label;
-                }
+                if (i === -1) label = `Yè (${dayNumber}/${monthNumber})`;
+                else if (i === 0) label = `Jodi a (${dayNumber}/${monthNumber})`;
+                else if (i === 1) label = `Demen (${dayNumber}/${monthNumber})`;
 
-                htmlContent += `
-                    <button onclick="selectDate('${dateStr}', '${label}')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 transition">
-                        ${label}
-                    </button>
-                `;
+                if (i === 0) currentDayFilter = dateStr;
+
+                const btnClass = (i === 0) 
+                    ? "day-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm transition"
+                    : "day-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition hover:text-white";
+
+                htmlContent += `<button onclick="selectDay(this, '${dateStr}')" class="${btnClass}">${label}</button>`;
             }
-
-            if (savedDate && savedDateLabel) {
-                document.getElementById('selectedDateLabel').innerText = savedDateLabel;
-            }
-
-            const savedLeagueLabel = sessionStorage.getItem('bz_selected_league_label');
-            if (savedLeagueLabel) {
-                document.getElementById('selectedLeagueLabel').innerText = savedLeagueLabel;
-            }
-
-            dateModalList.innerHTML = htmlContent;
+            daysContainer.innerHTML = htmlContent;
         }
 
-        function selectLeague(code, name) {
-            currentLeagueFilter = code;
-            sessionStorage.setItem('bz_selected_league', code);
-            sessionStorage.setItem('bz_selected_league_label', name);
-            document.getElementById('selectedLeagueLabel').innerText = name;
-            document.getElementById('leagueDropdown').classList.add('hidden');
-            applyFilters();
-        }
-
-        function selectDate(dateStr, label) {
+        function selectDay(btnElement, dateStr) {
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                btn.className = "day-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition hover:text-white";
+            });
+            btnElement.className = "day-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm transition";
             currentDayFilter = dateStr;
-            sessionStorage.setItem('bz_selected_date', dateStr);
-            sessionStorage.setItem('bz_selected_date_label', label);
-            document.getElementById('selectedDateLabel').innerText = label;
-            document.getElementById('dateDropdown').classList.add('hidden');
             applyFilters();
         }
 
@@ -285,6 +220,7 @@
         async function fetchLiveMatches() {
             const container = document.getElementById('matchesContainer');
             try {
+                // Rale tout match ki anndan daily_matches san sakrifis dat
                 const { data: matches, error } = await supabaseClient
                     .from('daily_matches')
                     .select('*');
@@ -292,13 +228,11 @@
                 if (error) throw error;
 
                 if (matches && matches.length > 0) {
-                    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-
                     loadedMatches = matches.map(m => ({
                         id: m.id,
                         leagueCode: m.league_code,
                         league: m.league_name,
-                        matchDate: m.match_date || todayStr,
+                        matchDate: m.match_date,
                         time: m.match_time,
                         teamA: m.team_a,
                         teamB: m.team_b,
@@ -309,7 +243,7 @@
 
                     applyFilters();
                 } else {
-                    container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
+                    container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen okenn match ki disponib pou jodi a nan baz de done a.</div>`;
                 }
             } catch (err) {
                 console.error("Erè Supabase:", err);
@@ -317,58 +251,79 @@
             }
         }
 
+        function filterLeague(code, btnElement) {
+            document.querySelectorAll('.league-btn').forEach(btn => {
+                btn.className = "league-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-gray-400 text-xs font-bold whitespace-nowrap transition";
+            });
+            btnElement.className = "league-btn px-3 py-1.5 rounded-lg bg-emerald-500 text-black text-xs font-extrabold whitespace-nowrap shadow-sm";
+            currentLeagueFilter = code;
+            applyFilters();
+        }
+
         function renderMatches(plan, list) {
             const container = document.getElementById('matchesContainer');
             const isFree = (plan === 'free');
 
             if (!list || list.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
+                container.innerHTML = `<div class="col-span-full text-center py-8 text-gray-500 text-xs font-bold">Pa gen match disponib pou seleksyon sa.</div>`;
                 return;
             }
 
             container.innerHTML = list.map(m => `
-                <div ${!isFree ? `onclick="window.location.href='details.html?id=${m.id}'"` : ''} class="p-4 rounded-xl bg-brand-card border border-brand-border ${!isFree ? 'hover:border-emerald-500/40 cursor-pointer group' : 'cursor-default'} transition shadow-md flex flex-col justify-between">
+                <div onclick="window.location.href='details.html?id=${m.id}'" class="p-4 rounded-2xl bg-brand-card border border-brand-border hover:border-emerald-500/40 transition cursor-pointer group shadow-sm flex flex-col justify-between">
                     
                     <div>
                         <!-- HEAD: ORÈ + CHANPYONA -->
                         <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs text-gray-400 font-semibold flex items-center gap-1.5">
+                            <span class="text-[11px] text-gray-400 font-semibold flex items-center gap-1">
                                 <i class="fa-regular fa-clock text-emerald-400"></i> ${m.time}
                             </span>
-                            <span class="text-xs text-gray-400 font-medium truncate max-w-[130px]">${m.league}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[11px] text-gray-400 font-medium">${m.league}</span>
+                                ${isFree ? `
+                                    <div class="w-6 h-6 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-[10px]" title="Accès limité">
+                                        <i class="fa-solid fa-lock"></i>
+                                    </div>
+                                ` : `
+                                    <div class="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-[10px]">
+                                        <i class="fa-solid fa-lock-open"></i>
+                                    </div>
+                                `}
+                            </div>
                         </div>
                         
                         <!-- MATCH TEAMS -->
-                        <div class="flex items-center justify-between text-sm font-bold text-white ${!isFree ? 'group-hover:text-emerald-400' : ''} transition my-3 px-1">
-                            <span class="truncate max-w-[42%]">${m.teamA}</span>
-                            <span class="text-[10px] text-gray-500 font-extrabold px-1">VS</span>
-                            <span class="truncate max-w-[42%] text-right">${m.teamB}</span>
+                        <div class="flex items-center justify-between text-xs sm:text-sm font-bold text-white group-hover:text-emerald-400 transition my-3 px-1">
+                            <span class="flex items-center gap-1.5"><i class="fa-solid fa-futbol text-emerald-400 text-[10px]"></i>${m.teamA}</span>
+                            <span class="text-[10px] text-gray-600 font-extrabold px-1">VS</span>
+                            <span class="flex items-center gap-1.5">${m.teamB}<i class="fa-solid fa-futbol text-emerald-400 text-[10px]"></i></span>
                         </div>
 
-                        <!-- PRONOSTIK BAZIK AK POURCENTAGE TOUPORE L -->
-                        <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-3">
+                        <!-- PRONOSTIK BAZIQ -->
+                        <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-2">
                             <div class="flex flex-col">
-                                <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Pronostik Bazik:</span>
+                                <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Pronostik Baziq:</span>
                                 <span class="text-xs font-extrabold text-emerald-400">${m.victory}</span>
                             </div>
-                            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold text-xs border border-emerald-500/30">
-                                ${m.percent}
-                            </span>
+                        </div>
+
+                        <!-- ANALIZ (BLURRED SI FREE) -->
+                        <div class="p-2.5 rounded-xl bg-brand-dark border border-brand-border flex justify-between items-center mt-2">
+                            <div class="flex flex-col">
+                                <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Analiz Rezo:</span>
+                                <span class="text-xs font-bold text-gray-300 ${isFree ? 'blur-sm select-none opacity-30' : ''}">${m.analysis}</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 font-extrabold text-xs border border-emerald-500/30">${m.percent}</span>
                         </div>
                     </div>
 
-                    <!-- FOOTER AFFICHE SELON PLAN -->
-                    <div class="mt-3 pt-2 border-t border-brand-border/40 text-center">
-                        ${isFree ? `
+                    ${isFree ? `
+                        <div class="mt-3 pt-2 border-t border-brand-border/40 text-center">
                             <a href="profile.html" class="text-[10px] text-gray-400 hover:text-amber-400 transition font-medium flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-gem text-amber-400/80 text-[9px]"></i> Passer en VIP / ÉLITE pour débloquer l'analyse
                             </a>
-                        ` : `
-                            <span class="text-[10px] text-amber-400 font-bold flex items-center justify-center gap-1.5 drop-shadow-[0_0_8px_rgba(251,191,36,0.2)]">
-                                <i class="fa-solid fa-crown text-[9px]"></i> Appuyer pour accéder à l'analyse complet du match
-                            </span>
-                        `}
-                    </div>
+                        </div>
+                    ` : ''}
 
                 </div>
             `).join('');
