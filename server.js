@@ -8,6 +8,7 @@ const PORT = process.env.PORT || 3000;
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uiepdartkcunumajlwwg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
 const FOOTBALL_DATA_KEY = process.env.FOOTBALL_DATA_KEY || '1d6fdcd8b34649fdaf25ddbbb47ac3ac';
+const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -40,21 +41,19 @@ async function syncDailyMatches() {
 
             const formattedMatches = data.matches.map(item => {
                 const code = item.competition.code || 'ALL';
-
-                // Pran dat reyèl kote match la ap jwe nan fòma YYYY-MM-DD
                 const realMatchDate = item.utcDate ? item.utcDate.split('T')[0] : today;
 
                 return {
                     id: item.id,
                     league_code: code,
                     league_name: item.competition.name,
-                    match_date: realMatchDate, // AJOUTE: Champ sa nesesè pou frontend la sible chak jou kòrèkteman
+                    match_date: realMatchDate,
                     match_time: new Date(item.utcDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' }),
                     team_a: item.homeTeam.name,
                     team_b: item.awayTeam.name,
-                    victory: `Viktwa ${item.homeTeam.name}`,
-                    percent: `${Math.floor(Math.random() * 15) + 78}%`,
-                    analysis: 'Analiz spòtif kalkile pa rezo'
+                    victory: null,
+                    percent: null,
+                    analysis: null
                 };
             });
 
@@ -75,16 +74,135 @@ async function syncDailyMatches() {
     }
 }
 
+async function analyzeMatch(match) {
+    const prompt = `Fè yon rechèch sou entènèt (sou sit BetMines ak Google) pou match foutbòl sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
+Site sous ou yo lè posib (pa egzanp "selon BetMines...").
+Reponn SÈLMAN ak yon objè JSON valid, san okenn lòt tèks, egzakteman nan fòma sa a:
+{
+  "pronostik": [{"label": "Viktwa ${match.team_a}", "confidence": 82, "risk": "Fèb"}, {"label": "Plis 2.5 Bi", "confidence": 78, "risk": "Fèb"}, {"label": "BTTS", "confidence": 70, "risk": "Modere"}],
+  "analiz_ia": "yon paragraf kout an Kreyòl ki eksplike tandans prensipal la",
+  "bilan": {"home": {"win":0,"draw":0,"loss":0}, "away": {"win":0,"draw":0,"loss":0}},
+  "forme": {"home": ["W","W","D","W","L"], "away": ["W","D","L","W","W"]},
+  "h2h": [{"result": "${match.team_a} 2 - 1 ${match.team_b}", "date": "dat"}],
+  "absences": {"home": [{"name":"...", "status":"blese"}], "away": [{"name":"...", "status":"blese"}]},
+  "lineup": {
+    "home": {"formation":"4-3-3", "gk":["..."], "df":["...","...","...","..."], "mid":["...","...","..."], "fw":["...","...","..."]},
+    "away": {"formation":"4-3-3", "gk":["..."], "df":["...","...","...","..."], "mid":["...","...","..."], "fw":["...","...","..."]}
+  },
+  "recommendation": "yon fraz kout"
+}
+"risk" dwe youn nan: "Fèb", "Modere", "Elve". Si w pa jwenn done presi pou yon chan, mete yon estimasyon rezonab olye ou kite l vid.`;
+
+    const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${OPENROUTER_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: 'nvidia/nemotron-3-super-120b-a12b',
+            messages: [{ role: 'user', content: prompt }],
+            plugins: [{ id: 'web', max_results: 5 }]
+        })
+    });
+
+    const orData = await orRes.json();
+    const rawText = orData.choices?.[0]?.message?.content || '';
+    const cleaned = rawText.replace(/```json|```/g, '').trim();
+    return JSON.parse(cleaned);
+}
+
+async function generatePendingAnalysis() {
+    console.log('🧠 Chèche match ki bezwen analiz...');
+
+    const { data: pending, error } = await supabase
+        .from('daily_matches')
+        .select('*')
+        .is('percent', null)
+        .limit(10);
+
+    if (error) { console.error('❌ Erè chèche match pou analize:', error); return; }
+    if (!pending || pending.length === 0) { console.log('✅ Tout match deja analize.'); return; }
+
+    console.log(`🧠 ${pending.length} match pou analize...`);
+
+    for (const match of pending) {
+        try {
+            const parsed = await analyzeMatch(match);
+            const topPick = parsed.pronostik?.[0];
+
+            await supabase.from('match_analysis').upsert({
+                match_id: match.id,
+                data: parsed,
+                created_at: new Date().toISOString()
+            });
+
+            await supabase.from('daily_matches').update({
+                percent: topPick ? `${topPick.confidence}%` : 'N/A',
+                victory: topPick ? topPick.label : 'Analiz endisponib'
+            }).eq('id', match.id);
+
+            console.log(`✅ Analize: ${match.team_a} vs ${match.team_b}`);
+        } catch (err) {
+            console.error(`❌ Erè analiz pou ${match.team_a} vs ${match.team_b}:`, err.message);
+        }
+    }
+}
+
 app.get('/', (req, res) => {
     res.send('BETZONE Backend active');
 });
 
+app.use(express.json());
+
+app.get('/api/match-details/:matchId', async (req, res) => {
+    const matchId = req.params.matchId;
+
+    try {
+        const { data: cached } = await supabase
+            .from('match_analysis')
+            .select('data, created_at')
+            .eq('match_id', matchId)
+            .maybeSingle();
+
+        const isSameDay = cached && (new Date(cached.created_at).toDateString() === new Date().toDateString());
+        if (isSameDay) {
+            return res.json({ ...cached.data, cached: true });
+        }
+
+        const { data: match, error: matchErr } = await supabase
+            .from('daily_matches')
+            .select('*')
+            .eq('id', matchId)
+            .single();
+
+        if (matchErr || !match) {
+            return res.status(404).json({ error: 'Match pa jwenn' });
+        }
+
+        const parsed = await analyzeMatch(match);
+
+        await supabase.from('match_analysis').upsert({
+            match_id: matchId,
+            data: parsed,
+            created_at: new Date().toISOString()
+        });
+
+        return res.json({ ...parsed, cached: false });
+
+    } catch (err) {
+        console.error('❌ Erè match-details:', err);
+        return res.status(500).json({ error: 'Nou pa t ka jenere analiz la kounye a.' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Sèvè ap koute sou pò ${PORT}`);
-    syncDailyMatches();
+    syncDailyMatches().then(() => generatePendingAnalysis());
 
     cron.schedule('*/12 * * * *', async () => {
         await syncDailyMatches();
+        await generatePendingAnalysis();
     }, {
         scheduled: true,
         timezone: "America/New_York"

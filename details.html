@@ -74,9 +74,9 @@
             <div class="flex items-center justify-between gap-4">
                 <div class="flex-1 flex flex-col items-center text-center">
                     <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand-dark border border-brand-border p-3 flex items-center justify-center mb-2 shadow-inner">
-                        <img src="https://media.api-sports.io/football/teams/541.png" alt="Real Madrid" class="w-full h-full object-contain">
+                        <img id="homeLogo" src="https://media.api-sports.io/football/teams/541.png" alt="Home Team" class="w-full h-full object-contain">
                     </div>
-                    <h2 class="text-sm sm:text-base font-extrabold text-white">Real Madrid</h2>
+                    <h2 id="homeTeamName" class="text-sm sm:text-base font-extrabold text-white">Real Madrid</h2>
                 </div>
 
                 <div class="flex flex-col items-center justify-center shrink-0">
@@ -85,9 +85,9 @@
 
                 <div class="flex-1 flex flex-col items-center text-center">
                     <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand-dark border border-brand-border p-3 flex items-center justify-center mb-2 shadow-inner">
-                        <img src="https://media.api-sports.io/football/teams/50.png" alt="Man City" class="w-full h-full object-contain">
+                        <img id="awayLogo" src="https://media.api-sports.io/football/teams/50.png" alt="Away Team" class="w-full h-full object-contain">
                     </div>
-                    <h2 class="text-sm sm:text-base font-extrabold text-white">Man City</h2>
+                    <h2 id="awayTeamName" class="text-sm sm:text-base font-extrabold text-white">Man City</h2>
                 </div>
             </div>
         </div>
@@ -119,17 +119,11 @@
                                 <tr>
                                     <th class="p-3">Opsyon</th>
                                     <th class="p-3">Konfyans (%)</th>
+                                    <th class="p-3">Ris</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-brand-border text-gray-200">
-                                <tr>
-                                    <td class="p-3 font-bold text-emerald-400">Victoire Real Madrid (1)</td>
-                                    <td class="p-3 mono font-bold text-amber-400">85%</td>
-                                </tr>
-                                <tr class="vip-only-row">
-                                    <td class="p-3 font-bold text-gray-300">Plus de 2.5 Buts</td>
-                                    <td class="p-3 mono font-bold text-amber-400 vip-content">78%</td>
-                                </tr>
+                                <!-- Dinamikman ranpli pa Javascript -->
                             </tbody>
                         </table>
                     </div>
@@ -143,9 +137,26 @@
                         <i class="fa-solid fa-brain text-emerald-400"></i>
                         <span>Analiz Entelijans Atifisyèl (IA)</span>
                     </h3>
-                    <div id="aiAnalysisBox" class="text-xs sm:text-sm text-gray-300 leading-relaxed">
-                        Real Madrid gen yon avantaj taktik sou 10 dènye match lakay li yo ak yon mwayèn 2.3 bi pa match. Man City gen yon defans fragil aletranje.
-                    </div>
+                    <p class="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                        <!-- Dinamikman ranpli pa Javascript -->
+                    </p>
+                </div>
+
+                <!-- BILAN AK FORME -->
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="p-4 rounded-2xl bg-brand-card border border-brand-border space-y-2"></div>
+                    <div class="p-4 rounded-2xl bg-brand-card border border-brand-border space-y-2"></div>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-brand-card border border-brand-border space-y-3">
+                    <div class="flex items-center justify-between"></div>
+                    <div class="flex items-center justify-between"></div>
+                </div>
+
+                <!-- H2H -->
+                <div class="p-4 rounded-2xl bg-brand-card border border-brand-border">
+                    <h4 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider mono">Dènye Konfrontasyon (H2H)</h4>
+                    <div class="space-y-2"></div>
                 </div>
             </div>
 
@@ -156,21 +167,24 @@
                         <i class="fa-solid fa-user-xmark text-red-400"></i>
                         <span>Jwè ki Absan (Blesi / Sanksyon)</span>
                     </h3>
-                    <div id="absentPlayersBox" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <div class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
-                            <span class="font-extrabold text-emerald-400 block">Real Madrid</span>
-                            <div class="flex items-center justify-between text-gray-300">
-                                <span>D. Alaba</span>
-                                <span class="text-[10px] text-red-400 font-bold">Blese</span>
-                            </div>
-                        </div>
-                        <div class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
-                            <span class="font-extrabold text-blue-400 block">Man City</span>
-                            <div class="flex items-center justify-between text-gray-300">
-                                <span>N. Ake</span>
-                                <span class="text-[10px] text-red-400 font-bold">Blese</span>
-                            </div>
-                        </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1"></div>
+                        <div class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1"></div>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-3xl bg-brand-card border border-brand-border space-y-4">
+                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mono flex items-center gap-2">
+                        <i class="fa-solid fa-shirt text-emerald-400"></i>
+                        <span>11 PWOBAB</span>
+                    </h3>
+                    <p class="text-[11px] text-gray-400 italic"></p>
+
+                    <!-- TEREN FOUTBÒL VISYÈL -->
+                    <div class="relative w-full h-80 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 overflow-hidden flex flex-col justify-between p-3">
+                        <div id="homeTeamPitch" class="h-1/2 flex flex-col justify-around"></div>
+                        <div class="w-full border-b border-dashed border-emerald-500/30 my-1"></div>
+                        <div id="awayTeamPitch" class="h-1/2 flex flex-col justify-around"></div>
                     </div>
                 </div>
             </div>
@@ -179,11 +193,12 @@
 
     </main>
 
-    <!-- SCRIPT DE RESTRICKTION PAR PLAN -->
+    <!-- SCRIPT PRENSIPAL -->
     <script>
         const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const BACKEND_URL = 'https://bet-zone.onrender.com';
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
@@ -192,47 +207,135 @@
             document.getElementById('btn-' + tabId).classList.add('active');
         }
 
-        async function initPagePermissions() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) return;
+        function riskColor(risk){
+            if(risk === 'Elve') return 'bg-red-500/10 text-red-400 border-red-500/20';
+            if(risk === 'Modere') return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+            return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+        }
+        function formResultColor(r){
+            if(r === 'W') return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+            if(r === 'L') return 'bg-red-500/20 text-red-400 border-red-500/30';
+            return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+        }
 
-            const { data: profile } = await supabaseClient
-                .from('profiles')
-                .select('plan')
-                .eq('id', session.user.id)
-                .maybeSingle();
+        async function loadMatchHeader(matchId) {
+    const { data: m, error } = await supabaseClient.from('daily_matches').select('*').eq('id', matchId).single();
+    if (error || !m) {
+        document.querySelector('main').innerHTML = '<div class="text-center py-20 text-gray-400 text-sm">Match sa a pa jwenn.</div>';
+        return null;
+    }
+    document.querySelector('.mono.uppercase').textContent = m.league_name;
+    document.getElementById('homeTeamName').textContent = m.team_a;
+    document.getElementById('awayTeamName').textContent = m.team_b;
+    document.getElementById('homeLogo').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(m.team_a)}&background=10b981&color=fff`;
+    document.getElementById('awayLogo').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(m.team_b)}&background=0284c7&color=fff`;
 
-            const plan = (profile?.plan || 'free').toLowerCase();
-            const tag = document.getElementById('userPlanTag');
+    // Estati/lè
+    const statusBadge = document.querySelector('.text-amber-400.mono.uppercase');
+    if (statusBadge) statusBadge.textContent = `Annatant (${m.match_time})`;
 
-            if (plan.includes('elite')) {
-                tag.className = "px-2.5 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-                tag.innerText = "ÉLITE";
-            } else if (plan.includes('vip')) {
-                tag.className = "px-2.5 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider bg-purple-500/20 text-purple-400 border border-purple-500/30";
-                tag.innerText = "VIP";
-            } else {
-                tag.className = "px-2.5 py-1 rounded-xl text-[10px] font-extrabold uppercase tracking-wider bg-gray-500/20 text-gray-400 border border-gray-500/30";
-                tag.innerText = "GRATIS";
+    // Dat match la (fòma: "8 Out 2026")
+    const dateEl = document.querySelector('.text-gray-400.mt-1.mono');
+    if (dateEl && m.match_date) {
+        const moisKreyol = ['Janvye','Fevriye','Mas','Avril','Me','Jen','Jiyè','Out','Septanm','Oktòb','Novanm','Desanm'];
+        const d = new Date(m.match_date + 'T00:00:00');
+        dateEl.textContent = `${d.getDate()} ${moisKreyol[d.getMonth()]} ${d.getFullYear()}`;
+    }
 
-                // Bloke fonksyon spesyal pou Gratis yo nan paj detay an
-                document.querySelectorAll('.vip-content').forEach(el => {
-                    el.innerHTML = `<span class="text-amber-400 text-[10px] font-extrabold">Achte on abonman VIP / ELITE pouw debloke analiz sa</span>`;
-                });
+    return m;
+}
 
-                document.getElementById('aiAnalysisBox').innerHTML = `
-                    <div class="p-4 rounded-xl bg-black/60 border border-amber-500/30 text-center text-amber-300 font-bold text-xs">
-                        Achte on abonman VIP / ELITE pouw debloke analiz sa
-                    </div>`;
+        function renderPronostik(list) {
+            const tbody = document.querySelector('#tab-pronostik tbody');
+            tbody.innerHTML = (list || []).map(p => `
+                <tr>
+                    <td class="p-3 font-bold text-gray-300">${p.label}</td>
+                    <td class="p-3 mono font-bold text-amber-400">${p.confidence}%</td>
+                    <td class="p-3"><span class="px-2 py-0.5 text-[10px] rounded-md border font-bold ${riskColor(p.risk)}">${p.risk}</span></td>
+                </tr>`).join('');
+        }
 
-                document.getElementById('absentPlayersBox').innerHTML = `
-                    <div class="p-4 rounded-xl bg-black/60 border border-amber-500/30 text-center text-amber-300 font-bold text-xs col-span-2">
-                        Achte on abonman VIP / ELITE pouw debloke analiz sa
-                    </div>`;
+        function renderAnaliz(data, homeName, awayName) {
+            document.querySelector('#tab-analiz p.leading-relaxed').textContent = data.analiz_ia || '';
+
+            const bilan = data.bilan || {};
+            const bilanBoxes = document.querySelectorAll('#tab-analiz .grid.grid-cols-2 > div');
+            if (bilanBoxes[0] && bilan.home) {
+                bilanBoxes[0].innerHTML = `<span class="font-extrabold text-white block border-b border-brand-border pb-1">${homeName} (Lakay)</span>
+                    <div class="flex justify-between text-gray-400"><span>Genyen:</span><span class="font-bold text-emerald-400">${bilan.home.win}</span></div>
+                    <div class="flex justify-between text-gray-400"><span>Nul:</span><span class="font-bold text-amber-400">${bilan.home.draw}</span></div>
+                    <div class="flex justify-between text-gray-400"><span>Pèdi:</span><span class="font-bold text-red-400">${bilan.home.loss}</span></div>`;
+            }
+            if (bilanBoxes[1] && bilan.away) {
+                bilanBoxes[1].innerHTML = `<span class="font-extrabold text-white block border-b border-brand-border pb-1">${awayName} (Deyò)</span>
+                    <div class="flex justify-between text-gray-400"><span>Genyen:</span><span class="font-bold text-emerald-400">${bilan.away.win}</span></div>
+                    <div class="flex justify-between text-gray-400"><span>Nul:</span><span class="font-bold text-amber-400">${bilan.away.draw}</span></div>
+                    <div class="flex justify-between text-gray-400"><span>Pèdi:</span><span class="font-bold text-red-400">${bilan.away.loss}</span></div>`;
+            }
+
+            const forme = data.forme || {};
+            const formeBoxes = document.querySelectorAll('#tab-analiz .space-y-3 > div');
+            const renderForm = (name, arr) => `<span class="font-bold text-white">${name}</span><div class="flex gap-1 mono font-bold text-[10px]">${(arr||[]).map(r => `<span class="w-5 h-5 rounded flex items-center justify-center border ${formResultColor(r)}">${r}</span>`).join('')}</div>`;
+            if (formeBoxes[0]) formeBoxes[0].innerHTML = renderForm(homeName, forme.home);
+            if (formeBoxes[1]) formeBoxes[1].innerHTML = renderForm(awayName, forme.away);
+
+            const h2hContainer = document.querySelector('#tab-analiz .space-y-2');
+            h2hContainer.innerHTML = (data.h2h || []).map(h => `
+                <div class="flex justify-between items-center p-2 rounded-xl bg-brand-dark text-gray-300">
+                    <span>${h.result}</span><span class="text-[10px] font-mono text-gray-500">${h.date}</span>
+                </div>`).join('');
+        }
+
+        function renderAktyalite(data, homeName, awayName) {
+            const absences = data.absences || { home: [], away: [] };
+            const absBoxes = document.querySelectorAll('#tab-aktyalite .grid.grid-cols-1 > div');
+            const renderAbs = (name, list, color) => `<span class="font-extrabold ${color} block">${name}</span>` +
+                (list||[]).map(p => `<div class="flex items-center justify-between text-gray-300"><span>${p.name}</span><span class="text-[10px] text-red-400 font-bold">${p.status}</span></div>`).join('');
+            if (absBoxes[0]) absBoxes[0].innerHTML = renderAbs(homeName, absences.home, 'text-emerald-400');
+            if (absBoxes[1]) absBoxes[1].innerHTML = renderAbs(awayName, absences.away, 'text-blue-400');
+
+            document.querySelector('#tab-aktyalite .text-\\[11px\\]').textContent = data.recommendation || '';
+
+            if (data.lineup) {
+                renderPitchLineup(data.lineup);
+                const lineupTitle = document.querySelector('#tab-aktyalite h3 span');
+                if (lineupTitle) lineupTitle.textContent = '11 PWOBAB (ESTIMASYON)';
             }
         }
 
-        document.addEventListener('DOMContentLoaded', initPagePermissions);
+        function renderPitchLineup(lineup) {
+            const buildSide = (side) => `
+                <div class="flex justify-center"><span class="bg-black/90 text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full border border-emerald-400/50">${side.gk?.[0] || ''}</span></div>
+                <div class="flex justify-around px-2">${(side.df||[]).map(p => `<span class="bg-black/80 text-white text-[8px] font-medium px-1.5 py-0.5 rounded border border-white/20">${p}</span>`).join('')}</div>
+                <div class="flex justify-around px-4">${(side.mid||[]).map(p => `<span class="bg-black/80 text-white text-[8px] font-medium px-1.5 py-0.5 rounded border border-white/20">${p}</span>`).join('')}</div>
+                <div class="flex justify-around px-6">${(side.fw||[]).map(p => `<span class="bg-black/80 text-white text-[8px] font-medium px-1.5 py-0.5 rounded border border-white/20">${p}</span>`).join('')}</div>`;
+            const homeEl = document.getElementById('homeTeamPitch');
+            const awayEl = document.getElementById('awayTeamPitch');
+            if (homeEl && lineup.home) homeEl.innerHTML = buildSide(lineup.home);
+            if (awayEl && lineup.away) awayEl.innerHTML = buildSide(lineup.away);
+        }
+
+        async function loadAnalysis(matchId, homeName, awayName) {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/match-details/${matchId}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erè');
+                renderPronostik(data.pronostik);
+                renderAnaliz(data, homeName, awayName);
+                renderAktyalite(data, homeName, awayName);
+            } catch (err) {
+                console.error('Analiz error:', err);
+                document.querySelector('#tab-analiz p.leading-relaxed').textContent = 'Nou pa t ka chaje analiz la kounye a.';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const matchId = params.get('id');
+            if (!matchId) return;
+            const match = await loadMatchHeader(matchId);
+            if (match) loadAnalysis(matchId, match.team_a, match.team_b);
+        });
     </script>
 </body>
 </html>
