@@ -104,7 +104,7 @@ Reponn SÈLMAN ak yon objè JSON valid, san okenn lòt tèks, egzakteman nan fò
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'nvidia/nemotron-3-embed-1b:free',
+            model: 'inclusionai/ling-3.0-tiny:free',
             messages: [{ role: 'user', content: prompt }],
             plugins: [{ id: 'web', max_results: 5 }]
         })
