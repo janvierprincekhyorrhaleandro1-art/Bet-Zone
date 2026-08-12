@@ -127,6 +127,7 @@ Reponn SÈLMAN ak yon objè JSON valid, san okenn lòt tèks, egzakteman nan fò
     } catch (e) {
         throw new Error(`JSON envalid soti nan modèl la: ${cleaned.substring(0, 200)}`);
     }
+}
 
 async function generatePendingAnalysis() {
     console.log('🧠 Chèche match ki bezwen analiz...');
@@ -165,11 +166,11 @@ async function generatePendingAnalysis() {
     }
 }
 
+app.use(express.json());
+
 app.get('/', (req, res) => {
     res.send('BETZONE Backend active');
 });
-
-app.use(express.json());
 
 app.get('/api/match-details/:matchId', async (req, res) => {
     const matchId = req.params.matchId;
