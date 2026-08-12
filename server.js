@@ -75,6 +75,10 @@ async function syncDailyMatches() {
 }
 
 async function analyzeMatch(match) {
+    if (!OPENROUTER_KEY) {
+        throw new Error('OPENROUTER_API_KEY pa konfigire sou sèvè a');
+    }
+
     const prompt = `Fè yon rechèch sou entènèt (sou sit BetMines ak Google) pou match foutbòl sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
 Site sous ou yo lè posib (pa egzanp "selon BetMines...").
 Reponn SÈLMAN ak yon objè JSON valid, san okenn lòt tèks, egzakteman nan fòma sa a:
@@ -107,10 +111,22 @@ Reponn SÈLMAN ak yon objè JSON valid, san okenn lòt tèks, egzakteman nan fò
     });
 
     const orData = await orRes.json();
+
+    if (!orRes.ok) {
+        throw new Error(`OpenRouter HTTP ${orRes.status}: ${orData.error?.message || JSON.stringify(orData)}`);
+    }
+
     const rawText = orData.choices?.[0]?.message?.content || '';
+    if (!rawText) {
+        throw new Error(`OpenRouter pa retounen tèks: ${JSON.stringify(orData)}`);
+    }
+
     const cleaned = rawText.replace(/```json|```/g, '').trim();
-    return JSON.parse(cleaned);
-}
+    try {
+        return JSON.parse(cleaned);
+    } catch (e) {
+        throw new Error(`JSON envalid soti nan modèl la: ${cleaned.substring(0, 200)}`);
+    }
 
 async function generatePendingAnalysis() {
     console.log('🧠 Chèche match ki bezwen analiz...');
