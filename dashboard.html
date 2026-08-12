@@ -82,8 +82,8 @@
             </div>
         </div>
 
-        <!-- BAND FILTÈ KI DEFILE ANBA BOUTON YO -->
-        <div class="grid grid-cols-2 gap-3 mb-5">
+        <!-- BAND FILTÈ KI DEFILE ANBA BOUTON YO SOU MATCH YO -->
+        <div class="grid grid-cols-2 gap-3 mb-5 relative z-30">
             
             <!-- 1. BOUTON & LIS DEFILANT CHANPYONA -->
             <div class="relative">
@@ -96,8 +96,8 @@
                     <i class="fa-solid fa-chevron-down text-xs text-gray-400 ml-1"></i>
                 </button>
 
-                <!-- LIS DEFILANT ANBA BOUTON CHANPYONA -->
-                <div id="leagueDropdown" class="hidden mt-2 w-full bg-brand-card border border-emerald-500/30 rounded-xl p-2 shadow-2xl space-y-1 max-h-60 overflow-y-auto no-scrollbar z-30">
+                <!-- LIS DEFILANT ABSOLUTE (SOU MATCH YO) -->
+                <div id="leagueDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-brand-card border border-emerald-500/30 rounded-xl p-2 shadow-2xl space-y-1 max-h-60 overflow-y-auto no-scrollbar z-50">
                     <button onclick="selectLeague('ALL', 'Tout Chanpyona')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-400 transition">
                         Tout Chanpyona
                     </button>
@@ -133,8 +133,8 @@
                     <i class="fa-solid fa-chevron-down text-xs text-gray-400 ml-1"></i>
                 </button>
 
-                <!-- LIS DEFILANT ANBA BOUTON DATE -->
-                <div id="dateDropdown" class="hidden mt-2 w-full bg-brand-card border border-emerald-500/30 rounded-xl p-2 shadow-2xl space-y-1 max-h-60 overflow-y-auto no-scrollbar z-30">
+                <!-- LIS DEFILANT ABSOLUTE (SOU MATCH YO) -->
+                <div id="dateDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-brand-card border border-emerald-500/30 rounded-xl p-2 shadow-2xl space-y-1 max-h-60 overflow-y-auto no-scrollbar z-50">
                     <div id="dateModalList" class="space-y-1">
                         <!-- Dat yo ap rantre la dinamikman -->
                     </div>
@@ -151,8 +151,8 @@
             </h2>
         </div>
 
-        <!-- GRID MATCH YO (LÈGÈMAN OGMANTE GWOSÈ KAWO YO) -->
-        <div id="matchesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- GRID MATCH YO -->
+        <div id="matchesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
             <div class="col-span-full text-center py-10 text-gray-400">
                 <i class="fa-solid fa-circle-notch fa-spin text-xl text-emerald-400 mb-2"></i>
                 <p class="text-xs font-semibold">N ap chaje match yo...</p>
@@ -198,17 +198,12 @@
 
         let loadedMatches = [];
         let currentUserPlan = 'free';
-        let currentDayFilter = null;
-        let currentLeagueFilter = 'ALL';
+        let currentDayFilter = sessionStorage.getItem('bz_selected_date') || null;
+        let currentLeagueFilter = sessionStorage.getItem('bz_selected_league') || 'ALL';
 
         function toggleDropdown(id) {
             const el = document.getElementById(id);
-            const isHidden = el.classList.contains('hidden');
-            document.getElementById('leagueDropdown').classList.add('hidden');
-            document.getElementById('dateDropdown').classList.add('hidden');
-            if (isHidden) {
-                el.classList.remove('hidden');
-            }
+            el.classList.toggle('hidden');
         }
 
         function renderDynamicDays() {
@@ -217,6 +212,9 @@
             const daysOfWeek = ['Dimanch', 'Lendi', 'Mardi', 'Mèkredi', 'Jedi', 'Vandredi', 'Samdi'];
             const targetToday = new Date();
             let htmlContent = '';
+
+            const savedDate = sessionStorage.getItem('bz_selected_date');
+            const savedDateLabel = sessionStorage.getItem('bz_selected_date_label');
 
             for (let i = -1; i <= 8; i++) {
                 const targetDate = new Date(targetToday);
@@ -231,7 +229,7 @@
                 else if (i === 0) label = `Jodi a (${dayName} ${dayNumber}/${monthNumber})`;
                 else if (i === 1) label = `Demen (${dayName} ${dayNumber}/${monthNumber})`;
 
-                if (i === 0) {
+                if (i === 0 && !savedDate) {
                     currentDayFilter = dateStr;
                     document.getElementById('selectedDateLabel').innerText = label;
                 }
@@ -242,11 +240,23 @@
                     </button>
                 `;
             }
+
+            if (savedDate && savedDateLabel) {
+                document.getElementById('selectedDateLabel').innerText = savedDateLabel;
+            }
+
+            const savedLeagueLabel = sessionStorage.getItem('bz_selected_league_label');
+            if (savedLeagueLabel) {
+                document.getElementById('selectedLeagueLabel').innerText = savedLeagueLabel;
+            }
+
             dateModalList.innerHTML = htmlContent;
         }
 
         function selectLeague(code, name) {
             currentLeagueFilter = code;
+            sessionStorage.setItem('bz_selected_league', code);
+            sessionStorage.setItem('bz_selected_league_label', name);
             document.getElementById('selectedLeagueLabel').innerText = name;
             document.getElementById('leagueDropdown').classList.add('hidden');
             applyFilters();
@@ -254,6 +264,8 @@
 
         function selectDate(dateStr, label) {
             currentDayFilter = dateStr;
+            sessionStorage.setItem('bz_selected_date', dateStr);
+            sessionStorage.setItem('bz_selected_date_label', label);
             document.getElementById('selectedDateLabel').innerText = label;
             document.getElementById('dateDropdown').classList.add('hidden');
             applyFilters();
@@ -314,7 +326,6 @@
                 return;
             }
 
-            // KAWO MATCH YO YON TI JAN PI GWÒ (p-4 pito p-3)
             container.innerHTML = list.map(m => `
                 <div ${!isFree ? `onclick="window.location.href='details.html?id=${m.id}'"` : ''} class="p-4 rounded-xl bg-brand-card border border-brand-border ${!isFree ? 'hover:border-emerald-500/40 cursor-pointer group' : 'cursor-default'} transition shadow-md flex flex-col justify-between">
                     
