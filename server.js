@@ -223,7 +223,7 @@ app.listen(PORT, () => {
     console.log(`🚀 Sèvè ap koute sou pò ${PORT}`);
     syncDailyMatches().then(() => generatePendingAnalysis());
 
-    cron.schedule('*/12 * * * *', async () => {
+    cron.schedule('0 2 * * *', async () => {
         await syncDailyMatches();
         await generatePendingAnalysis();
     }, {
