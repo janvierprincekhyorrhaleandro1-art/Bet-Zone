@@ -15,6 +15,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 // Fonksyon pou fòse sèvè a tann (delay)
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// 1. Rale match pou 10 jou devan pou mete nan kalandriye Supabase la
 async function syncDailyMatches() {
     console.log(`⏰ [${new Date().toISOString()}] Ekzekisyon senkronizasyon match...`);
 
@@ -25,7 +26,7 @@ async function syncDailyMatches() {
     const today = todayDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
     const toDateStr = futureDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
-    console.log(`📅 Chèche match ant: ${today} ak ${toDateStr}`);
+    console.log(`📅 Chèche match pou kalandriye ant: ${today} ak ${toDateStr}`);
 
     try {
         const response = await fetch(`https://api.football-data.org/v4/matches?competitions=PL,PD,BL1,SA,FL1,CL&dateFrom=${today}&dateTo=${toDateStr}`, {
@@ -42,7 +43,6 @@ async function syncDailyMatches() {
         if (data.matches && data.matches.length > 0) {
             console.log(`⚽ Jwenn ${data.matches.length} match sou Football-Data.org.`);
 
-            // 1. Chèche match ki deja nan Supabase pou nou pa kraze analiz ki te fèt deja yo
             const { data: existingMatches } = await supabase.from('daily_matches').select('id, victory, percent');
             const existingMap = new Map(existingMatches?.map(m => [m.id, m]) || []);
 
@@ -59,18 +59,16 @@ async function syncDailyMatches() {
                     match_time: new Date(item.utcDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' }),
                     team_a: item.homeTeam.name,
                     team_b: item.awayTeam.name,
-                    // Si match la te deja gen analiz nan Supabase, nou KENBE L!
                     victory: existing ? existing.victory : null,
                     percent: existing ? existing.percent : null
                 };
             });
 
-            // 2. Sèvi ak upsert pou nou pa janm efase okenn analiz
             const { error: insErr } = await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
             if (insErr) {
                 console.error("❌ Erè enskripsyon nan Supabase:", insErr);
             } else {
-                console.log(`✅ ${formattedMatches.length} match senkronize san kraze analiz ki te fèt deja!`);
+                console.log(`✅ ${formattedMatches.length} match (sou 10 jou) senkronize nan Supabase!`);
             }
         } else {
             console.log("⚠️ Pa gen okenn match pou peryòd sa a sou Football-Data.org.");
@@ -108,7 +106,7 @@ Reponn SÈLMAN ak yon objè JSON valid nan fòma sa a ekzakteman (pa koupe l, pa
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'gemini-2.5-flash-lite',
+            model: 'gemini-3.5-flash',
             messages: [{ role: 'user', content: prompt }],
             response_format: { type: "json_object" },
             max_tokens: 100000
@@ -135,19 +133,29 @@ Reponn SÈLMAN ak yon objè JSON valid nan fòma sa a ekzakteman (pa koupe l, pa
     }
 }
 
+// 2. SÈLMAN analize match jodi a, demen, ak apre demen!
 async function generatePendingAnalysis() {
-    console.log('🧠 Chèche match ki bezwen analiz...');
+    console.log('🧠 Chèche match ki bezwen analiz (Sèlman pou jodi a ak 2 jou apre)...');
+
+    const todayDate = new Date();
+    const maxDate = new Date();
+    maxDate.setDate(todayDate.getDate() + 2); // Jodi a + 2 jou apre (antou 3 jou)
+
+    const todayStr = todayDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const maxDateStr = maxDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
     const { data: pending, error } = await supabase
         .from('daily_matches')
         .select('*')
         .is('percent', null)
+        .gte('match_date', todayStr)
+        .lte('match_date', maxDateStr)
         .limit(10);
 
     if (error) { console.error('❌ Erè chèche match pou analize:', error); return; }
-    if (!pending || pending.length === 0) { console.log('✅ Tout match deja analize.'); return; }
+    if (!pending || pending.length === 0) { console.log('✅ Pa gen okenn match ki bezwen analiz nan fenèt 3 jou sa yo.'); return; }
 
-    console.log(`🧠 ${pending.length} match pou analize...`);
+    console.log(`🧠 ${pending.length} match pou analize nan fenèt 3 jou sa yo...`);
 
     for (const match of pending) {
         try {
@@ -165,7 +173,7 @@ async function generatePendingAnalysis() {
                 victory: topPick ? topPick.label : 'Analiz endisponib'
             }).eq('id', match.id);
 
-            console.log(`✅ Analize: ${match.team_a} vs ${match.team_b}`);
+            console.log(`✅ Analize: ${match.team_a} vs ${match.team_b} (${match.match_date})`);
 
             // Poz 4 segonn pou respekte limit API a
             await sleep(4000);
