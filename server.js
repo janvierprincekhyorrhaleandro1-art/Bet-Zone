@@ -83,21 +83,32 @@ async function analyzeMatch(match) {
         throw new Error('GEMINI_API_KEY pa konfigire sou sèvè a');
     }
 
-    const prompt = `Fè yon analiz pou match foutbòl sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
-Reponn SÈLMAN ak yon objè JSON valid nan fòma sa a ekzakteman (pa koupe l, pa ajoute tèks deyò a):
+    const prompt = `Fè yon rechèch REYÈL sou entènèt pou match foutbòl sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
+
+RÈG SOUS POU CHAK SEKSYON (obligatwa, swiv yo egzakteman):
+1. "pronostik": Chèche VRÈ pronostik ki pibliye sou site BETMINES pou match sa a (Home Win %, Draw %, Over/Under, BTTS...). Itilize done sa yo pou ranpli "confidence" ak "risk" — pa envante yo, itilize sa BetMines pibliye reyèlman.
+2. "analiz_ia": Se PWÒP DEDIKSYON pa ou (AI a) — baze sou rechèch ou fè sou FÒM RESAN tou de ekip yo (dènye match yo, dinamik aktyèl). Ekri yon paragraf ki eksplike konklizyon pa ou.
+3. "forme": Chèche 5 dènye rezilta chak ekip SOU SITE BETMINES.
+4. "h2h": Chèche 5 dènye match ant de ekip yo SOU SITE BETMINES.
+5. "absences": Chèche jwè blese oswa sispann ki pp jwe match sa pou toude ekip yo SOU GOOGLE.
+6. "lineup": PA kopye yon konpozisyon deja pibliye — DEDUI li pa ou menm: chèche SOU GOOGLE ki 11 jwè ki te kòmanse (starting XI) nan 2 DÈNYE match chak ekip te jwe, epi konstwi yon konpozisyon pwobab apati sa.
+"bilan": baze sou estatistik sezon aktyèl yo, chèche sou site BetMines tou.
+
+Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis, san eksplikasyon), ki swiv EGZAKTEMAN estrikti sa a — chak valè ki anba a se yon <deskripsyon>, ranplase l ak vrè done w jwenn:
 {
-  "pronostik": [{"label": "Viktwa ${match.team_a}", "confidence": 82, "risk": "Fèb"}, {"label": "Plis 2.5 Bi", "confidence": 78, "risk": "Fèb"}, {"label": "BTTS", "confidence": 70, "risk": "Modere"}],
-  "analiz_ia": "yon paragraf kout an Kreyòl ki eksplike tandans prensipal la",
+  "pronostik": [{"label": "<pick BetMines>", "confidence": 80, "risk": "Fèb"}, {"label": "<2yèm pick>", "confidence": 70, "risk": "Modere"}, {"label": "<3yèm pick>", "confidence": 60, "risk": "Elve"}],
+  "analiz_ia": "<paragraf dediksyon pa ou, baze sou fòm resan>",
   "bilan": {"home": {"win":0,"draw":0,"loss":0}, "away": {"win":0,"draw":0,"loss":0}},
-  "forme": {"home": ["W","W","D","W","L"], "away": ["W","D","L","W","W"]},
-  "h2h": [{"result": "${match.team_a} 2 - 1 ${match.team_b}", "date": "dat"}],
-  "absences": {"home": [{"name":"Okenn", "status":"bon"}], "away": [{"name":"Okenn", "status":"bon"}]},
+  "forme": {"home": ["W","W","D","L","W"], "away": ["W","D","L","W","W"]},
+  "h2h": [{"result": "<vrè rezilta>", "date": "<vrè dat>"}],
+  "absences": {"home": [{"name":"<non jwè>", "status":"<blese/sispann>"}], "away": [{"name":"<non>", "status":"<...>"}]},
   "lineup": {
-    "home": {"formation":"4-3-3", "gk":["GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["M1","M2","M3"], "fw":["F1","F2","F3"]},
-    "away": {"formation":"4-3-3", "gk":["GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["M1","M2","M3"], "fw":["F1","F2","F3"]}
+    "home": {"formation":"4-3-3", "gk":["<non>"], "df":["<4 non>"], "mid":["<3 non>"], "fw":["<3 non>"]},
+    "away": {"formation":"4-3-3", "gk":["<non>"], "df":["<4 non>"], "mid":["<3 non>"], "fw":["<3 non>"]}
   },
-  "recommendation": "yon fraz kout"
-}`;
+  "recommendation": "<konklizyon kout pa ou>"
+}
+Si w vrèman pa jwenn done presi pou yon chan apre rechèch ou yo, mete (Done sa inaksesib).`;
 
     const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
         method: 'POST',
@@ -106,10 +117,10 @@ Reponn SÈLMAN ak yon objè JSON valid nan fòma sa a ekzakteman (pa koupe l, pa
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'gemini-3.5-flash',
+            model: 'gemini-2.5-flash-lite',
             messages: [{ role: 'user', content: prompt }],
             response_format: { type: "json_object" },
-            max_tokens: 100000
+            max_tokens: 4000
         })
     });
 
