@@ -8,9 +8,12 @@ const PORT = process.env.PORT || 3000;
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uiepdartkcunumajlwwg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
 const FOOTBALL_DATA_KEY = process.env.FOOTBALL_DATA_KEY || '1d6fdcd8b34649fdaf25ddbbb47ac3ac';
-const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+// Fonksyon pou fòse sèvè a tann (delay)
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function syncDailyMatches() {
     console.log(`⏰ [${new Date().toISOString()}] Ekzekisyon senkronizasyon match...`);
@@ -75,12 +78,11 @@ async function syncDailyMatches() {
 }
 
 async function analyzeMatch(match) {
-    if (!OPENROUTER_KEY) {
-        throw new Error('OPENROUTER_API_KEY pa konfigire sou sèvè a');
+    if (!GEMINI_KEY) {
+        throw new Error('GEMINI_API_KEY pa konfigire sou sèvè a');
     }
 
-    const prompt = `Fè yon rechèch sou entènèt (sou sit BetMines ak Google) pou match foutbòl sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
-Site sous ou yo lè posib (pa egzanp "selon BetMines...").
+    const prompt = `Fè yon analiz pou match foutbòl sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
 Reponn SÈLMAN ak yon objè JSON valid, san okenn lòt tèks, egzakteman nan fòma sa a:
 {
   "pronostik": [{"label": "Viktwa ${match.team_a}", "confidence": 82, "risk": "Fèb"}, {"label": "Plis 2.5 Bi", "confidence": 78, "risk": "Fèb"}, {"label": "BTTS", "confidence": 70, "risk": "Modere"}],
@@ -97,28 +99,28 @@ Reponn SÈLMAN ak yon objè JSON valid, san okenn lòt tèks, egzakteman nan fò
 }
 "risk" dwe youn nan: "Fèb", "Modere", "Elve". Si w pa jwenn done presi pou yon chan, mete yon estimasyon rezonab olye ou kite l vid.`;
 
-    const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${OPENROUTER_KEY}`,
+            'Authorization': `Bearer ${GEMINI_KEY}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'openai/gpt-oss-20b:free',
+            model: 'gemini-2.5-flash',
             messages: [{ role: 'user', content: prompt }],
-            plugins: [{ id: 'web', max_results: 5 }]
+            response_format: { type: "json_object" }
         })
     });
 
-    const orData = await orRes.json();
+    const data = await res.json();
 
-    if (!orRes.ok) {
-        throw new Error(`OpenRouter HTTP ${orRes.status}: ${orData.error?.message || JSON.stringify(orData)}`);
+    if (!res.ok) {
+        throw new Error(`Gemini HTTP ${res.status}: ${data.error?.message || JSON.stringify(data)}`);
     }
 
-    const rawText = orData.choices?.[0]?.message?.content || '';
+    const rawText = data.choices?.[0]?.message?.content || '';
     if (!rawText) {
-        throw new Error(`OpenRouter pa retounen tèks: ${JSON.stringify(orData)}`);
+        throw new Error(`Gemini pa retounen tèks: ${JSON.stringify(data)}`);
     }
 
     const cleaned = rawText.replace(/```json|```/g, '').trim();
@@ -160,6 +162,10 @@ async function generatePendingAnalysis() {
             }).eq('id', match.id);
 
             console.log(`✅ Analize: ${match.team_a} vs ${match.team_b}`);
+
+            // Poz 4 segonn pou pa depase limit 15 reket/minit Gemini an
+            await sleep(4000);
+
         } catch (err) {
             console.error(`❌ Erè analiz pou ${match.team_a} vs ${match.team_b}:`, err.message);
         }
