@@ -42,9 +42,14 @@ async function syncDailyMatches() {
         if (data.matches && data.matches.length > 0) {
             console.log(`⚽ Jwenn ${data.matches.length} match sou Football-Data.org.`);
 
+            // 1. Chèche match ki deja nan Supabase pou nou pa kraze analiz ki te fèt deja yo
+            const { data: existingMatches } = await supabase.from('daily_matches').select('id, victory, percent');
+            const existingMap = new Map(existingMatches?.map(m => [m.id, m]) || []);
+
             const formattedMatches = data.matches.map(item => {
                 const code = item.competition.code || 'ALL';
                 const realMatchDate = item.utcDate ? item.utcDate.split('T')[0] : today;
+                const existing = existingMap.get(item.id);
 
                 return {
                     id: item.id,
@@ -54,20 +59,18 @@ async function syncDailyMatches() {
                     match_time: new Date(item.utcDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' }),
                     team_a: item.homeTeam.name,
                     team_b: item.awayTeam.name,
-                    victory: null,
-                    percent: null,
-                    analysis: null
+                    // Si match la te deja gen analiz nan Supabase, nou KENBE L!
+                    victory: existing ? existing.victory : null,
+                    percent: existing ? existing.percent : null
                 };
             });
 
-            const { error: delErr } = await supabase.from('daily_matches').delete().neq('id', 0);
-            if (delErr) console.error("❌ Erè efase nan Supabase:", delErr);
-
-            const { error: insErr } = await supabase.from('daily_matches').insert(formattedMatches);
+            // 2. Sèvi ak upsert pou nou pa janm efase okenn analiz
+            const { error: insErr } = await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
             if (insErr) {
-                console.error("❌ Erè ensèsyon nan Supabase:", insErr);
+                console.error("❌ Erè enskripsyon nan Supabase:", insErr);
             } else {
-                console.log(`✅ ${formattedMatches.length} match anrejistre nan Supabase ak tout dat yo!`);
+                console.log(`✅ ${formattedMatches.length} match senkronize san kraze analiz ki te fèt deja!`);
             }
         } else {
             console.log("⚠️ Pa gen okenn match pou peryòd sa a sou Football-Data.org.");
@@ -83,21 +86,20 @@ async function analyzeMatch(match) {
     }
 
     const prompt = `Fè yon analiz pou match foutbòl sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
-Reponn SÈLMAN ak yon objè JSON valid, san okenn lòt tèks, egzakteman nan fòma sa a:
+Reponn SÈLMAN ak yon objè JSON valid nan fòma sa a ekzakteman (pa koupe l, pa ajoute tèks deyò a):
 {
   "pronostik": [{"label": "Viktwa ${match.team_a}", "confidence": 82, "risk": "Fèb"}, {"label": "Plis 2.5 Bi", "confidence": 78, "risk": "Fèb"}, {"label": "BTTS", "confidence": 70, "risk": "Modere"}],
   "analiz_ia": "yon paragraf kout an Kreyòl ki eksplike tandans prensipal la",
   "bilan": {"home": {"win":0,"draw":0,"loss":0}, "away": {"win":0,"draw":0,"loss":0}},
   "forme": {"home": ["W","W","D","W","L"], "away": ["W","D","L","W","W"]},
   "h2h": [{"result": "${match.team_a} 2 - 1 ${match.team_b}", "date": "dat"}],
-  "absences": {"home": [{"name":"...", "status":"blese"}], "away": [{"name":"...", "status":"blese"}]},
+  "absences": {"home": [{"name":"Okenn", "status":"bon"}], "away": [{"name":"Okenn", "status":"bon"}]},
   "lineup": {
-    "home": {"formation":"4-3-3", "gk":["..."], "df":["...","...","...","..."], "mid":["...","...","..."], "fw":["...","...","..."]},
-    "away": {"formation":"4-3-3", "gk":["..."], "df":["...","...","...","..."], "mid":["...","...","..."], "fw":["...","...","..."]}
+    "home": {"formation":"4-3-3", "gk":["GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["M1","M2","M3"], "fw":["F1","F2","F3"]},
+    "away": {"formation":"4-3-3", "gk":["GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["M1","M2","M3"], "fw":["F1","F2","F3"]}
   },
   "recommendation": "yon fraz kout"
-}
-"risk" dwe youn nan: "Fèb", "Modere", "Elve". Si w pa jwenn done presi pou yon chan, mete yon estimasyon rezonab olye ou kite l vid.`;
+}`;
 
     const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
         method: 'POST',
@@ -106,9 +108,10 @@ Reponn SÈLMAN ak yon objè JSON valid, san okenn lòt tèks, egzakteman nan fò
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'gemini-3.5-flash',
+            model: 'gemini-2.5-flash-lite',
             messages: [{ role: 'user', content: prompt }],
-            response_format: { type: "json_object" }
+            response_format: { type: "json_object" },
+            max_tokens: 100000
         })
     });
 
@@ -118,16 +121,17 @@ Reponn SÈLMAN ak yon objè JSON valid, san okenn lòt tèks, egzakteman nan fò
         throw new Error(`Gemini HTTP ${res.status}: ${data.error?.message || JSON.stringify(data)}`);
     }
 
-    const rawText = data.choices?.[0]?.message?.content || '';
+    let rawText = data.choices?.[0]?.message?.content || '';
     if (!rawText) {
         throw new Error(`Gemini pa retounen tèks: ${JSON.stringify(data)}`);
     }
 
-    const cleaned = rawText.replace(/```json|```/g, '').trim();
+    rawText = rawText.replace(/```json|```/g, '').trim();
+
     try {
-        return JSON.parse(cleaned);
+        return JSON.parse(rawText);
     } catch (e) {
-        throw new Error(`JSON envalid soti nan modèl la: ${cleaned.substring(0, 200)}`);
+        throw new Error(`JSON envalid soti nan modèl la: ${rawText.substring(0, 150)}...`);
     }
 }
 
@@ -163,7 +167,7 @@ async function generatePendingAnalysis() {
 
             console.log(`✅ Analize: ${match.team_a} vs ${match.team_b}`);
 
-            // Poz 4 segonn pou pa depase limit 15 reket/minit Gemini an
+            // Poz 4 segonn pou respekte limit API a
             await sleep(4000);
 
         } catch (err) {
@@ -223,7 +227,9 @@ app.listen(PORT, () => {
     console.log(`🚀 Sèvè ap koute sou pò ${PORT}`);
     syncDailyMatches().then(() => generatePendingAnalysis());
 
+    // Kouri otomatik chak jou presizeman a 2:00 AM (lè Nouyòk / Ayiti)
     cron.schedule('0 2 * * *', async () => {
+        console.log('⏰ Ekzekisyon otomatik 2:00 AM kòmanse...');
         await syncDailyMatches();
         await generatePendingAnalysis();
     }, {
