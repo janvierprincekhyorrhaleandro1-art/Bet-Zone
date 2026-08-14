@@ -343,24 +343,53 @@
         function renderMatches(plan, list) {
             const container = document.getElementById('matchesContainer');
             const isUserFree = (plan === 'free');
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
             if (!list || list.length === 0) {
                 container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
                 return;
             }
 
+            // LOJIK POU SEPARASYON MATCH GRATIS AK VIP (SAN REPETISYON)
+            const totalCount = list.length;
+            let freeCount = 0;
+
+            if (totalCount === 1) freeCount = 0;
+            else if (totalCount <= 3) freeCount = 1; // Si gen 2 oswa 3 match -> 1 gratis
+            else if (totalCount <= 5) freeCount = 2; // Si gen 4 oswa 5 match -> 2 gratis
+            else freeCount = 3;                      // Toujou maksimòm 3 gratis
+
+            const freeList = list.slice(0, freeCount);
+            const freeIds = new Set(freeList.map(m => m.id));
+            
+            // Match VIP yo se tout match ki PA nan gratis yo
+            const vipList = list.filter(m => !freeIds.has(m.id));
+
             let displayList = [];
             let isBlurredList = false;
             let canClickDetails = !isUserFree;
 
             if (activeCategory === 'free') {
-                // Seleksyon toujou mwens ke oswa egal a 3 match o aza pou match gratis
-                const shuffled = [...list].sort(() => 0.5 - Math.random());
-                displayList = shuffled.slice(0, Math.min(3, list.length));
+                // Tcheke si dat ki seleksyone a se JODI A
+                const isSelectedToday = (currentDayFilter === todayStr || !currentDayFilter);
+
+                if (!isSelectedToday || freeList.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center py-12 px-4 rounded-xl bg-brand-card/50 border border-brand-border">
+                            <i class="fa-solid fa-calendar-xmark text-3xl text-emerald-400/50 mb-3 block"></i>
+                            <p class="text-sm font-extrabold text-white">Match gratis jodia poko disponib</p>
+                            <p class="text-xs text-gray-400 mt-1">Gade match VIP / ELITE yo oswa retounen sou dat jodi a.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                displayList = freeList;
                 isBlurredList = false;
             } else {
-                // Seksyon VIP / ELITE
-                displayList = list;
+                // SEKSYON VIP / ELITE
+                displayList = isUserFree ? vipList : list;
+
                 if (isUserFree) {
                     isBlurredList = true;
                     canClickDetails = false;
@@ -368,6 +397,11 @@
                     isBlurredList = false;
                     canClickDetails = true;
                 }
+            }
+
+            if (displayList.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen match nan seksyon sa a.</div>`;
+                return;
             }
 
             container.innerHTML = displayList.map(m => {
