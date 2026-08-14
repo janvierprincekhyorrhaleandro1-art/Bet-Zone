@@ -11,81 +11,87 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use(express.json());
+
 const PORT = process.env.PORT || 3000;
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uiepdartkcunumajlwwg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
-const FOOTBALL_DATA_KEY = process.env.FOOTBALL_DATA_KEY || '1d6fdcd8b34649fdaf25ddbbb47ac3ac';
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+// TheSportsDB Key Gratis ("3")
+const SPORTSDB_API_KEY = '3';
+const BASE_URL = `https://www.thesportsdb.com/api/v1/json/${SPORTSDB_API_KEY}`;
+
+// Lis Lig yo pou TheSportsDB
+const LEAGUES = [
+    { id: '4328', code: 'PL', name: 'English Premier League' },
+    { id: '4335', code: 'PD', name: 'Spanish La Liga' },
+    { id: '4331', code: 'BL1', name: 'German Bundesliga' },
+    { id: '4334', code: 'FL1', name: 'French Ligue 1' },
+    { id: '4332', code: 'SA', name: 'Italian Serie A' },
+    { id: '4480', code: 'CL', name: 'UEFA Champions League' }
+];
+
 // Fonksyon pou fòse sèvè a tann (delay)
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// 1. Rale match pou 10 jou devan pou mete nan kalandriye Supabase la
+// 1. Senkronize match pou jodi a ak jou k ap vini yo depi TheSportsDB
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Ekzekisyon senkronizasyon match...`);
+    console.log(`⏰ [${new Date().toISOString()}] Ekzekisyon senkronizasyon match ak TheSportsDB...`);
 
     const todayDate = new Date();
-    const futureDate = new Date();
-    futureDate.setDate(todayDate.getDate() + 10);
+    const todayStr = todayDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
-    const today = todayDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-    const toDateStr = futureDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    for (const league of LEAGUES) {
+        try {
+            const eventsRes = await fetch(`${BASE_URL}/eventsday.php?d=${todayStr}&l=${encodeURIComponent(league.name)}`);
+            const eventsData = await eventsRes.json();
 
-    console.log(`📅 Chèche match pou kalandriye ant: ${today} ak ${toDateStr}`);
+            if (!eventsData.events || eventsData.events.length === 0) {
+                console.log(`⚠️ Pa gen match pou ${league.name} jodia (${todayStr}).`);
+                continue;
+            }
 
-    try {
-        const response = await fetch(`https://api.football-data.org/v4/matches?competitions=PL,PD,BL1,SA,FL1,CL&dateFrom=${today}&dateTo=${toDateStr}`, {
-            headers: { 'X-Auth-Token': FOOTBALL_DATA_KEY }
-        });
-
-        const data = await response.json();
-
-        if (data.message) {
-            console.error("❌ Erè ki soti nan Football-Data.org:", data.message);
-            return;
-        }
-
-        if (data.matches && data.matches.length > 0) {
-            console.log(`⚽ Jwenn ${data.matches.length} match sou Football-Data.org.`);
+            console.log(`⚽ Jwenn ${eventsData.events.length} match pou ${league.name} sou TheSportsDB.`);
 
             const { data: existingMatches } = await supabase.from('daily_matches').select('id, victory, percent');
             const existingMap = new Map(existingMatches?.map(m => [m.id, m]) || []);
 
-            const formattedMatches = data.matches.map(item => {
-                const code = item.competition.code || 'ALL';
-                const realMatchDate = item.utcDate ? item.utcDate.split('T')[0] : today;
-                const existing = existingMap.get(item.id);
+            const formattedMatches = eventsData.events.map(event => {
+                const matchId = parseInt(event.idEvent);
+                const existing = existingMap.get(matchId);
 
                 return {
-                    id: item.id,
-                    league_code: code,
-                    league_name: item.competition.name,
-                    match_date: realMatchDate,
-                    match_time: new Date(item.utcDate).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' }),
-                    team_a: item.homeTeam.name,
-                    team_b: item.awayTeam.name,
+                    id: matchId,
+                    league_code: league.code,
+                    league_name: league.name,
+                    match_date: todayStr,
+                    match_time: event.strTime ? event.strTime.substring(0, 5) : '20:00',
+                    team_a: event.strHomeTeam,
+                    team_b: event.strAwayTeam,
                     victory: existing ? existing.victory : null,
                     percent: existing ? existing.percent : null
                 };
             });
 
             const { error: insErr } = await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
+
             if (insErr) {
-                console.error("❌ Erè enskripsyon nan Supabase:", insErr);
+                console.error(`❌ Erè Supabase pou ${league.name}:`, insErr.message);
             } else {
-                console.log(`✅ ${formattedMatches.length} match (sou 10 jou) senkronize nan Supabase!`);
+                console.log(`✅ ${formattedMatches.length} match senkronize nan Supabase pou ${league.name}!`);
             }
-        } else {
-            console.log("⚠️ Pa gen okenn match pou peryòd sa a sou Football-Data.org.");
+
+        } catch (err) {
+            console.error(`❌ Erè rale match pou ${league.name}:`, err.message);
         }
-    } catch (err) {
-        console.error("❌ Erè nan fonksyon sync la:", err);
     }
 }
 
+// 2. Analiz ak Gemini (itilize menm prompt ak estrikti JSON ou an)
 async function analyzeMatch(match) {
     if (!GEMINI_KEY) {
         throw new Error('GEMINI_API_KEY pa konfigire sou sèvè a');
@@ -152,13 +158,13 @@ Si w vrèman pa jwenn done presi pou yon chan apre rechèch ou yo, mete (Done sa
     }
 }
 
-// 2. SÈLMAN analize match jodi a, demen, ak apre demen!
+// 3. Generer analiz pou match ki an atant nan fenèt 3 jou
 async function generatePendingAnalysis() {
     console.log('🧠 Chèche match ki bezwen analiz (Sèlman pou jodi a ak 2 jou apre)...');
 
     const todayDate = new Date();
     const maxDate = new Date();
-    maxDate.setDate(todayDate.getDate() + 2); // Jodi a + 2 jou apre (antou 3 jou)
+    maxDate.setDate(todayDate.getDate() + 2);
 
     const todayStr = todayDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
     const maxDateStr = maxDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
@@ -203,10 +209,8 @@ async function generatePendingAnalysis() {
     }
 }
 
-app.use(express.json());
-
 app.get('/', (req, res) => {
-    res.send('BETZONE Backend active');
+    res.send('BETZONE Backend (TheSportsDB) active');
 });
 
 app.get('/api/match-details/:matchId', async (req, res) => {
@@ -251,7 +255,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Sèvè ap koute sou pò ${PORT}`);
+    console.log(`🚀 Sèvè ap koute sou pò ${PORT} (TheSportsDB mode)`);
     
     // PAUZ : Ekzekisyon nan demaraj dezaktive pou pa boufe tokens
     // syncDailyMatches().then(() => generatePendingAnalysis());
