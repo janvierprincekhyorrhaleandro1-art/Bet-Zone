@@ -82,6 +82,20 @@
             </div>
         </div>
 
+        <!-- 2 BAND KÒT A KÒT (ONGLÈ/TABS) -->
+        <div class="grid grid-cols-2 gap-3 mb-5">
+            <button id="tabFreeBtn" onclick="switchCategory('free')" class="py-3 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition shadow-md bg-emerald-500/20 border-emerald-500 text-emerald-400">
+                <i class="fa-solid fa-gift text-sm"></i>
+                <span class="truncate">Match gratis jounen an</span>
+            </button>
+
+            <button id="tabVipBtn" onclick="switchCategory('vip')" class="py-3 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition shadow-md bg-brand-card border-brand-border text-gray-400 hover:text-amber-400">
+                <i class="fa-solid fa-crown text-sm text-amber-400"></i>
+                <span class="truncate">Match VIP / ELITE</span>
+                <i id="vipTabLockIcon" class="fa-solid fa-lock text-[10px] text-amber-400 ml-0.5"></i>
+            </button>
+        </div>
+
         <!-- BAND FILTÈ KI DEFILE ANBA BOUTON YO SOU MATCH YO -->
         <div class="grid grid-cols-2 gap-3 mb-5 relative z-30">
             
@@ -143,12 +157,23 @@
 
         </div>
 
-        <!-- KONTENÈ MATCH YO (GRATIS AK VIP SEPARE) -->
-        <div id="dashboardSections" class="space-y-8 relative z-10">
-            <div class="text-center py-10 text-gray-400">
+        <!-- GRID MATCH YO -->
+        <div id="matchesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+            <div class="col-span-full text-center py-10 text-gray-400">
                 <i class="fa-solid fa-circle-notch fa-spin text-xl text-emerald-400 mb-2"></i>
                 <p class="text-xs font-semibold">N ap chaje match yo...</p>
             </div>
+        </div>
+
+        <!-- BANNER AVIS VIP POU MOUN FREE (SÈLMAN VIZIB NAN VIP TAB) -->
+        <div id="vipUpgradeNotice" class="hidden mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
+            <p class="text-xs font-extrabold text-amber-400 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-gem text-amber-400"></i>
+                Achete yon plan VIP / ELITE pou debloke tout match ak analiz konplè yo
+            </p>
+            <a href="profile.html" class="inline-block mt-2 px-5 py-2 rounded-lg bg-amber-500 text-black font-extrabold text-xs hover:bg-amber-400 transition shadow-lg">
+                Wè Plan yo
+            </a>
         </div>
 
     </main>
@@ -190,12 +215,29 @@
 
         let loadedMatches = [];
         let currentUserPlan = 'free';
+        let activeCategory = 'free'; // 'free' oswa 'vip'
         let currentDayFilter = sessionStorage.getItem('bz_selected_date') || null;
         let currentLeagueFilter = sessionStorage.getItem('bz_selected_league') || 'ALL';
 
         function toggleDropdown(id) {
             const el = document.getElementById(id);
             el.classList.toggle('hidden');
+        }
+
+        function switchCategory(cat) {
+            activeCategory = cat;
+            const freeBtn = document.getElementById('tabFreeBtn');
+            const vipBtn = document.getElementById('tabVipBtn');
+
+            if (cat === 'free') {
+                freeBtn.className = "py-3 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition shadow-md bg-emerald-500/20 border-emerald-500 text-emerald-400";
+                vipBtn.className = "py-3 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition shadow-md bg-brand-card border-brand-border text-gray-400 hover:text-amber-400";
+            } else {
+                vipBtn.className = "py-3 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition shadow-md bg-amber-500/20 border-amber-500 text-amber-400";
+                freeBtn.className = "py-3 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition shadow-md bg-brand-card border-brand-border text-gray-400 hover:text-emerald-400";
+            }
+
+            applyFilters();
         }
 
         function renderDynamicDays() {
@@ -275,7 +317,7 @@
         }
 
         async function fetchLiveMatches() {
-            const mainSections = document.getElementById('dashboardSections');
+            const container = document.getElementById('matchesContainer');
             try {
                 const { data: matches, error } = await supabaseClient
                     .from('daily_matches')
@@ -301,25 +343,60 @@
 
                     applyFilters();
                 } else {
-                    mainSections.innerHTML = `<div class="text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
+                    container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
                 }
             } catch (err) {
                 console.error("Erè Supabase:", err);
-                mainSections.innerHTML = `<div class="text-center py-10 text-red-400 text-xs font-bold">Erè nan chajman match yo depi Supabase.</div>`;
+                container.innerHTML = `<div class="col-span-full text-center py-10 text-red-400 text-xs font-bold">Erè nan chajman match yo depi Supabase.</div>`;
             }
         }
 
-        function renderMatchCard(m, canAccessDetails, isBlurred) {
-            return `
-                <div ${canAccessDetails ? `onclick="window.location.href='details.html?id=${m.id}'"` : ''} 
-                     class="relative p-4 rounded-xl bg-brand-card border border-brand-border ${canAccessDetails ? 'hover:border-emerald-500/40 cursor-pointer group' : 'cursor-default'} transition shadow-md flex flex-col justify-between overflow-hidden">
+        function renderMatches(plan, list) {
+            const container = document.getElementById('matchesContainer');
+            const vipNotice = document.getElementById('vipUpgradeNotice');
+            const isUserFree = (plan === 'free');
+
+            if (!list || list.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
+                vipNotice.classList.add('hidden');
+                return;
+            }
+
+            let displayList = [];
+            let isBlurredList = false;
+            let canClickDetails = !isUserFree;
+
+            if (activeCategory === 'free') {
+                // Seleksyon 4 match o aza pou match gratis
+                const shuffled = [...list].sort(() => 0.5 - Math.random());
+                displayList = shuffled.slice(0, Math.min(4, list.length));
+                isBlurredList = false;
+                vipNotice.classList.add('hidden');
+            } else {
+                // Seksyon VIP / ELITE
+                displayList = list;
+                if (isUserFree) {
+                    isBlurredList = true;
+                    canClickDetails = false;
+                    vipNotice.classList.remove('hidden');
+                } else {
+                    isBlurredList = false;
+                    canClickDetails = true;
+                    vipNotice.classList.add('hidden');
+                }
+            }
+
+            container.innerHTML = displayList.map(m => `
+                <div ${canClickDetails ? `onclick="window.location.href='details.html?id=${m.id}'"` : ''} 
+                     class="relative p-4 rounded-xl bg-brand-card border border-brand-border ${canClickDetails ? 'hover:border-emerald-500/40 cursor-pointer group' : 'cursor-default'} transition shadow-md flex flex-col justify-between overflow-hidden">
                     
-                    ${isBlurred ? `
-                        <div class="absolute inset-0 bg-brand-card/70 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center p-3 text-center">
-                            <div class="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-base mb-2 shadow-lg">
+                    ${isBlurredList ? `
+                        <div class="absolute inset-0 bg-brand-card/80 backdrop-blur-md z-20 flex flex-col items-center justify-center p-3 text-center">
+                            <div class="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg mb-2 shadow-lg">
                                 <i class="fa-solid fa-lock"></i>
                             </div>
                             <span class="text-xs font-extrabold text-white">Match VIP / ELITE</span>
+                            <span class="text-[10px] text-gray-400 mt-0.5">Debloke ak yon abònman</span>
                         </div>
                     ` : ''}
 
@@ -333,7 +410,7 @@
                         </div>
                         
                         <!-- MATCH TEAMS -->
-                        <div class="flex items-center justify-between text-sm font-bold text-white ${canAccessDetails ? 'group-hover:text-emerald-400' : ''} transition my-3 px-1">
+                        <div class="flex items-center justify-between text-sm font-bold text-white ${canClickDetails ? 'group-hover:text-emerald-400' : ''} transition my-3 px-1">
                             <span class="truncate max-w-[42%]">${m.teamA}</span>
                             <span class="text-[10px] text-gray-500 font-extrabold px-1">VS</span>
                             <span class="truncate max-w-[42%] text-right">${m.teamB}</span>
@@ -353,7 +430,7 @@
 
                     <!-- FOOTER AFFICHE SELON ACCESS -->
                     <div class="mt-3 pt-2 border-t border-brand-border/40 text-center">
-                        ${canAccessDetails ? `
+                        ${canClickDetails ? `
                             <span class="text-[10px] text-amber-400 font-bold flex items-center justify-center gap-1.5 drop-shadow-[0_0_8px_rgba(251,191,36,0.2)]">
                                 <i class="fa-solid fa-crown text-[9px]"></i> Appuyer pour accéder à l'analyse complet du match
                             </span>
@@ -365,93 +442,7 @@
                     </div>
 
                 </div>
-            `;
-        }
-
-        function renderMatches(plan, list) {
-            const mainSections = document.getElementById('dashboardSections');
-            const isFree = (plan === 'free');
-
-            if (!list || list.length === 0) {
-                mainSections.innerHTML = `<div class="text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
-                return;
-            }
-
-            let freeMatches = [];
-            let vipMatches = [];
-
-            if (isFree) {
-                // Si jou an gen egzakteman 5 match, mete 3 selman, sinon mete 5 match o aza
-                const freeCount = list.length === 5 ? 3 : 5;
-                const shuffled = [...list].sort(() => 0.5 - Math.random());
-                freeMatches = shuffled.slice(0, Math.min(freeCount, list.length));
-                
-                // Rès match yo ale nan VIP/ELITE
-                const freeIds = new Set(freeMatches.map(m => m.id));
-                vipMatches = list.filter(m => !freeIds.has(m.id));
-            } else {
-                // Moun VIP/ELITE wè 5 (oswa 3) nan match gratis la epi tout rès yo san blur nan VIP
-                const freeCount = list.length === 5 ? 3 : 5;
-                freeMatches = list.slice(0, Math.min(freeCount, list.length));
-                vipMatches = list.slice(Math.min(freeCount, list.length));
-            }
-
-            let html = '';
-
-            // 1. BAND MATCH GRATIS POU JOUNEN AN
-            html += `
-                <section>
-                    <div class="flex items-center gap-2 mb-3">
-                        <i class="fa-solid fa-gift text-emerald-400 text-sm"></i>
-                        <h2 class="text-sm sm:text-base font-bold text-white tracking-wide">Match gratis pou jounen an</h2>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        ${freeMatches.map(m => renderMatchCard(m, !isFree, false)).join('')}
-                    </div>
-                </section>
-            `;
-
-            // 2. BAND MATCH VIP / ELITE (SEPARE PA YON ESPAS)
-            html += `
-                <section id="vipSection" class="pt-2">
-                    <div class="flex justify-between items-center mb-3">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-crown text-amber-400 text-sm"></i>
-                            <h2 class="text-sm sm:text-base font-bold text-white tracking-wide">Match VIP / ELITE</h2>
-                        </div>
-                        ${isFree ? `
-                            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-bold">
-                                <i class="fa-solid fa-lock text-xs"></i>
-                                <span>Mòd Veriye</span>
-                            </div>
-                        ` : ''}
-                    </div>
-
-                    ${vipMatches.length > 0 ? `
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            ${vipMatches.map(m => renderMatchCard(m, !isFree, isFree)).join('')}
-                        </div>
-                    ` : `
-                        <div class="p-6 rounded-xl bg-brand-card/50 border border-brand-border text-center text-gray-400 text-xs font-semibold">
-                            Pa gen lòt match anplis pou seksyon sa an.
-                        </div>
-                    `}
-
-                    ${isFree ? `
-                        <div class="mt-4 p-3 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
-                            <p class="text-xs font-extrabold text-amber-400 flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-gem text-amber-400"></i>
-                                Achete yon plan VIP / ELITE pou debloke tout match ak analiz konplè yo
-                            </p>
-                            <a href="profile.html" class="inline-block mt-2 px-4 py-1.5 rounded-lg bg-amber-500 text-black font-extrabold text-xs hover:bg-amber-400 transition">
-                                Wè Plan yo
-                            </a>
-                        </div>
-                    ` : ''}
-                </section>
-            `;
-
-            mainSections.innerHTML = html;
+            `).join('');
         }
 
         async function checkAuth() {
@@ -459,6 +450,7 @@
             if (error || !session) { window.location.href = "auth.html"; return; }
             const user = session.user;
             const planBadge = document.getElementById('userPlanBadge');
+            const vipTabLockIcon = document.getElementById('vipTabLockIcon');
 
             try {
                 const { data: profile } = await supabaseClient
@@ -480,10 +472,13 @@
 
                 if (currentPlan.includes('elite')) {
                     planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-star text-[10px]"></i> ÉLITE</span>`;
+                    if (vipTabLockIcon) vipTabLockIcon.classList.add('hidden');
                 } else if (currentPlan.includes('vip')) {
                     planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-crown text-[10px]"></i> VIP</span>`;
+                    if (vipTabLockIcon) vipTabLockIcon.classList.add('hidden');
                 } else {
                     planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-extrabold uppercase tracking-wider">GRATIS</span>`;
+                    if (vipTabLockIcon) vipTabLockIcon.classList.remove('hidden');
                 }
 
                 await fetchLiveMatches();
