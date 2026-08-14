@@ -165,17 +165,6 @@
             </div>
         </div>
 
-        <!-- BANNER AVIS VIP POU MOUN FREE (SÈLMAN VIZIB NAN VIP TAB) -->
-        <div id="vipUpgradeNotice" class="hidden mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
-            <p class="text-xs font-extrabold text-amber-400 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-gem text-amber-400"></i>
-                Achete yon plan VIP / ELITE pou debloke tout match ak analiz konplè yo
-            </p>
-            <a href="profile.html" class="inline-block mt-2 px-5 py-2 rounded-lg bg-amber-500 text-black font-extrabold text-xs hover:bg-amber-400 transition shadow-lg">
-                Wè Plan yo
-            </a>
-        </div>
-
     </main>
 
     <!-- FOOTER -->
@@ -353,12 +342,10 @@
 
         function renderMatches(plan, list) {
             const container = document.getElementById('matchesContainer');
-            const vipNotice = document.getElementById('vipUpgradeNotice');
             const isUserFree = (plan === 'free');
 
             if (!list || list.length === 0) {
                 container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
-                vipNotice.classList.add('hidden');
                 return;
             }
 
@@ -367,82 +354,88 @@
             let canClickDetails = !isUserFree;
 
             if (activeCategory === 'free') {
-                // Seleksyon 4 match o aza pou match gratis
+                // Seleksyon toujou mwens ke oswa egal a 3 match o aza pou match gratis
                 const shuffled = [...list].sort(() => 0.5 - Math.random());
-                displayList = shuffled.slice(0, Math.min(4, list.length));
+                displayList = shuffled.slice(0, Math.min(3, list.length));
                 isBlurredList = false;
-                vipNotice.classList.add('hidden');
             } else {
                 // Seksyon VIP / ELITE
                 displayList = list;
                 if (isUserFree) {
                     isBlurredList = true;
                     canClickDetails = false;
-                    vipNotice.classList.remove('hidden');
                 } else {
                     isBlurredList = false;
                     canClickDetails = true;
-                    vipNotice.classList.add('hidden');
                 }
             }
 
-            container.innerHTML = displayList.map(m => `
-                <div ${canClickDetails ? `onclick="window.location.href='details.html?id=${m.id}'"` : ''} 
-                     class="relative p-4 rounded-xl bg-brand-card border border-brand-border ${canClickDetails ? 'hover:border-emerald-500/40 cursor-pointer group' : 'cursor-default'} transition shadow-md flex flex-col justify-between overflow-hidden">
-                    
-                    ${isBlurredList ? `
-                        <div class="absolute inset-0 bg-brand-card/80 backdrop-blur-md z-20 flex flex-col items-center justify-center p-3 text-center">
-                            <div class="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg mb-2 shadow-lg">
-                                <i class="fa-solid fa-lock"></i>
-                            </div>
-                            <span class="text-xs font-extrabold text-white">Match VIP / ELITE</span>
-                            <span class="text-[10px] text-gray-400 mt-0.5">Debloke ak yon abònman</span>
-                        </div>
-                    ` : ''}
+            container.innerHTML = displayList.map(m => {
+                let onClickAttr = '';
+                if (canClickDetails) {
+                    onClickAttr = `onclick="window.location.href='details.html?id=${m.id}'"`;
+                } else if (isBlurredList) {
+                    onClickAttr = `onclick="window.location.href='checkout.html'"`;
+                }
 
-                    <div>
-                        <!-- HEAD: ORÈ + CHANPYONA -->
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs text-gray-400 font-semibold flex items-center gap-1.5">
-                                <i class="fa-regular fa-clock text-emerald-400"></i> ${m.time}
-                            </span>
-                            <span class="text-xs text-gray-400 font-medium truncate max-w-[130px]">${m.league}</span>
-                        </div>
+                return `
+                    <div ${onClickAttr} 
+                         class="relative p-4 rounded-xl bg-brand-card border border-brand-border ${canClickDetails || isBlurredList ? 'hover:border-emerald-500/40 cursor-pointer group' : 'cursor-default'} transition shadow-md flex flex-col justify-between overflow-hidden">
                         
-                        <!-- MATCH TEAMS -->
-                        <div class="flex items-center justify-between text-sm font-bold text-white ${canClickDetails ? 'group-hover:text-emerald-400' : ''} transition my-3 px-1">
-                            <span class="truncate max-w-[42%]">${m.teamA}</span>
-                            <span class="text-[10px] text-gray-500 font-extrabold px-1">VS</span>
-                            <span class="truncate max-w-[42%] text-right">${m.teamB}</span>
-                        </div>
-
-                        <!-- PRONOSTIK BAZIK AK POURCENTAGE TOUPORE L -->
-                        <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-3">
-                            <div class="flex flex-col">
-                                <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Pronostik Bazik:</span>
-                                <span class="text-xs font-extrabold text-emerald-400">${m.victory || 'N/A'}</span>
+                        ${isBlurredList ? `
+                            <div class="absolute inset-0 bg-brand-card/80 backdrop-blur-md z-20 flex flex-col items-center justify-center p-3 text-center cursor-pointer">
+                                <div class="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg mb-2 shadow-lg">
+                                    <i class="fa-solid fa-lock"></i>
+                                </div>
+                                <span class="text-xs font-extrabold text-white">Match VIP / ELITE</span>
+                                <span class="text-[10px] text-amber-400 mt-1 font-bold">Klike pou debloke</span>
                             </div>
-                            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold text-xs border border-emerald-500/30">
-                                ${m.percent || 'N/A'}
-                            </span>
+                        ` : ''}
+
+                        <div>
+                            <!-- HEAD: ORÈ + CHANPYONA -->
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs text-gray-400 font-semibold flex items-center gap-1.5">
+                                    <i class="fa-regular fa-clock text-emerald-400"></i> ${m.time}
+                                </span>
+                                <span class="text-xs text-gray-400 font-medium truncate max-w-[130px]">${m.league}</span>
+                            </div>
+                            
+                            <!-- MATCH TEAMS -->
+                            <div class="flex items-center justify-between text-sm font-bold text-white ${canClickDetails ? 'group-hover:text-emerald-400' : ''} transition my-3 px-1">
+                                <span class="truncate max-w-[42%]">${m.teamA}</span>
+                                <span class="text-[10px] text-gray-500 font-extrabold px-1">VS</span>
+                                <span class="truncate max-w-[42%] text-right">${m.teamB}</span>
+                            </div>
+
+                            <!-- PRONOSTIK BAZIK AK POURCENTAGE TOUPORE L -->
+                            <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-3">
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Pronostik Bazik:</span>
+                                    <span class="text-xs font-extrabold text-emerald-400">${m.victory || 'N/A'}</span>
+                                </div>
+                                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold text-xs border border-emerald-500/30">
+                                    ${m.percent || 'N/A'}
+                                </span>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- FOOTER AFFICHE SELON ACCESS -->
-                    <div class="mt-3 pt-2 border-t border-brand-border/40 text-center">
-                        ${canClickDetails ? `
-                            <span class="text-[10px] text-amber-400 font-bold flex items-center justify-center gap-1.5 drop-shadow-[0_0_8px_rgba(251,191,36,0.2)]">
-                                <i class="fa-solid fa-crown text-[9px]"></i> Appuyer pour accéder à l'analyse complet du match
-                            </span>
-                        ` : `
-                            <span class="text-[10px] text-gray-400 font-medium flex items-center justify-center gap-1">
-                                <i class="fa-solid fa-circle-info text-[9px] text-emerald-400"></i> Match sèlman vizib nan fòma bazik
-                            </span>
-                        `}
-                    </div>
+                        <!-- FOOTER AFFICHE SELON ACCESS -->
+                        <div class="mt-3 pt-2 border-t border-brand-border/40 text-center">
+                            ${canClickDetails ? `
+                                <span class="text-[10px] text-amber-400 font-bold flex items-center justify-center gap-1.5 drop-shadow-[0_0_8px_rgba(251,191,36,0.2)]">
+                                    <i class="fa-solid fa-crown text-[9px]"></i> Appuyer pour accéder à l'analyse complet du match
+                                </span>
+                            ` : `
+                                <span class="text-[10px] text-gray-400 font-medium flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-circle-info text-[9px] text-emerald-400"></i> Match sèlman vizib nan fòma bazik
+                                </span>
+                            `}
+                        </div>
 
-                </div>
-            `).join('');
+                    </div>
+                `;
+            }).join('');
         }
 
         async function checkAuth() {
