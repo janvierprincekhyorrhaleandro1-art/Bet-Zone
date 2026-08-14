@@ -143,17 +143,9 @@
 
         </div>
 
-        <!-- KAT PREDIKSYON YO -->
-        <div class="flex justify-between items-center mb-3">
-            <h2 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-fire text-emerald-400"></i>
-                <span>Match ak Prediksyon</span>
-            </h2>
-        </div>
-
-        <!-- GRID MATCH YO -->
-        <div id="matchesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
-            <div class="col-span-full text-center py-10 text-gray-400">
+        <!-- KONTENÈ MATCH YO (GRATIS AK VIP SEPARE) -->
+        <div id="dashboardSections" class="space-y-8 relative z-10">
+            <div class="text-center py-10 text-gray-400">
                 <i class="fa-solid fa-circle-notch fa-spin text-xl text-emerald-400 mb-2"></i>
                 <p class="text-xs font-semibold">N ap chaje match yo...</p>
             </div>
@@ -283,7 +275,7 @@
         }
 
         async function fetchLiveMatches() {
-            const container = document.getElementById('matchesContainer');
+            const mainSections = document.getElementById('dashboardSections');
             try {
                 const { data: matches, error } = await supabaseClient
                     .from('daily_matches')
@@ -309,26 +301,28 @@
 
                     applyFilters();
                 } else {
-                    container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
+                    mainSections.innerHTML = `<div class="text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
                 }
             } catch (err) {
                 console.error("Erè Supabase:", err);
-                container.innerHTML = `<div class="col-span-full text-center py-10 text-red-400 text-xs font-bold">Erè nan chajman match yo depi Supabase.</div>`;
+                mainSections.innerHTML = `<div class="text-center py-10 text-red-400 text-xs font-bold">Erè nan chajman match yo depi Supabase.</div>`;
             }
         }
 
-        function renderMatches(plan, list) {
-            const container = document.getElementById('matchesContainer');
-            const isFree = (plan === 'free');
-
-            if (!list || list.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
-                return;
-            }
-
-            container.innerHTML = list.map(m => `
-                <div ${!isFree ? `onclick="window.location.href='details.html?id=${m.id}'"` : ''} class="p-4 rounded-xl bg-brand-card border border-brand-border ${!isFree ? 'hover:border-emerald-500/40 cursor-pointer group' : 'cursor-default'} transition shadow-md flex flex-col justify-between">
+        function renderMatchCard(m, canAccessDetails, isBlurred) {
+            return `
+                <div ${canAccessDetails ? `onclick="window.location.href='details.html?id=${m.id}'"` : ''} 
+                     class="relative p-4 rounded-xl bg-brand-card border border-brand-border ${canAccessDetails ? 'hover:border-emerald-500/40 cursor-pointer group' : 'cursor-default'} transition shadow-md flex flex-col justify-between overflow-hidden">
                     
+                    ${isBlurred ? `
+                        <div class="absolute inset-0 bg-brand-card/70 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center p-3 text-center">
+                            <div class="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-base mb-2 shadow-lg">
+                                <i class="fa-solid fa-lock"></i>
+                            </div>
+                            <span class="text-xs font-extrabold text-white">Match VIP / ELITE</span>
+                        </div>
+                    ` : ''}
+
                     <div>
                         <!-- HEAD: ORÈ + CHANPYONA -->
                         <div class="flex justify-between items-center mb-2">
@@ -339,7 +333,7 @@
                         </div>
                         
                         <!-- MATCH TEAMS -->
-                        <div class="flex items-center justify-between text-sm font-bold text-white ${!isFree ? 'group-hover:text-emerald-400' : ''} transition my-3 px-1">
+                        <div class="flex items-center justify-between text-sm font-bold text-white ${canAccessDetails ? 'group-hover:text-emerald-400' : ''} transition my-3 px-1">
                             <span class="truncate max-w-[42%]">${m.teamA}</span>
                             <span class="text-[10px] text-gray-500 font-extrabold px-1">VS</span>
                             <span class="truncate max-w-[42%] text-right">${m.teamB}</span>
@@ -349,29 +343,115 @@
                         <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-3">
                             <div class="flex flex-col">
                                 <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Pronostik Bazik:</span>
-                                <span class="text-xs font-extrabold text-emerald-400">${m.victory}</span>
+                                <span class="text-xs font-extrabold text-emerald-400">${m.victory || 'N/A'}</span>
                             </div>
                             <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold text-xs border border-emerald-500/30">
-                                ${m.percent}
+                                ${m.percent || 'N/A'}
                             </span>
                         </div>
                     </div>
 
-                    <!-- FOOTER AFFICHE SELON PLAN -->
+                    <!-- FOOTER AFFICHE SELON ACCESS -->
                     <div class="mt-3 pt-2 border-t border-brand-border/40 text-center">
-                        ${isFree ? `
-                            <a href="profile.html" class="text-[10px] text-gray-400 hover:text-amber-400 transition font-medium flex items-center justify-center gap-1">
-                                <i class="fa-solid fa-gem text-amber-400/80 text-[9px]"></i> Passer en VIP / ÉLITE pour débloquer l'analyse
-                            </a>
-                        ` : `
+                        ${canAccessDetails ? `
                             <span class="text-[10px] text-amber-400 font-bold flex items-center justify-center gap-1.5 drop-shadow-[0_0_8px_rgba(251,191,36,0.2)]">
                                 <i class="fa-solid fa-crown text-[9px]"></i> Appuyer pour accéder à l'analyse complet du match
+                            </span>
+                        ` : `
+                            <span class="text-[10px] text-gray-400 font-medium flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-circle-info text-[9px] text-emerald-400"></i> Match sèlman vizib nan fòma bazik
                             </span>
                         `}
                     </div>
 
                 </div>
-            `).join('');
+            `;
+        }
+
+        function renderMatches(plan, list) {
+            const mainSections = document.getElementById('dashboardSections');
+            const isFree = (plan === 'free');
+
+            if (!list || list.length === 0) {
+                mainSections.innerHTML = `<div class="text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
+                return;
+            }
+
+            let freeMatches = [];
+            let vipMatches = [];
+
+            if (isFree) {
+                // Si jou an gen egzakteman 5 match, mete 3 selman, sinon mete 5 match o aza
+                const freeCount = list.length === 5 ? 3 : 5;
+                const shuffled = [...list].sort(() => 0.5 - Math.random());
+                freeMatches = shuffled.slice(0, Math.min(freeCount, list.length));
+                
+                // Rès match yo ale nan VIP/ELITE
+                const freeIds = new Set(freeMatches.map(m => m.id));
+                vipMatches = list.filter(m => !freeIds.has(m.id));
+            } else {
+                // Moun VIP/ELITE wè 5 (oswa 3) nan match gratis la epi tout rès yo san blur nan VIP
+                const freeCount = list.length === 5 ? 3 : 5;
+                freeMatches = list.slice(0, Math.min(freeCount, list.length));
+                vipMatches = list.slice(Math.min(freeCount, list.length));
+            }
+
+            let html = '';
+
+            // 1. BAND MATCH GRATIS POU JOUNEN AN
+            html += `
+                <section>
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fa-solid fa-gift text-emerald-400 text-sm"></i>
+                        <h2 class="text-sm sm:text-base font-bold text-white tracking-wide">Match gratis pou jounen an</h2>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${freeMatches.map(m => renderMatchCard(m, !isFree, false)).join('')}
+                    </div>
+                </section>
+            `;
+
+            // 2. BAND MATCH VIP / ELITE (SEPARE PA YON ESPAS)
+            html += `
+                <section id="vipSection" class="pt-2">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-crown text-amber-400 text-sm"></i>
+                            <h2 class="text-sm sm:text-base font-bold text-white tracking-wide">Match VIP / ELITE</h2>
+                        </div>
+                        ${isFree ? `
+                            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-bold">
+                                <i class="fa-solid fa-lock text-xs"></i>
+                                <span>Mòd Veriye</span>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    ${vipMatches.length > 0 ? `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            ${vipMatches.map(m => renderMatchCard(m, !isFree, isFree)).join('')}
+                        </div>
+                    ` : `
+                        <div class="p-6 rounded-xl bg-brand-card/50 border border-brand-border text-center text-gray-400 text-xs font-semibold">
+                            Pa gen lòt match anplis pou seksyon sa an.
+                        </div>
+                    `}
+
+                    ${isFree ? `
+                        <div class="mt-4 p-3 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-center">
+                            <p class="text-xs font-extrabold text-amber-400 flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-gem text-amber-400"></i>
+                                Achete yon plan VIP / ELITE pou debloke tout match ak analiz konplè yo
+                            </p>
+                            <a href="profile.html" class="inline-block mt-2 px-4 py-1.5 rounded-lg bg-amber-500 text-black font-extrabold text-xs hover:bg-amber-400 transition">
+                                Wè Plan yo
+                            </a>
+                        </div>
+                    ` : ''}
+                </section>
+            `;
+
+            mainSections.innerHTML = html;
         }
 
         async function checkAuth() {
