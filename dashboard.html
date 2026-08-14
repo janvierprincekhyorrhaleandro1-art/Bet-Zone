@@ -350,29 +350,26 @@
                 return;
             }
 
-            // LOJIK POU SEPARASYON MATCH GRATIS AK VIP (SAN REPETISYON)
+            // Tcheke si dat k ap gade a se jodi a
+            const isSelectedToday = (currentDayFilter === todayStr || !currentDayFilter);
+
+            // Kalkil kantite match gratis yo
             const totalCount = list.length;
             let freeCount = 0;
-
             if (totalCount === 1) freeCount = 0;
-            else if (totalCount <= 3) freeCount = 1; // Si gen 2 oswa 3 match -> 1 gratis
-            else if (totalCount <= 5) freeCount = 2; // Si gen 4 oswa 5 match -> 2 gratis
-            else freeCount = 3;                      // Toujou maksimòm 3 gratis
+            else if (totalCount <= 3) freeCount = 1;
+            else if (totalCount <= 5) freeCount = 2;
+            else freeCount = 3;
 
-            const freeList = list.slice(0, freeCount);
+            // Match gratis yo vizib sèlman si se jodi a
+            const freeList = isSelectedToday ? list.slice(0, freeCount) : [];
             const freeIds = new Set(freeList.map(m => m.id));
-            
-            // Match VIP yo se tout match ki PA nan gratis yo
-            const vipList = list.filter(m => !freeIds.has(m.id));
 
             let displayList = [];
             let isBlurredList = false;
             let canClickDetails = !isUserFree;
 
             if (activeCategory === 'free') {
-                // Tcheke si dat ki seleksyone a se JODI A
-                const isSelectedToday = (currentDayFilter === todayStr || !currentDayFilter);
-
                 if (!isSelectedToday || freeList.length === 0) {
                     container.innerHTML = `
                         <div class="col-span-full text-center py-12 px-4 rounded-xl bg-brand-card/50 border border-brand-border">
@@ -388,12 +385,20 @@
                 isBlurredList = false;
             } else {
                 // SEKSYON VIP / ELITE
-                displayList = isUserFree ? vipList : list;
-
                 if (isUserFree) {
+                    // Si match gratis la JA DISPONIB jodi a -> wete l nan VIP pou l pa double
+                    // Si match gratis la POKO DISPONIB (oswa se yon lòt dat) -> montre TOUT match yo nan VIP
+                    if (isSelectedToday && freeList.length > 0) {
+                        displayList = list.filter(m => !freeIds.has(m.id));
+                    } else {
+                        displayList = list;
+                    }
+
                     isBlurredList = true;
                     canClickDetails = false;
                 } else {
+                    // Moun ki gen VIP/ELITE wè tout match yo nòmalman
+                    displayList = list;
                     isBlurredList = false;
                     canClickDetails = true;
                 }
