@@ -244,9 +244,12 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 Sèvè ap koute sou pò ${PORT}`);
-    syncDailyMatches().then(() => generatePendingAnalysis());
+    
+    // PAUZ : Ekzekisyon nan demaraj dezaktive pou pa boufe tokens
+    // syncDailyMatches().then(() => generatePendingAnalysis());
 
-    // Kouri otomatik chak jou presizeman a 2:00 AM (lè Nouyòk / Ayiti)
+    // PAUZ : Cron job 2:00 AM dezaktive
+    /*
     cron.schedule('0 2 * * *', async () => {
         console.log('⏰ Ekzekisyon otomatik 2:00 AM kòmanse...');
         await syncDailyMatches();
@@ -255,4 +258,5 @@ app.listen(PORT, () => {
         scheduled: true,
         timezone: "America/New_York"
     });
+    */
 });
