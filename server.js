@@ -21,7 +21,6 @@ const FOOTBALL_DATA_API_KEY = process.env.FOOTBALL_DATA_API_KEY || 'YOUR_FOOTBAL
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// Lis Lig yo sou Football-Data.org
 const LEAGUES = [
     { code: 'PL', name: 'English Premier League' },
     { code: 'PD', name: 'Spanish La Liga' },
@@ -33,16 +32,27 @@ const LEAGUES = [
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// 1. Senkronize match 10 JOU AVANS ak Football-Data.org
+// Helper pou jwenn dat nan fòma YYYY-MM-DD egzak pou Football-Data.org
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// 1. Senkronize match (Garantis san erè 400)
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match ak Football-Data.org (10 jou avans)...`);
+    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match ak Football-Data.org...`);
 
-    const todayDate = new Date();
-    const maxDate = new Date();
-    maxDate.setDate(todayDate.getDate() + 10);
+    const now = new Date();
+    const todayStr = formatDate(now);
 
-    const todayStr = todayDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-    const maxStr = maxDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    // Nou pran 9 jou anplis pou rantre pil nan limit 10 jou gratis api a (Jodi a + 9 jou = 10 jou total)
+    const futureDate = new Date();
+    futureDate.setDate(now.getDate() + 9);
+    const maxStr = formatDate(futureDate);
+
+    console.log(`📅 Chèche match ant ${todayStr} ak ${maxStr}...`);
 
     for (const league of LEAGUES) {
         try {
@@ -53,7 +63,8 @@ async function syncDailyMatches() {
             });
 
             if (!response.ok) {
-                console.error(`⚠️ Erè API Football-Data (${response.status}) pou ${league.name}`);
+                const errText = await response.text();
+                console.error(`⚠️ Erè API Football-Data (${response.status}) pou ${league.name}:`, errText);
                 continue;
             }
 
@@ -79,7 +90,7 @@ async function syncDailyMatches() {
                     id: matchId,
                     league_code: league.code,
                     league_name: league.name,
-                    match_date: matchUtcDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }),
+                    match_date: formatDate(matchUtcDate),
                     match_time: matchUtcDate.toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }),
                     team_a: match.homeTeam.name,
                     team_b: match.awayTeam.name,
@@ -96,7 +107,7 @@ async function syncDailyMatches() {
                 console.log(`✅ ${formattedMatches.length} match senkronize pou ${league.name}!`);
             }
 
-            // Poz 6 segonn pou aliyen ak limit gratis Football-Data (10 req/min)
+            // Poz 6 segonn ant chak requêtes pou resepkte limit 10 req/min plan gratis la
             await sleep(6000);
 
         } catch (err) {
