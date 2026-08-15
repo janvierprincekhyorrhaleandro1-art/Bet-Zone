@@ -91,7 +91,7 @@ async function syncDailyMatches() {
     }
 }
 
-// 2. Analiz ak Gemini (itilize menm prompt ak estrikti JSON ou an)
+// 2. Analiz ak Gemini
 async function analyzeMatch(match) {
     if (!GEMINI_KEY) {
         throw new Error('GEMINI_API_KEY pa konfigire sou sèvè a');
@@ -256,19 +256,16 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 Sèvè ap koute sou pò ${PORT} (TheSportsDB mode)`);
-    
-    // PAUZ : Ekzekisyon nan demaraj dezaktive pou pa boufe tokens
-    // syncDailyMatches().then(() => generatePendingAnalysis());
 
-    // PAUZ : Cron job 2:00 AM dezaktive
-    /*
+    // Senkronize match yo sèlman nan demaraj
+    syncDailyMatches();
+
+    // Cron job 2:00 AM pou senkronizasyon chak jou
     cron.schedule('0 2 * * *', async () => {
         console.log('⏰ Ekzekisyon otomatik 2:00 AM kòmanse...');
         await syncDailyMatches();
-        await generatePendingAnalysis();
     }, {
         scheduled: true,
         timezone: "America/New_York"
     });
-    */
 });
