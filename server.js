@@ -4,7 +4,6 @@ const cron = require('node-cron');
 
 const app = express();
 
-// Konfigirasyon CORS pou pèmèt aksè nan API a
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -21,11 +20,9 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// TheSportsDB Key Gratis ("3")
 const SPORTSDB_API_KEY = '3';
 const BASE_URL = `https://www.thesportsdb.com/api/v1/json/${SPORTSDB_API_KEY}`;
 
-// Lis Lig yo ak ID yo nan TheSportsDB
 const LEAGUES = [
     { id: '4328', code: 'PL', name: 'English Premier League' },
     { id: '4335', code: 'PD', name: 'Spanish La Liga' },
@@ -35,49 +32,62 @@ const LEAGUES = [
     { id: '4480', code: 'CL', name: 'UEFA Champions League' }
 ];
 
-// Fonksyon pou fòse sèvè a tann (delay)
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// 1. Senkronize match jodia AK 10 jou k ap vini yo depi TheSportsDB (itilize eventsnext.php ak eventsday.php)
+// Helper pou evite erè JSON ki plante sèvè a
+async function fetchSafeJSON(url) {
+    try {
+        const res = await fetch(url);
+        if (!res.ok) {
+            console.error(`⚠️ HTTP Erè ${res.status} sou URL: ${url}`);
+            return null;
+        }
+        const text = await res.text();
+        if (!text || text.trim() === '') return null;
+        return JSON.parse(text);
+    } catch (err) {
+        console.error(`❌ Erè parsing JSON sou ${url}:`, err.message);
+        return null;
+    }
+}
+
+// 1. Senkronize match
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Ekzekisyon senkronizasyon match ak TheSportsDB (10 jou avans)...`);
+    console.log(`⏰ [${new Date().toISOString()}] Ekzekisyon senkronizasyon match...`);
 
     const todayDate = new Date();
     const maxDate = new Date();
-    maxDate.setDate(todayDate.getDate() + 10); // 10 jou avans
+    maxDate.setDate(todayDate.getDate() + 10);
 
     const todayStr = todayDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
     const maxStr = maxDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
     for (const league of LEAGUES) {
         try {
-            // Nou rale pwochèn match lig la (eventsnext) pou nou ka gen match 10 jou avans yo
-            const eventsRes = await fetch(`${BASE_URL}/eventsnext.php?id=${league.id}`);
-            const eventsData = await eventsRes.json();
+            // Chèche match pou pwochen jou yo ak TheSportsDB
+            const eventsData = await fetchSafeJSON(`${BASE_URL}/eventsnext.php?id=${league.id}`);
+            let allEvents = eventsData && eventsData.events ? eventsData.events : [];
 
-            let allEvents = eventsData.events || [];
-
-            // Nou rale match jodi a tou pou sekirite (eventsday)
-            const todayRes = await fetch(`${BASE_URL}/eventsday.php?d=${todayStr}&l=${encodeURIComponent(league.name)}`);
-            const todayData = await todayRes.json();
-            if (todayData.events) {
+            // Chèche match jodi a tou pou sekirite
+            const todayData = await fetchSafeJSON(`${BASE_URL}/eventsday.php?d=${todayStr}&l=${encodeURIComponent(league.name)}`);
+            if (todayData && todayData.events) {
                 allEvents = [...allEvents, ...todayData.events];
             }
 
             if (allEvents.length === 0) {
-                console.log(`⚠️ Pa gen match pou ${league.name} nan fenèt sa a.`);
+                console.log(`⚠️ Pa gen done disponib pou ${league.name} kounye a.`);
                 continue;
             }
 
-            // Elimine doubli (duplicates) pa idEvent
             const uniqueEventsMap = new Map();
-            allEvents.forEach(e => uniqueEventsMap.set(e.idEvent, e));
+            allEvents.forEach(e => {
+                if (e && e.idEvent) uniqueEventsMap.set(e.idEvent, e);
+            });
             const uniqueEvents = Array.from(uniqueEventsMap.values());
 
-            // Filtre sèlman match ki rantre ant Jodi a ak 10 Jou apre
             const validMatches = uniqueEvents.filter(event => {
                 const eventDate = event.dateEvent;
-                return eventDate >= todayStr && eventDate <= maxStr;
+                return eventDate && eventDate >= todayStr && eventDate <= maxStr;
             });
 
             if (validMatches.length === 0) {
@@ -85,7 +95,7 @@ async function syncDailyMatches() {
                 continue;
             }
 
-            console.log(`⚽ Jwenn ${validMatches.length} match pou ${league.name} ant ${todayStr} ak ${maxStr}.`);
+            console.log(`⚽ Jwenn ${validMatches.length} match pou ${league.name}.`);
 
             const { data: existingMatches } = await supabase.from('daily_matches').select('id, victory, percent');
             const existingMap = new Map(existingMatches?.map(m => [m.id, m]) || []);
@@ -98,7 +108,7 @@ async function syncDailyMatches() {
                     id: matchId,
                     league_code: league.code,
                     league_name: league.name,
-                    match_date: event.dateEvent, // Dat reyèl match la (YYYY-MM-DD)
+                    match_date: event.dateEvent,
                     match_time: event.strTime ? event.strTime.substring(0, 5) : '20:00',
                     team_a: event.strHomeTeam,
                     team_b: event.strAwayTeam,
@@ -112,14 +122,13 @@ async function syncDailyMatches() {
             if (insErr) {
                 console.error(`❌ Erè Supabase pou ${league.name}:`, insErr.message);
             } else {
-                console.log(`✅ ${formattedMatches.length} match senkronize nan Supabase pou ${league.name}!`);
+                console.log(`✅ ${formattedMatches.length} match senkronize pou ${league.name}!`);
             }
 
-            // Poz 1 segonn ant chak lig pou pa chaje API a
-            await sleep(1000);
+            await sleep(1500);
 
         } catch (err) {
-            console.error(`❌ Erè rale match pou ${league.name}:`, err.message);
+            console.error(`❌ Erè senkronizasyon pou ${league.name}:`, err.message);
         }
     }
 }
@@ -141,7 +150,7 @@ RÈG SOUS POU CHAK SEKSYON (obligatwa, swiv yo egzakteman):
 6. "lineup": PA kopye yon konpozisyon deja pibliye — DEDUI li pa ou menm: chèche SOU GOOGLE ki 11 jwè ki te kòmanse (starting XI) nan 2 DÈNYE match chak ekip te jwe, epi konstwi yon konpozisyon pwobab apati sa.
 "bilan": baze sou estatistik sezon aktyèl yo, chèche sou site BetMines tou.
 
-Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis, san eksplikasyon), ki swiv EGZAKTEMAN estrikti sa a — chak valè ki anba a se yon <deskripsyon>, ranplase l ak vrè done w jwenn:
+Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis, san eksplikasyon), ki swiv EGZAKTEMAN estrikti sa a:
 {
   "pronostik": [{"label": "<pick BetMines>", "confidence": 80, "risk": "Fèb"}, {"label": "<2yèm pick>", "confidence": 70, "risk": "Modere"}, {"label": "<3yèm pick>", "confidence": 60, "risk": "Elve"}],
   "analiz_ia": "<paragraf dediksyon pa ou, baze sou fòm resan>",
@@ -154,8 +163,7 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis, san eksplikasyon
     "away": {"formation":"4-3-3", "gk":["<non>"], "df":["<4 non>"], "mid":["<3 non>"], "fw":["<3 non>"]}
   },
   "recommendation": "<konklizyon kout pa ou>"
-}
-Si w vrèman pa jwenn done presi pou yon chan apre rechèch ou yo, mete (Done sa inaksesib).`;
+}`;
 
     const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
         method: 'POST',
@@ -192,7 +200,7 @@ Si w vrèman pa jwenn done presi pou yon chan apre rechèch ou yo, mete (Done sa
 }
 
 app.get('/', (req, res) => {
-    res.send('BETZONE Backend (TheSportsDB) active');
+    res.send('BETZONE Backend active');
 });
 
 app.get('/api/match-details/:matchId', async (req, res) => {
@@ -237,12 +245,10 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Sèvè ap koute sou pò ${PORT} (TheSportsDB mode)`);
+    console.log(`🚀 Sèvè ap koute sou pò ${PORT}`);
 
-    // Senkronize match yo 10 jou avans nan demaraj
     syncDailyMatches();
 
-    // Cron job 2:00 AM pou senkronizasyon otomatik chak jou
     cron.schedule('0 2 * * *', async () => {
         console.log('⏰ Ekzekisyon otomatik 2:00 AM kòmanse...');
         await syncDailyMatches();
