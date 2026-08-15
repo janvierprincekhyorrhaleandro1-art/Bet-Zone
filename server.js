@@ -17,43 +17,25 @@ const PORT = process.env.PORT || 3000;
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uiepdartkcunumajlwwg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
+const FOOTBALL_DATA_API_KEY = process.env.FOOTBALL_DATA_API_KEY || 'YOUR_FOOTBALL_DATA_KEY_HERE';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-const SPORTSDB_API_KEY = '3';
-const BASE_URL = `https://www.thesportsdb.com/api/v1/json/${SPORTSDB_API_KEY}`;
-
+// Lis Lig yo sou Football-Data.org
 const LEAGUES = [
-    { id: '4328', code: 'PL', name: 'English Premier League' },
-    { id: '4335', code: 'PD', name: 'Spanish La Liga' },
-    { id: '4331', code: 'BL1', name: 'German Bundesliga' },
-    { id: '4334', code: 'FL1', name: 'French Ligue 1' },
-    { id: '4332', code: 'SA', name: 'Italian Serie A' },
-    { id: '4480', code: 'CL', name: 'UEFA Champions League' }
+    { code: 'PL', name: 'English Premier League' },
+    { code: 'PD', name: 'Spanish La Liga' },
+    { code: 'BL1', name: 'German Bundesliga' },
+    { code: 'FL1', name: 'French Ligue 1' },
+    { code: 'SA', name: 'Italian Serie A' },
+    { code: 'CL', name: 'UEFA Champions League' }
 ];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Helper pou evite erè JSON ki plante sèvè a
-async function fetchSafeJSON(url) {
-    try {
-        const res = await fetch(url);
-        if (!res.ok) {
-            console.error(`⚠️ HTTP Erè ${res.status} sou URL: ${url}`);
-            return null;
-        }
-        const text = await res.text();
-        if (!text || text.trim() === '') return null;
-        return JSON.parse(text);
-    } catch (err) {
-        console.error(`❌ Erè parsing JSON sou ${url}:`, err.message);
-        return null;
-    }
-}
-
-// 1. Senkronize match
+// 1. Senkronize match 10 JOU AVANS ak Football-Data.org
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Ekzekisyon senkronizasyon match...`);
+    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match ak Football-Data.org (10 jou avans)...`);
 
     const todayDate = new Date();
     const maxDate = new Date();
@@ -64,54 +46,43 @@ async function syncDailyMatches() {
 
     for (const league of LEAGUES) {
         try {
-            // Chèche match pou pwochen jou yo ak TheSportsDB
-            const eventsData = await fetchSafeJSON(`${BASE_URL}/eventsnext.php?id=${league.id}`);
-            let allEvents = eventsData && eventsData.events ? eventsData.events : [];
+            const url = `https://api.football-data.org/v4/competitions/${league.code}/matches?dateFrom=${todayStr}&dateTo=${maxStr}`;
+            
+            const response = await fetch(url, {
+                headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
+            });
 
-            // Chèche match jodi a tou pou sekirite
-            const todayData = await fetchSafeJSON(`${BASE_URL}/eventsday.php?d=${todayStr}&l=${encodeURIComponent(league.name)}`);
-            if (todayData && todayData.events) {
-                allEvents = [...allEvents, ...todayData.events];
-            }
-
-            if (allEvents.length === 0) {
-                console.log(`⚠️ Pa gen done disponib pou ${league.name} kounye a.`);
+            if (!response.ok) {
+                console.error(`⚠️ Erè API Football-Data (${response.status}) pou ${league.name}`);
                 continue;
             }
 
-            const uniqueEventsMap = new Map();
-            allEvents.forEach(e => {
-                if (e && e.idEvent) uniqueEventsMap.set(e.idEvent, e);
-            });
-            const uniqueEvents = Array.from(uniqueEventsMap.values());
+            const data = await response.json();
+            const matches = data.matches || [];
 
-            const validMatches = uniqueEvents.filter(event => {
-                const eventDate = event.dateEvent;
-                return eventDate && eventDate >= todayStr && eventDate <= maxStr;
-            });
-
-            if (validMatches.length === 0) {
+            if (matches.length === 0) {
                 console.log(`⚠️ Pa gen match ant ${todayStr} ak ${maxStr} pou ${league.name}.`);
                 continue;
             }
 
-            console.log(`⚽ Jwenn ${validMatches.length} match pou ${league.name}.`);
+            console.log(`⚽ Jwenn ${matches.length} match pou ${league.name}.`);
 
             const { data: existingMatches } = await supabase.from('daily_matches').select('id, victory, percent');
             const existingMap = new Map(existingMatches?.map(m => [m.id, m]) || []);
 
-            const formattedMatches = validMatches.map(event => {
-                const matchId = parseInt(event.idEvent);
+            const formattedMatches = matches.map(match => {
+                const matchId = match.id;
                 const existing = existingMap.get(matchId);
+                const matchUtcDate = new Date(match.utcDate);
 
                 return {
                     id: matchId,
                     league_code: league.code,
                     league_name: league.name,
-                    match_date: event.dateEvent,
-                    match_time: event.strTime ? event.strTime.substring(0, 5) : '20:00',
-                    team_a: event.strHomeTeam,
-                    team_b: event.strAwayTeam,
+                    match_date: matchUtcDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }),
+                    match_time: matchUtcDate.toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }),
+                    team_a: match.homeTeam.name,
+                    team_b: match.awayTeam.name,
                     victory: existing ? existing.victory : null,
                     percent: existing ? existing.percent : null
                 };
@@ -125,7 +96,8 @@ async function syncDailyMatches() {
                 console.log(`✅ ${formattedMatches.length} match senkronize pou ${league.name}!`);
             }
 
-            await sleep(1500);
+            // Poz 6 segonn pou aliyen ak limit gratis Football-Data (10 req/min)
+            await sleep(6000);
 
         } catch (err) {
             console.error(`❌ Erè senkronizasyon pou ${league.name}:`, err.message);
@@ -200,7 +172,7 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis, san eksplikasyon
 }
 
 app.get('/', (req, res) => {
-    res.send('BETZONE Backend active');
+    res.send('BETZONE Backend (Football-Data) active');
 });
 
 app.get('/api/match-details/:matchId', async (req, res) => {
