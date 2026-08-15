@@ -25,7 +25,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const SPORTSDB_API_KEY = '3';
 const BASE_URL = `https://www.thesportsdb.com/api/v1/json/${SPORTSDB_API_KEY}`;
 
-// Lis Lig yo pou TheSportsDB
+// Lis Lig yo ak ID yo nan TheSportsDB
 const LEAGUES = [
     { id: '4328', code: 'PL', name: 'English Premier League' },
     { id: '4335', code: 'PD', name: 'Spanish La Liga' },
@@ -38,29 +38,59 @@ const LEAGUES = [
 // Fonksyon pou fòse sèvè a tann (delay)
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// 1. Senkronize match pou jodi a ak jou k ap vini yo depi TheSportsDB
+// 1. Senkronize match jodia AK 10 jou k ap vini yo depi TheSportsDB (itilize eventsnext.php ak eventsday.php)
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Ekzekisyon senkronizasyon match ak TheSportsDB...`);
+    console.log(`⏰ [${new Date().toISOString()}] Ekzekisyon senkronizasyon match ak TheSportsDB (10 jou avans)...`);
 
     const todayDate = new Date();
+    const maxDate = new Date();
+    maxDate.setDate(todayDate.getDate() + 10); // 10 jou avans
+
     const todayStr = todayDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const maxStr = maxDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
     for (const league of LEAGUES) {
         try {
-            const eventsRes = await fetch(`${BASE_URL}/eventsday.php?d=${todayStr}&l=${encodeURIComponent(league.name)}`);
+            // Nou rale pwochèn match lig la (eventsnext) pou nou ka gen match 10 jou avans yo
+            const eventsRes = await fetch(`${BASE_URL}/eventsnext.php?id=${league.id}`);
             const eventsData = await eventsRes.json();
 
-            if (!eventsData.events || eventsData.events.length === 0) {
-                console.log(`⚠️ Pa gen match pou ${league.name} jodia (${todayStr}).`);
+            let allEvents = eventsData.events || [];
+
+            // Nou rale match jodi a tou pou sekirite (eventsday)
+            const todayRes = await fetch(`${BASE_URL}/eventsday.php?d=${todayStr}&l=${encodeURIComponent(league.name)}`);
+            const todayData = await todayRes.json();
+            if (todayData.events) {
+                allEvents = [...allEvents, ...todayData.events];
+            }
+
+            if (allEvents.length === 0) {
+                console.log(`⚠️ Pa gen match pou ${league.name} nan fenèt sa a.`);
                 continue;
             }
 
-            console.log(`⚽ Jwenn ${eventsData.events.length} match pou ${league.name} sou TheSportsDB.`);
+            // Elimine doubli (duplicates) pa idEvent
+            const uniqueEventsMap = new Map();
+            allEvents.forEach(e => uniqueEventsMap.set(e.idEvent, e));
+            const uniqueEvents = Array.from(uniqueEventsMap.values());
+
+            // Filtre sèlman match ki rantre ant Jodi a ak 10 Jou apre
+            const validMatches = uniqueEvents.filter(event => {
+                const eventDate = event.dateEvent;
+                return eventDate >= todayStr && eventDate <= maxStr;
+            });
+
+            if (validMatches.length === 0) {
+                console.log(`⚠️ Pa gen match ant ${todayStr} ak ${maxStr} pou ${league.name}.`);
+                continue;
+            }
+
+            console.log(`⚽ Jwenn ${validMatches.length} match pou ${league.name} ant ${todayStr} ak ${maxStr}.`);
 
             const { data: existingMatches } = await supabase.from('daily_matches').select('id, victory, percent');
             const existingMap = new Map(existingMatches?.map(m => [m.id, m]) || []);
 
-            const formattedMatches = eventsData.events.map(event => {
+            const formattedMatches = validMatches.map(event => {
                 const matchId = parseInt(event.idEvent);
                 const existing = existingMap.get(matchId);
 
@@ -68,7 +98,7 @@ async function syncDailyMatches() {
                     id: matchId,
                     league_code: league.code,
                     league_name: league.name,
-                    match_date: todayStr,
+                    match_date: event.dateEvent, // Dat reyèl match la (YYYY-MM-DD)
                     match_time: event.strTime ? event.strTime.substring(0, 5) : '20:00',
                     team_a: event.strHomeTeam,
                     team_b: event.strAwayTeam,
@@ -84,6 +114,9 @@ async function syncDailyMatches() {
             } else {
                 console.log(`✅ ${formattedMatches.length} match senkronize nan Supabase pou ${league.name}!`);
             }
+
+            // Poz 1 segonn ant chak lig pou pa chaje API a
+            await sleep(1000);
 
         } catch (err) {
             console.error(`❌ Erè rale match pou ${league.name}:`, err.message);
@@ -158,57 +191,6 @@ Si w vrèman pa jwenn done presi pou yon chan apre rechèch ou yo, mete (Done sa
     }
 }
 
-// 3. Generer analiz pou match ki an atant nan fenèt 3 jou
-async function generatePendingAnalysis() {
-    console.log('🧠 Chèche match ki bezwen analiz (Sèlman pou jodi a ak 2 jou apre)...');
-
-    const todayDate = new Date();
-    const maxDate = new Date();
-    maxDate.setDate(todayDate.getDate() + 2);
-
-    const todayStr = todayDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-    const maxDateStr = maxDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-
-    const { data: pending, error } = await supabase
-        .from('daily_matches')
-        .select('*')
-        .is('percent', null)
-        .gte('match_date', todayStr)
-        .lte('match_date', maxDateStr)
-        .limit(10);
-
-    if (error) { console.error('❌ Erè chèche match pou analize:', error); return; }
-    if (!pending || pending.length === 0) { console.log('✅ Pa gen okenn match ki bezwen analiz nan fenèt 3 jou sa yo.'); return; }
-
-    console.log(`🧠 ${pending.length} match pou analize nan fenèt 3 jou sa yo...`);
-
-    for (const match of pending) {
-        try {
-            const parsed = await analyzeMatch(match);
-            const topPick = parsed.pronostik?.[0];
-
-            await supabase.from('match_analysis').upsert({
-                match_id: match.id,
-                data: parsed,
-                created_at: new Date().toISOString()
-            });
-
-            await supabase.from('daily_matches').update({
-                percent: topPick ? `${topPick.confidence}%` : 'N/A',
-                victory: topPick ? topPick.label : 'Analiz endisponib'
-            }).eq('id', match.id);
-
-            console.log(`✅ Analize: ${match.team_a} vs ${match.team_b} (${match.match_date})`);
-
-            // Poz 4 segonn pou respekte limit API a
-            await sleep(4000);
-
-        } catch (err) {
-            console.error(`❌ Erè analiz pou ${match.team_a} vs ${match.team_b}:`, err.message);
-        }
-    }
-}
-
 app.get('/', (req, res) => {
     res.send('BETZONE Backend (TheSportsDB) active');
 });
@@ -257,10 +239,10 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Sèvè ap koute sou pò ${PORT} (TheSportsDB mode)`);
 
-    // Senkronize match yo sèlman nan demaraj
+    // Senkronize match yo 10 jou avans nan demaraj
     syncDailyMatches();
 
-    // Cron job 2:00 AM pou senkronizasyon chak jou
+    // Cron job 2:00 AM pou senkronizasyon otomatik chak jou
     cron.schedule('0 2 * * *', async () => {
         console.log('⏰ Ekzekisyon otomatik 2:00 AM kòmanse...');
         await syncDailyMatches();
