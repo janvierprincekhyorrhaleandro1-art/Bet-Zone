@@ -197,15 +197,15 @@
 
                     <div class="space-y-3 text-xs">
                         <div class="flex justify-between items-center p-2.5 rounded-xl bg-brand-dark border border-brand-border">
-                            <span id="formHomeName" class="font-bold text-white">Lakay</span>
-                            <div id="formHome" class="flex gap-1 mono font-bold text-[10px]">
+                            <span id="formHomeName" class="font-bold text-white">Chaje...</span>
+                            <div id="formHome" class="flex gap-1 mono text-[10px]">
                                 <span class="text-gray-500">Chaje...</span>
                             </div>
                         </div>
 
                         <div class="flex justify-between items-center p-2.5 rounded-xl bg-brand-dark border border-brand-border">
-                            <span id="formAwayName" class="font-bold text-white">Deyò</span>
-                            <div id="formAway" class="flex gap-1 mono font-bold text-[10px]">
+                            <span id="formAwayName" class="font-bold text-white">Chaje...</span>
+                            <div id="formAway" class="flex gap-1 mono text-[10px]">
                                 <span class="text-gray-500">Chaje...</span>
                             </div>
                         </div>
@@ -379,13 +379,21 @@
                     }
                 }
 
-                // 5. Mete Forme
+                // 5. Mete Forme (G = Genyen, N = Nil, P = Pèdi) - Sèvi ak non ekip dinamik yo
                 if (data.forme) {
-                    const renderBadges = (arr) => (arr || []).map(f => {
-                        let colorClass = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-                        if (f === 'W') colorClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-                        if (f === 'L') colorClass = 'bg-red-500/20 text-red-400 border-red-500/30';
-                        return `<span class="w-5 h-5 rounded flex items-center justify-center border ${colorClass}">${f}</span>`;
+                    const renderBadges = (arr) => (arr || []).slice(0, 5).map(f => {
+                        let letter = 'N';
+                        let colorClass = 'bg-amber-500/20 text-amber-400 border-amber-500/30'; // Nil (N)
+
+                        if (f === 'W' || f === 'G') {
+                            letter = 'G';
+                            colorClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'; // Genyen (G)
+                        } else if (f === 'L' || f === 'P') {
+                            letter = 'P';
+                            colorClass = 'bg-red-500/20 text-red-400 border-red-500/30'; // Pèdi (P)
+                        }
+
+                        return `<span class="w-5 h-5 rounded flex items-center justify-center border font-bold ${colorClass}">${letter}</span>`;
                     }).join('');
 
                     document.getElementById('formHome').innerHTML = renderBadges(data.forme.home);
