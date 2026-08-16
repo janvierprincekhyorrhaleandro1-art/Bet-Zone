@@ -270,7 +270,7 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTE
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'gemini-2.5-flash-lite',
+            model: 'gemini-3.5-flash-lite',
             messages: [{ role: 'user', content: prompt }],
             response_format: { type: "json_object" },
             max_tokens: 4000
