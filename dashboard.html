@@ -388,8 +388,6 @@
             } else {
                 // SEKSYON VIP / ELITE
                 if (isUserFree) {
-                    // Si match gratis la JA DISPONIB jodi a -> wete l nan VIP pou l pa double
-                    // Si match gratis la POKO DISPONIB (oswa se yon lòt dat) -> montre TOUT match yo nan VIP
                     if (isSelectedToday && freeList.length > 0) {
                         displayList = list.filter(m => !freeIds.has(m.id));
                     } else {
@@ -412,29 +410,17 @@
             }
 
             container.innerHTML = displayList.map(m => {
-                let onClickAttr = '';
+                let cardClickAttr = '';
                 if (canClickDetails) {
-                    onClickAttr = `onclick="window.location.href='details.html?id=${m.id}'"`;
-                } else if (isBlurredList) {
-                    onClickAttr = `onclick="window.location.href='checkout.html'"`;
+                    cardClickAttr = `onclick="window.location.href='details.html?id=${m.id}'"`;
                 }
 
                 return `
-                    <div ${onClickAttr} 
-                         class="relative p-4 rounded-xl bg-brand-card border border-brand-border ${canClickDetails || isBlurredList ? 'hover:border-emerald-500/40 cursor-pointer group' : 'cursor-default'} transition shadow-md flex flex-col justify-between overflow-hidden">
+                    <div ${cardClickAttr} 
+                         class="relative p-4 rounded-xl bg-brand-card border border-brand-border ${canClickDetails ? 'hover:border-emerald-500/40 cursor-pointer group' : ''} transition shadow-md flex flex-col justify-between overflow-hidden">
                         
-                        ${isBlurredList ? `
-                            <div class="absolute inset-0 bg-brand-card/80 backdrop-blur-md z-20 flex flex-col items-center justify-center p-3 text-center cursor-pointer">
-                                <div class="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-lg mb-2 shadow-lg">
-                                    <i class="fa-solid fa-lock"></i>
-                                </div>
-                                <span class="text-xs font-extrabold text-white">Match VIP / ELITE</span>
-                                <span class="text-[10px] text-amber-400 mt-1 font-bold">Klike pou debloke</span>
-                            </div>
-                        ` : ''}
-
                         <div>
-                            <!-- HEAD: ORÈ + CHANPYONA -->
+                            <!-- HEAD: ORÈ + CHANPYONA (TOUJOU VIZIB) -->
                             <div class="flex justify-between items-center mb-2">
                                 <span class="text-xs text-gray-400 font-semibold flex items-center gap-1.5">
                                     <i class="fa-regular fa-clock text-emerald-400"></i> ${m.time}
@@ -442,22 +428,31 @@
                                 <span class="text-xs text-gray-400 font-medium truncate max-w-[130px]">${m.league}</span>
                             </div>
                             
-                            <!-- MATCH TEAMS -->
+                            <!-- MATCH TEAMS (TOUJOU VIZIB) -->
                             <div class="flex items-center justify-between text-sm font-bold text-white ${canClickDetails ? 'group-hover:text-emerald-400' : ''} transition my-3 px-1">
                                 <span class="truncate max-w-[42%]">${m.teamA}</span>
                                 <span class="text-[10px] text-gray-500 font-extrabold px-1">VS</span>
                                 <span class="truncate max-w-[42%] text-right">${m.teamB}</span>
                             </div>
 
-                            <!-- PRONOSTIK BAZIK AK POURCENTAGE TOUPORE L -->
-                            <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center mt-3">
-                                <div class="flex flex-col">
-                                    <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Pronostik Bazik:</span>
-                                    <span class="text-xs font-extrabold text-emerald-400">${m.victory || 'N/A'}</span>
+                            <!-- PRONOSTIK BAZIK AK POURCENTAGE (BLURRED SI MOUN NAN GRATIS NAN VIP) -->
+                            <div class="relative mt-3 rounded-lg overflow-hidden">
+                                <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center ${isBlurredList ? 'blur-sm select-none opacity-40' : ''}">
+                                    <div class="flex flex-col">
+                                        <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Pronostik Bazik:</span>
+                                        <span class="text-xs font-extrabold text-emerald-400">${m.victory || 'N/A'}</span>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold text-xs border border-emerald-500/30">
+                                        ${m.percent || 'N/A'}
+                                    </span>
                                 </div>
-                                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold text-xs border border-emerald-500/30">
-                                    ${m.percent || 'N/A'}
-                                </span>
+
+                                ${isBlurredList ? `
+                                    <div onclick="window.location.href='checkout.html'" class="absolute inset-0 bg-brand-card/70 backdrop-blur-[2px] flex items-center justify-center gap-2 cursor-pointer border border-amber-500/30 rounded-lg hover:bg-brand-card/90 transition px-2">
+                                        <i class="fa-solid fa-lock text-amber-400 text-xs"></i>
+                                        <span class="text-[11px] font-extrabold text-amber-400">Debloke ak VIP / ELITE</span>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
 
@@ -468,8 +463,8 @@
                                     <i class="fa-solid fa-crown text-[9px]"></i> Appuyer pour accéder à l'analyse complet du match
                                 </span>
                             ` : `
-                                <span class="text-[10px] text-gray-400 font-medium flex items-center justify-center gap-1">
-                                    <i class="fa-solid fa-circle-info text-[9px] text-emerald-400"></i> Match sèlman vizib nan fòma bazik
+                                <span onclick="window.location.href='checkout.html'" class="text-[10px] text-amber-400/80 hover:text-amber-400 font-bold flex items-center justify-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-crown text-[9px]"></i> Klike la pou w achte yon plan VIP
                                 </span>
                             `}
                         </div>
@@ -511,7 +506,7 @@
                     planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-crown text-[10px]"></i> VIP</span>`;
                     if (vipTabLockIcon) vipTabLockIcon.classList.add('hidden');
                 } else {
-                    planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-extrabold uppercase tracking-wider">GRATIS</span>`;
+                    planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase tracking-wider">GRATIS</span>`;
                     if (vipTabLockIcon) vipTabLockIcon.classList.remove('hidden');
                 }
 
