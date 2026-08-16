@@ -32,7 +32,6 @@ const LEAGUES = [
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Helper pou jwenn dat nan fòma YYYY-MM-DD egzak pou Football-Data.org
 function formatDate(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -40,42 +39,25 @@ function formatDate(date) {
     return `${year}-${month}-${day}`;
 }
 
-// 1. Senkronize match
+// 1. Senkronizasyon Match ak Football-Data.org
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match ak Football-Data.org...`);
-
+    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match...`);
     const now = new Date();
     const todayStr = formatDate(now);
-
     const futureDate = new Date();
     futureDate.setDate(now.getDate() + 9);
     const maxStr = formatDate(futureDate);
 
-    console.log(`📅 Chèche match ant ${todayStr} ak ${maxStr}...`);
-
     for (const league of LEAGUES) {
         try {
             const url = `https://api.football-data.org/v4/competitions/${league.code}/matches?dateFrom=${todayStr}&dateTo=${maxStr}`;
-            
-            const response = await fetch(url, {
-                headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
-            });
+            const response = await fetch(url, { headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY } });
 
-            if (!response.ok) {
-                const errText = await response.text();
-                console.error(`⚠️ Erè API Football-Data (${response.status}) pou ${league.name}:`, errText);
-                continue;
-            }
+            if (!response.ok) continue;
 
             const data = await response.json();
             const matches = data.matches || [];
-
-            if (matches.length === 0) {
-                console.log(`⚠️ Pa gen match ant ${todayStr} ak ${maxStr} pou ${league.name}.`);
-                continue;
-            }
-
-            console.log(`⚽ Jwenn ${matches.length} match pou ${league.name}.`);
+            if (matches.length === 0) continue;
 
             const { data: existingMatches } = await supabase.from('daily_matches').select('id, victory, percent');
             const existingMap = new Map(existingMatches?.map(m => [m.id, m]) || []);
@@ -98,23 +80,15 @@ async function syncDailyMatches() {
                 };
             });
 
-            const { error: insErr } = await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
-
-            if (insErr) {
-                console.error(`❌ Erè Supabase pou ${league.name}:`, insErr.message);
-            } else {
-                console.log(`✅ ${formattedMatches.length} match senkronize pou ${league.name}!`);
-            }
-
+            await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
             await sleep(6000);
-
         } catch (err) {
-            console.error(`❌ Erè senkronizasyon pou ${league.name}:`, err.message);
+            console.error(`❌ Erè senkronizasyon (${league.name}):`, err.message);
         }
     }
 }
 
-// 2. Fonksyon pou jwenn H2H, Form, ak Bilan soti dirèkteman nan Football-Data.org
+// 2. Fetch H2H, Form, ak Bilan soti nan Football-Data.org
 async function getFootballDataStats(matchId) {
     try {
         const h2hRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}/head2head`, {
@@ -122,8 +96,7 @@ async function getFootballDataStats(matchId) {
         });
         
         let h2hList = [];
-        let homeTeamId = null;
-        let awayTeamId = null;
+        let homeTeamId = null, awayTeamId = null;
 
         if (h2hRes.ok) {
             const h2hData = await h2hRes.json();
@@ -154,24 +127,19 @@ async function getFootballDataStats(matchId) {
         const parseFormAndBilan = (matches, teamId) => {
             let form = [];
             let win = 0, draw = 0, loss = 0;
-
             matches.forEach(m => {
                 const isHome = m.homeTeam.id === teamId;
                 const homeScore = m.score.fullTime.home;
                 const awayScore = m.score.fullTime.away;
 
                 if (homeScore === awayScore) {
-                    form.push('N');
-                    draw++;
+                    form.push('N'); draw++;
                 } else if ((isHome && homeScore > awayScore) || (!isHome && awayScore > homeScore)) {
-                    form.push('G');
-                    win++;
+                    form.push('G'); win++;
                 } else {
-                    form.push('P');
-                    loss++;
+                    form.push('P'); loss++;
                 }
             });
-
             return { form: form.length ? form : ['N','N','N','N','N'], bilan: { win, draw, loss } };
         };
 
@@ -199,27 +167,16 @@ async function getFootballDataStats(matchId) {
             }
         }
 
-        return {
-            h2h: h2hList,
-            forme: { home: homeForm, away: awayForm },
-            bilan: { home: homeBilan, away: awayBilan }
-        };
+        return { h2h: h2hList, forme: { home: homeForm, away: awayForm }, bilan: { home: homeBilan, away: awayBilan } };
 
     } catch (e) {
-        console.error("Erè Football-Data Stats:", e.message);
-        return {
-            h2h: [],
-            forme: { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] },
-            bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } }
-        };
+        return { h2h: [], forme: { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] }, bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } } };
     }
 }
 
-// 3. Analiz ak Gemini (Ekzekite SÈLMAN pou jodia ak demen)
+// 3. PROMPT DETAYE KREYÒL OU AN POU GEMINI
 async function analyzeMatch(match) {
-    if (!GEMINI_KEY) {
-        throw new Error('GEMINI_API_KEY pa konfigire sou sèvè a');
-    }
+    if (!GEMINI_KEY) throw new Error('GEMINI_API_KEY pa konfigire');
 
     const prompt = `Ou se yon ekspè nan analiz matche foutbòl. Fè yon rechèch REYÈL sou Google ak sou sit forebet.com pou match sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
 
@@ -248,117 +205,77 @@ SWIV MANSYON SA YO EGZAKTEMAN:
 Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTEMAN estrikti sa a:
 {
   "pronostik": [
-    {"label": "<opsyon ekip ki gen plis % sou forebet>", "confidence": 65},
-    {"label": "<opsyon Over/Under goal sou forebet>", "confidence": 70}
+    {"label": "${match.team_a} Win", "confidence": 65},
+    {"label": "Over 2.5", "confidence": 70}
   ],
   "analiz_ia": "<ti analiz an kreyòl sou kijan match la ka ye>",
   "lineup": {
-    "home": {"formation":"4-3-3", "gk":["<1 non>"], "df":["<4 non>"], "mid":["<3 non>"], "fw":["<3 non>"]},
-    "away": {"formation":"4-3-3", "gk":["<1 non>"], "df":["<4 non>"], "mid":["<3 non>"], "fw":["<3 non>"]}
+    "home": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1", "DF2", "DF3", "DF4"], "mid":["MID1", "MID2", "MID3"], "fw":["FW1", "FW2", "FW3"]},
+    "away": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1", "DF2", "DF3", "DF4"], "mid":["MID1", "MID2", "MID3"], "fw":["FW1", "FW2", "FW3"]}
   },
   "absences": {
-    "home": [{"name":"<non jwè>", "status":"<blese/sispann>"}],
-    "away": [{"name":"<non jwè>", "status":"<blese/sispann>"}]
+    "home": [{"name":"Non Jwè", "status":"Blese"}],
+    "away": [{"name":"Non Jwè", "status":"Sispann"}]
   },
   "recommendation": "<ti konsèy kout baze sou rechèch yo>"
 }`;
 
-    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
         method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${GEMINI_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            model: 'gemini-3.5-flash-lite',
-            messages: [{ role: 'user', content: prompt }],
-            response_format: { type: "json_object" },
-            max_tokens: 4000
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
 
     const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'Erè Gemini API');
 
-    if (!res.ok) {
-        throw new Error(`Gemini HTTP ${res.status}: ${data.error?.message || JSON.stringify(data)}`);
-    }
-
-    let rawText = data.choices?.[0]?.message?.content || '';
-    if (!rawText) {
-        throw new Error(`Gemini pa retounen tèks: ${JSON.stringify(data)}`);
-    }
-
+    let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     rawText = rawText.replace(/```json|```/g, '').trim();
 
-    try {
-        return JSON.parse(rawText);
-    } catch (e) {
-        throw new Error(`JSON envalid soti nan modèl la: ${rawText.substring(0, 150)}...`);
-    }
+    return JSON.parse(rawText);
 }
 
-app.get('/', (req, res) => {
-    res.send('BETZONE Backend (Football-Data & Gemini) active');
-});
-
-// ROUTE PRENSIPAL DETAY MATCH
+// 4. Endpoint Detay Match
 app.get('/api/match-details/:matchId', async (req, res) => {
     const matchId = req.params.matchId;
 
     try {
-        // Tcheke kach Supabase anvan
         const { data: cached } = await supabase
             .from('match_analysis')
             .select('data, created_at')
             .eq('match_id', matchId)
             .maybeSingle();
 
-        const isSameDay = cached && (new Date(cached.created_at).toDateString() === new Date().toDateString());
-        if (isSameDay) {
+        if (cached && (new Date(cached.created_at).toDateString() === new Date().toDateString())) {
             return res.json({ ...cached.data, cached: true });
         }
 
-        const { data: match, error: matchErr } = await supabase
+        const { data: match } = await supabase
             .from('daily_matches')
             .select('*')
             .eq('id', matchId)
             .single();
 
-        if (matchErr || !match) {
+        if (!match) {
             return res.status(404).json({ error: 'Match pa jwenn' });
         }
 
-        // 1. Fetch Done H2H, Form, ak Bilan nan Football-Data.org
         const footballDataStats = await getFootballDataStats(matchId);
-
-        // 2. KONTWÒL DAT (JODI A AK DEMEN SÈLMAN POU GEMINI)
-        const matchDate = new Date(match.match_date);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
-
-        // Si dat match la se jodia oswa demen, n ap chèche analiz Gemini
-        const isTodayOrTomorrow = (matchDate >= today && matchDate <= new Date(tomorrow.getTime() + 86400000));
 
         let geminiParsed = {
             pronostik: [],
-            analiz_ia: 'Analiz IA ak aktyalite yo ap disponib nan jou match la sèlman.',
+            analiz_ia: 'Analiz IA an ap jenere...',
             lineup: null,
             absences: { home: [], away: [] },
-            recommendation: 'Reviendrez le jour du match pour la recommandation complète.'
+            recommendation: 'Konsèy ap disponib nan kèk sekonn.'
         };
 
-        if (isTodayOrTomorrow) {
-            try {
-                geminiParsed = await analyzeMatch(match);
-            } catch (gemErr) {
-                console.error('Erè pandan Gemini t ap analize:', gemErr.message);
-            }
+        try {
+            geminiParsed = await analyzeMatch(match);
+        } catch (gemErr) {
+            console.error('⚠️ Erè Gemini (Fallback ekzekite):', gemErr.message);
         }
 
-        // 3. Konbine 2 done yo ansanm
         const finalResponse = {
             matchInfo: {
                 league: match.league_name,
@@ -370,16 +287,15 @@ app.get('/api/match-details/:matchId', async (req, res) => {
                 awayLogo: ''
             },
             pronostik: geminiParsed.pronostik || [],
-            analiz_ia: geminiParsed.analiz_ia,
+            analiz_ia: geminiParsed.analiz_ia || '',
             bilan: footballDataStats.bilan,
             forme: footballDataStats.forme,
             h2h: footballDataStats.h2h,
             lineup: geminiParsed.lineup,
-            absences: geminiParsed.absences,
-            recommendation: geminiParsed.recommendation
+            absences: geminiParsed.absences || { home: [], away: [] },
+            recommendation: geminiParsed.recommendation || ''
         };
 
-        // Enregistre nan Supabase pou kach
         await supabase.from('match_analysis').upsert({
             match_id: matchId,
             data: finalResponse,
@@ -390,20 +306,8 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 
     } catch (err) {
         console.error('❌ Erè match-details:', err);
-        return res.status(500).json({ error: 'Nou pa t ka jenere analiz la kounye a.' });
+        return res.status(500).json({ error: err.message });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Sèvè ap koute sou pò ${PORT}`);
-
-    syncDailyMatches();
-
-    cron.schedule('0 2 * * *', async () => {
-        console.log('⏰ Ekzekisyon otomatik 2:00 AM kòmanse...');
-        await syncDailyMatches();
-    }, {
-        scheduled: true,
-        timezone: "America/New_York"
-    });
-});
+app.listen(PORT, () => console.log(`🚀 Sèvè ap koute sou pò ${PORT}`));
