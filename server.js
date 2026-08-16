@@ -40,14 +40,13 @@ function formatDate(date) {
     return `${year}-${month}-${day}`;
 }
 
-// 1. Senkronize match (Garantis san erè 400)
+// 1. Senkronize match
 async function syncDailyMatches() {
     console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match ak Football-Data.org...`);
 
     const now = new Date();
     const todayStr = formatDate(now);
 
-    // Nou pran 9 jou anplis pou rantre pil nan limit 10 jou gratis api a (Jodi a + 9 jou = 10 jou total)
     const futureDate = new Date();
     futureDate.setDate(now.getDate() + 9);
     const maxStr = formatDate(futureDate);
@@ -107,7 +106,6 @@ async function syncDailyMatches() {
                 console.log(`✅ ${formattedMatches.length} match senkronize pou ${league.name}!`);
             }
 
-            // Poz 6 segonn ant chak requêtes pou resepkte limit 10 req/min plan gratis la
             await sleep(6000);
 
         } catch (err) {
@@ -116,36 +114,153 @@ async function syncDailyMatches() {
     }
 }
 
-// 2. Analiz ak Gemini
+// 2. Fonksyon pou jwenn H2H, Form, ak Bilan soti dirèkteman nan Football-Data.org
+async function getFootballDataStats(matchId) {
+    try {
+        const h2hRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}/head2head`, {
+            headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
+        });
+        
+        let h2hList = [];
+        let homeTeamId = null;
+        let awayTeamId = null;
+
+        if (h2hRes.ok) {
+            const h2hData = await h2hRes.json();
+            homeTeamId = h2hData.resultSet?.homeTeam?.id;
+            awayTeamId = h2hData.resultSet?.awayTeam?.id;
+
+            h2hList = (h2hData.matches || []).slice(0, 5).map(m => ({
+                result: `${m.homeTeam.shortName || m.homeTeam.name} ${m.score.fullTime.home ?? 0} - ${m.score.fullTime.away ?? 0} ${m.awayTeam.shortName || m.awayTeam.name}`,
+                date: new Date(m.utcDate).toLocaleDateString('ht-HT')
+            }));
+        }
+
+        if (!homeTeamId || !awayTeamId) {
+            const matchRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}`, {
+                headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
+            });
+            if (matchRes.ok) {
+                const mData = await matchRes.json();
+                homeTeamId = mData.homeTeam?.id;
+                awayTeamId = mData.awayTeam?.id;
+            }
+        }
+
+        let homeForm = ['N','N','N','N','N'], awayForm = ['N','N','N','N','N'];
+        let homeBilan = { win: 0, draw: 0, loss: 0 };
+        let awayBilan = { win: 0, draw: 0, loss: 0 };
+
+        const parseFormAndBilan = (matches, teamId) => {
+            let form = [];
+            let win = 0, draw = 0, loss = 0;
+
+            matches.forEach(m => {
+                const isHome = m.homeTeam.id === teamId;
+                const homeScore = m.score.fullTime.home;
+                const awayScore = m.score.fullTime.away;
+
+                if (homeScore === awayScore) {
+                    form.push('N');
+                    draw++;
+                } else if ((isHome && homeScore > awayScore) || (!isHome && awayScore > homeScore)) {
+                    form.push('G');
+                    win++;
+                } else {
+                    form.push('P');
+                    loss++;
+                }
+            });
+
+            return { form: form.length ? form : ['N','N','N','N','N'], bilan: { win, draw, loss } };
+        };
+
+        if (homeTeamId) {
+            const hFormRes = await fetch(`https://api.football-data.org/v4/teams/${homeTeamId}/matches?status=FINISHED&limit=5`, {
+                headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
+            });
+            if (hFormRes.ok) {
+                const hData = await hFormRes.json();
+                const resParsed = parseFormAndBilan(hData.matches || [], homeTeamId);
+                homeForm = resParsed.form;
+                homeBilan = resParsed.bilan;
+            }
+        }
+
+        if (awayTeamId) {
+            const aFormRes = await fetch(`https://api.football-data.org/v4/teams/${awayTeamId}/matches?status=FINISHED&limit=5`, {
+                headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
+            });
+            if (aFormRes.ok) {
+                const aData = await aFormRes.json();
+                const resParsed = parseFormAndBilan(aData.matches || [], awayTeamId);
+                awayForm = resParsed.form;
+                awayBilan = resParsed.bilan;
+            }
+        }
+
+        return {
+            h2h: h2hList,
+            forme: { home: homeForm, away: awayForm },
+            bilan: { home: homeBilan, away: awayBilan }
+        };
+
+    } catch (e) {
+        console.error("Erè Football-Data Stats:", e.message);
+        return {
+            h2h: [],
+            forme: { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] },
+            bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } }
+        };
+    }
+}
+
+// 3. Analiz ak Gemini (Ekzekite SÈLMAN pou jodia ak demen)
 async function analyzeMatch(match) {
     if (!GEMINI_KEY) {
         throw new Error('GEMINI_API_KEY pa konfigire sou sèvè a');
     }
 
-    const prompt = `Fè yon rechèch REYÈL sou entènèt pou match foutbòl sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
+    const prompt = `Ou se yon ekspè nan analiz matche foutbòl. Fè yon rechèch REYÈL sou Google ak sou sit forebet.com pou match sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
 
-RÈG SOUS POU CHAK SEKSYON (obligatwa, swiv yo egzakteman):
-1. "pronostik": Chèche VRÈ pronostik ki pibliye sou site BETMINES pou match sa a (Home Win %, Draw %, Over/Under, BTTS...). Itilize done sa yo pou ranpli "confidence" ak "risk" — pa envante yo, itilize sa BetMines pibliye reyèlman.
-2. "analiz_ia": Se PWÒP DEDIKSYON pa ou (AI a) — baze sou rechèch ou fè sou FÒM RESAN tou de ekip yo (dènye match yo, dinamik aktyèl). Ekri yon paragraf ki eksplike konklizyon pa ou.
-3. "forme": Chèche 5 dènye rezilta chak ekip SOU SITE BETMINES.
-4. "h2h": Chèche 5 dènye match ant de ekip yo SOU SITE BETMINES.
-5. "absences": Chèche jwè blese oswa sispann ki pp jwe match sa pou toude ekip yo SOU GOOGLE.
-6. "lineup": PA kopye yon konpozisyon deja pibliye — DEDUI li pa ou menm: chèche SOU GOOGLE ki 11 jwè ki te kòmanse (starting XI) nan 2 DÈNYE match chak ekip te jwe, epi konstwi yon konpozisyon pwobab apati sa.
-"bilan": baze sou estatistik sezon aktyèl yo, chèche sou site BetMines tou.
+SWIV MANSYON SA YO EGZAKTEMAN:
 
-Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis, san eksplikasyon), ki swiv EGZAKTEMAN estrikti sa a:
+1. **"pronostik" (SOTI SOU FOREBET.COM)**:
+   - Chèche match ${match.team_a} vs ${match.team_b} sou site forebet.com.
+   - Pran ekip ki gen plis pousantaj (%) pou genyen an epi evalye pousantaj la sou 100%.
+   - Chèche opsyon Over/Under goal ki pi posib sou forebet.com pou match sa epi evalye l an pousantaj (%).
+
+2. **"analiz_ia" (ANALIZ ENTELIJANS ATIFISYÈL)**:
+   - Fè yon ti rechèch sou Google sou tou de ekip ki pral jwe yo.
+   - Analize epi ekri nan mo pa ou yon ti analiz an kreyòl sou kijan match la ka ye baze sou dinamik ak fòm tou de ekip yo.
+
+3. **"lineup" (11 PROBAB POU KÒMANSE)**:
+   - Fè yon rechèch sou Google pou jwenn 11 jwè chak ekip ki te kòmanse (starting XI) nan 2 DÈNYE MATCH yo te jwe.
+   - Analize jwè ki te titilè yo epi DEDUI pi bon 11 jwè ki gen plis chans pou kòmanse pou chak ekip.
+   - Mete jwè yo byen nan pozisyon yo: gk (1 jwè), df (3-5 jwè), mid (3-5 jwè), fw (1-3 jwè).
+
+4. **"absences" (JWÈ KI ABSAN - BLESI / SANKSYON)**:
+   - Fè yon ti rechèch sou Google pou gade si gen jwè nan 2 ekip sa yo ki blese oswa ki gen sanksyon ki pap ka jwe.
+
+5. **"recommendation" (REKÒMANDASYON AKTYALITE)**:
+   - Entèprete tout done rechèch ou te fè anwo yo pou bay yon ti konsèy final kout pou match sa a.
+
+Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTEMAN estrikti sa a:
 {
-  "pronostik": [{"label": "<pick BetMines>", "confidence": 80, "risk": "Fèb"}, {"label": "<2yèm pick>", "confidence": 70, "risk": "Modere"}, {"label": "<3yèm pick>", "confidence": 60, "risk": "Elve"}],
-  "analiz_ia": "<paragraf dediksyon pa ou, baze sou fòm resan>",
-  "bilan": {"home": {"win":0,"draw":0,"loss":0}, "away": {"win":0,"draw":0,"loss":0}},
-  "forme": {"home": ["W","W","D","L","W"], "away": ["W","D","L","W","W"]},
-  "h2h": [{"result": "<vrè rezilta>", "date": "<vrè dat>"}],
-  "absences": {"home": [{"name":"<non jwè>", "status":"<blese/sispann>"}], "away": [{"name":"<non>", "status":"<...>"}]},
+  "pronostik": [
+    {"label": "<opsyon ekip ki gen plis % sou forebet>", "confidence": 65},
+    {"label": "<opsyon Over/Under goal sou forebet>", "confidence": 70}
+  ],
+  "analiz_ia": "<ti analiz an kreyòl sou kijan match la ka ye>",
   "lineup": {
-    "home": {"formation":"4-3-3", "gk":["<non>"], "df":["<4 non>"], "mid":["<3 non>"], "fw":["<3 non>"]},
-    "away": {"formation":"4-3-3", "gk":["<non>"], "df":["<4 non>"], "mid":["<3 non>"], "fw":["<3 non>"]}
+    "home": {"formation":"4-3-3", "gk":["<1 non>"], "df":["<4 non>"], "mid":["<3 non>"], "fw":["<3 non>"]},
+    "away": {"formation":"4-3-3", "gk":["<1 non>"], "df":["<4 non>"], "mid":["<3 non>"], "fw":["<3 non>"]}
   },
-  "recommendation": "<konklizyon kout pa ou>"
+  "absences": {
+    "home": [{"name":"<non jwè>", "status":"<blese/sispann>"}],
+    "away": [{"name":"<non jwè>", "status":"<blese/sispann>"}]
+  },
+  "recommendation": "<ti konsèy kout baze sou rechèch yo>"
 }`;
 
     const res = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
@@ -183,13 +298,15 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis, san eksplikasyon
 }
 
 app.get('/', (req, res) => {
-    res.send('BETZONE Backend (Football-Data) active');
+    res.send('BETZONE Backend (Football-Data & Gemini) active');
 });
 
+// ROUTE PRENSIPAL DETAY MATCH
 app.get('/api/match-details/:matchId', async (req, res) => {
     const matchId = req.params.matchId;
 
     try {
+        // Tcheke kach Supabase anvan
         const { data: cached } = await supabase
             .from('match_analysis')
             .select('data, created_at')
@@ -211,15 +328,65 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             return res.status(404).json({ error: 'Match pa jwenn' });
         }
 
-        const parsed = await analyzeMatch(match);
+        // 1. Fetch Done H2H, Form, ak Bilan nan Football-Data.org
+        const footballDataStats = await getFootballDataStats(matchId);
 
+        // 2. KONTWÒL DAT (JODI A AK DEMEN SÈLMAN POU GEMINI)
+        const matchDate = new Date(match.match_date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+
+        // Si dat match la se jodia oswa demen, n ap chèche analiz Gemini
+        const isTodayOrTomorrow = (matchDate >= today && matchDate <= new Date(tomorrow.getTime() + 86400000));
+
+        let geminiParsed = {
+            pronostik: [],
+            analiz_ia: 'Analiz IA ak aktyalite yo ap disponib nan jou match la sèlman.',
+            lineup: null,
+            absences: { home: [], away: [] },
+            recommendation: 'Reviendrez le jour du match pour la recommandation complète.'
+        };
+
+        if (isTodayOrTomorrow) {
+            try {
+                geminiParsed = await analyzeMatch(match);
+            } catch (gemErr) {
+                console.error('Erè pandan Gemini t ap analize:', gemErr.message);
+            }
+        }
+
+        // 3. Konbine 2 done yo ansanm
+        const finalResponse = {
+            matchInfo: {
+                league: match.league_name,
+                status: 'Annatant',
+                date: match.match_date,
+                homeName: match.team_a,
+                awayName: match.team_b,
+                homeLogo: '',
+                awayLogo: ''
+            },
+            pronostik: geminiParsed.pronostik || [],
+            analiz_ia: geminiParsed.analiz_ia,
+            bilan: footballDataStats.bilan,
+            forme: footballDataStats.forme,
+            h2h: footballDataStats.h2h,
+            lineup: geminiParsed.lineup,
+            absences: geminiParsed.absences,
+            recommendation: geminiParsed.recommendation
+        };
+
+        // Enregistre nan Supabase pou kach
         await supabase.from('match_analysis').upsert({
             match_id: matchId,
-            data: parsed,
+            data: finalResponse,
             created_at: new Date().toISOString()
         });
 
-        return res.json({ ...parsed, cached: false });
+        return res.json({ ...finalResponse, cached: false });
 
     } catch (err) {
         console.error('❌ Erè match-details:', err);
