@@ -309,6 +309,11 @@
 
     <!-- SCRIPT POU SWITCH TAB YO AK SHARJE DONE DINAMIK (API & BACKEND) -->
     <script>
+        // Si w ap kouri l lokalman mete 'http://localhost:3000' oswa lyen Render/Vercel ou an
+        const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:3000' 
+            : ''; 
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -317,7 +322,6 @@
             document.getElementById('btn-' + tabId).classList.add('active');
         }
 
-        // Chaje done an tan reyèl soti nan backend Express la
         async function fetchMatchDetails() {
             const urlParams = new URLSearchParams(window.location.search);
             const matchId = urlParams.get('id');
@@ -325,7 +329,7 @@
             if (!matchId) return;
 
             try {
-                const res = await fetch(`/api/match-details/${matchId}`);
+                const res = await fetch(`${BACKEND_URL}/api/match-details/${matchId}`);
                 if (!res.ok) throw new Error('Erè nan chaje done');
                 const data = await res.json();
 
@@ -339,11 +343,14 @@
                     document.getElementById('formHomeName').innerText = data.matchInfo.homeName;
                     document.getElementById('formAwayName').innerText = data.matchInfo.awayName;
 
-                    if (data.matchInfo.homeLogo) document.getElementById('homeLogo').src = data.matchInfo.homeLogo;
-                    if (data.matchInfo.awayLogo) document.getElementById('awayLogo').src = data.matchInfo.awayLogo;
+                    const homeAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.matchInfo.homeName)}&background=10b981&color=fff`;
+                    const awayAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.matchInfo.awayName)}&background=3b82f6&color=fff`;
+
+                    document.getElementById('homeLogo').src = data.matchInfo.homeLogo || homeAvatar;
+                    document.getElementById('awayLogo').src = data.matchInfo.awayLogo || awayAvatar;
                 }
 
-                // 2. Mete Pronostik Detaye (Sèlsman Tips ak Konfyans)
+                // 2. Mete Pronostik Detaye
                 if (data.pronostik && data.pronostik.length > 0) {
                     const tbody = document.getElementById('pronostikTableBody');
                     tbody.innerHTML = data.pronostik.map(p => `
@@ -379,18 +386,18 @@
                     }
                 }
 
-                // 5. Mete Forme (G = Genyen, N = Nil, P = Pèdi) - Sèvi ak non ekip dinamik yo
+                // 5. Mete Forme
                 if (data.forme) {
                     const renderBadges = (arr) => (arr || []).slice(0, 5).map(f => {
                         let letter = 'N';
-                        let colorClass = 'bg-amber-500/20 text-amber-400 border-amber-500/30'; // Nil (N)
+                        let colorClass = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
 
                         if (f === 'W' || f === 'G') {
                             letter = 'G';
-                            colorClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'; // Genyen (G)
+                            colorClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
                         } else if (f === 'L' || f === 'P') {
                             letter = 'P';
-                            colorClass = 'bg-red-500/20 text-red-400 border-red-500/30'; // Pèdi (P)
+                            colorClass = 'bg-red-500/20 text-red-400 border-red-500/30';
                         }
 
                         return `<span class="w-5 h-5 rounded flex items-center justify-center border font-bold ${colorClass}">${letter}</span>`;
@@ -410,7 +417,7 @@
                     `).join('');
                 }
 
-                // 7. Mete Absences & Lineups (si yo disponib)
+                // 7. Mete Absences & Lineups
                 if (data.absences) {
                     if (data.absences.home && data.absences.home.length > 0) {
                         document.getElementById('absencesHome').innerHTML = `
@@ -449,7 +456,7 @@
             }
         }
 
-        // Render Teren 3D si gen done lineup
+        // Render Teren 3D
         function renderPitchLineup(lineupData) {
             const homeContainer = document.getElementById('homeTeamPitch');
             if (homeContainer && lineupData.home) {
@@ -492,7 +499,7 @@
             if (awayContainer && lineupData.away) {
                 const a = lineupData.away;
                 awayContainer.innerHTML = `
-                    <div class="flex justify-center">
+                    <div class="flex justify-between px-4">
                         ${(a.fw || []).map(p => `
                             <div class="flex flex-col items-center">
                                 <span class="bg-black/80 text-sky-100 border-sky-400/40 text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
@@ -500,7 +507,7 @@
                             </div>
                         `).join('')}
                     </div>
-                    <div class="flex justify-between px-4">
+                    <div class="flex justify-around px-6">
                         ${(a.mid || []).map(p => `
                             <div class="flex flex-col items-center">
                                 <span class="bg-black/80 text-sky-100 border-sky-400/40 text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
