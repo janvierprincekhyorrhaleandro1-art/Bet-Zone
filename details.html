@@ -37,9 +37,26 @@
             border-bottom-color: #10b981;
             background-color: rgba(16, 185, 129, 0.05);
         }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between antialiased">
+<body class="min-h-screen flex flex-col justify-between antialiased relative">
+
+    <!-- LOADING OVERLAY ANIMASYON -->
+    <div id="pageLoader" class="fixed inset-0 bg-[#05070a] z-50 flex flex-col items-center justify-center transition-opacity duration-300">
+        <div class="relative flex items-center justify-center">
+            <div class="w-16 h-16 rounded-full border-4 border-brand-border border-t-emerald-400 animate-spin"></div>
+            <i class="fa-solid fa-futbol text-emerald-400 absolute text-xl"></i>
+        </div>
+        <span class="mt-4 text-xs font-bold text-gray-400 uppercase tracking-widest mono">Chaje done match la...</span>
+    </div>
 
     <!-- NAVBAR -->
     <nav class="w-full px-4 sm:px-6 py-3 flex justify-between items-center border-b border-brand-border glass-panel sticky top-0 z-40">
@@ -104,7 +121,7 @@
         </div>
 
         <!-- BANDE ORIZONTAL POU TABS (MENU OPTION YO) -->
-        <div class="flex border-b border-brand-border overflow-x-auto no-scrollbar gap-2 bg-brand-card/50 p-1 rounded-2xl">
+        <div id="tabsContainer" class="flex border-b border-brand-border overflow-x-auto no-scrollbar gap-2 bg-brand-card/50 p-1 rounded-2xl scroll-smooth">
             <button onclick="switchTab('tab-pronostik')" id="btn-tab-pronostik" class="tab-btn active flex-1 py-2.5 px-4 text-xs font-bold text-gray-400 border-b-2 border-transparent transition whitespace-nowrap text-center rounded-xl">
                 <i class="fa-solid fa-bullseye mr-1.5"></i>Pronostik
             </button>
@@ -279,14 +296,31 @@
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
 
             document.getElementById(tabId).classList.remove('hidden');
-            document.getElementById('btn-' + tabId).classList.add('active');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.add('active');
+
+            // Scroll otomatik sou bar tabs la pou opsyon an ka parèt byen
+            activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+
+        function hideLoader() {
+            const loader = document.getElementById('pageLoader');
+            if (loader) {
+                loader.classList.add('opacity-0');
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 300);
+            }
         }
 
         async function fetchMatchDetails() {
             const urlParams = new URLSearchParams(window.location.search);
             const matchId = urlParams.get('id');
 
-            if (!matchId) return;
+            if (!matchId) {
+                hideLoader();
+                return;
+            }
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/match-details/${matchId}`);
@@ -308,8 +342,33 @@
                     const homeAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.matchInfo.homeName)}&background=10b981&color=fff`;
                     const awayAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.matchInfo.awayName)}&background=3b82f6&color=fff`;
 
-                    document.getElementById('homeLogo').src = data.matchInfo.homeLogo || homeAvatar;
-                    document.getElementById('awayLogo').src = data.matchInfo.awayLogo || awayAvatar;
+                    const homeLogoImg = document.getElementById('homeLogo');
+                    const awayLogoImg = document.getElementById('awayLogo');
+
+                    let logosToLoad = 2;
+                    const onLogoComplete = () => {
+                        logosToLoad--;
+                        if (logosToLoad <= 0) {
+                            hideLoader();
+                        }
+                    };
+
+                    homeLogoImg.onload = onLogoComplete;
+                    homeLogoImg.onerror = () => {
+                        homeLogoImg.src = homeAvatar;
+                        onLogoComplete();
+                    };
+
+                    awayLogoImg.onload = onLogoComplete;
+                    awayLogoImg.onerror = () => {
+                        awayLogoImg.src = awayAvatar;
+                        onLogoComplete();
+                    };
+
+                    homeLogoImg.src = data.matchInfo.homeLogo || homeAvatar;
+                    awayLogoImg.src = data.matchInfo.awayLogo || awayAvatar;
+                } else {
+                    hideLoader();
                 }
 
                 // 2. Mete Pronostik Detaye
@@ -424,6 +483,7 @@
 
             } catch (err) {
                 console.error("Erè pandan n ap chaje detay match la:", err);
+                hideLoader();
             }
         }
 
