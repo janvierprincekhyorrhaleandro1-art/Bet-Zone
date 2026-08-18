@@ -195,22 +195,21 @@ async function getFootballDataStats(matchId) {
 async function analyzeMatch(match) {
     if (!COHERE_KEY) throw new Error('COHERE_API_KEY pa konfigire');
 
-    const prompt = `Ou se yon ekspè nan analiz matche foutbòl. Fè yon analiz pou match sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
+    const prompt = `Fè yon rechèch REYÈL sou entènèt pou match foutbòl sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
 
-SWIV MANSYON SA YO EGZAKTEMAN:
+RÈG SOUS POU CHAK SEKSYON (obligatwa, swiv yo egzakteman):
+1. "pronostik": Chèche VRÈ pronostik ki pibliye sou site forebet.com pou match sa a (Home Win %, Draw %, Over/Under, BTTS...). Itilize done sa yo pou ranpli "confidence" ak "risk" — pa envante yo, itilize sa forebet.com pibliye reyèlman.
+2. "analiz_ia": Se PWÒP DEDIKSYON pa ou (AI a) — baze sou rechèch ou fè sou FÒM RESAN tou de ekip yo (dènye match yo, dinamik aktyèl). Ekri yon paragraf ki eksplike konklizyon pa ou.
+3. "absences": Chèche jwè blese oswa sispann ki pp jwe match sa pou toude ekip yo SOU GOOGLE.
 
-1. **"pronostik"**: Bay yon estimasyon reyalis pou match sa a (Home Win %, Draw %, Over/Under).
-2. **"analiz_ia"**: Ekri yon ti analiz kout an Kreyòl sou fòm 2 ekip yo ak anje match la.
-3. **"absences"**: Lsite jwè ki blese oswa sispann si genyen.
-4. **"recommendation"**: Yon konsèy final kout.
-
-Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTEMAN estrikti sa a:
+Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis, san eksplikasyon), ki swiv EGZAKTEMAN estrikti sa a — chak valè ki anba a se yon <deskripsyon>, ranplase l ak vrè done w jwenn:
 {
-  "pronostik": [{"label": "${match.team_a} Win", "confidence": 65}, {"label": "Over 2.5", "confidence": 70}],
-  "analiz_ia": "Analiz IA an ap jenere...",
-  "absences": {"home": [{"name":"Non Jwè", "status":"Blese"}], "away": [{"name":"Non Jwè", "status":"Sispann"}]},
-  "recommendation": "<ti konsèy kout>"
-}`;
+  "pronostik": [{"label": "<pick Forebet>", "confidence": <% Forebet>, "risk": "<Fèb|Modere|Elve, jijman pa ou>"}, {"label": "<2yèm pick>", "confidence": <nonb>, "risk": "<...>"}, {"label": "<3yèm pick>", "confidence": <nonb>, "risk": "<...>"}],
+  "analiz_ia": "<paragraf dediksyon pa ou, baze sou fòm resan>",
+  "absences": {"home": [{"name":"<non jwè Google>", "status":"<blese/sispann>"}], "away": [{"name":"<non>", "status":"<...>"}]},
+  "recommendation": "<konklizyon kout pa ou>"
+}
+Si w vrèman pa jwenn done presi pou yon chan apre rechèch ou yo , mete (Done sa inaksesib).`;
 
     const coRes = await fetch('https://api.cohere.com/v2/chat', {
         method: 'POST',
@@ -235,10 +234,14 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTE
         throw new Error(`Cohere HTTP ${coRes.status}: ${data.message || JSON.stringify(data)}`);
     }
 
-    let rawText = data.message?.content?.[0]?.text || data.text || '';
+    const contentArray = data.message?.content || [];
+    const textBlock = contentArray.find(c => c.type === 'text');
+    let rawText = textBlock ? textBlock.text : (data.text || '');
+
     if (!rawText) {
         throw new Error(`Cohere pa retounen tèks: ${JSON.stringify(data)}`);
     }
+
     rawText = rawText.replace(/```json|```/g, '').trim();
 
     try {
