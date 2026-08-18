@@ -192,12 +192,6 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTE
 {
   "pronostik": [{"label": "${match.team_a} Win", "confidence": 65}, {"label": "Over 2.5", "confidence": 70}],
   "analiz_ia": "<ti analiz an kreyòl>",
-  "lineup": {
-    "home": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["MID1","MID2","MID3"], "fw":["FW1","FW2","FW3"]},
-    "away": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["MID1","MID2","MID3"], "fw":["FW1","FW2","FW3"]}
-  },
-  "absences": {"home": [{"name":"Non Jwè", "status":"Blese"}], "away": [{"name":"Non Jwè", "status":"Sispann"}]},
-  "recommendation": "<ti konsèy kout>"
 }`;
 
     const coRes = await fetch('https://api.cohere.com/v1/chat', {
@@ -207,7 +201,7 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTE
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'command-a-03-2025',
+            model: 'command-a-plus-05-2026',
             message: prompt,
             connectors: [{ id: 'web-search' }]
         })
