@@ -255,7 +255,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 
         let cohereParsed = {
             pronostik: [],
-            analiz_ia: 'Analiz IA an ap jenere...,
+            analiz_ia: 'Analiz IA an ap jenere...',
             absences: { home: [], away: [] },
             recommendation: 'Konsèy ap disponib nan kèk sekonn.'
         };
