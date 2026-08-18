@@ -191,7 +191,7 @@ async function getFootballDataStats(matchId) {
     }
 }
 
-// 3. ANALIZ MATCH AK COHERE API
+// 3. ANALIZ MATCH AK COHERE API (V2 CHAT)
 async function analyzeMatch(match) {
     if (!COHERE_KEY) throw new Error('COHERE_API_KEY pa konfigire');
 
@@ -220,7 +220,12 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTE
         },
         body: JSON.stringify({
             model: 'command-a-plus-05-2026',
-            message: prompt
+            messages: [
+                {
+                    role: 'user',
+                    content: prompt
+                }
+            ]
         })
     });
 
@@ -230,7 +235,7 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTE
         throw new Error(`Cohere HTTP ${coRes.status}: ${data.message || JSON.stringify(data)}`);
     }
 
-    let rawText = data.text || '';
+    let rawText = data.message?.content?.[0]?.text || data.text || '';
     if (!rawText) {
         throw new Error(`Cohere pa retounen tèks: ${JSON.stringify(data)}`);
     }
