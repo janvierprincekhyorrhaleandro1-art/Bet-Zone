@@ -212,7 +212,7 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTE
   "recommendation": "<ti konsèy kout>"
 }`;
 
-    const coRes = await fetch('https://api.cohere.com/v1/chat', {
+    const coRes = await fetch('https://api.cohere.com/v2/chat', {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${COHERE_KEY}`,
