@@ -229,6 +229,9 @@ Si w vrèman pa jwenn done presi pou yon chan apre rechèch ou yo , mete (Done s
     const data = response.data;
     let rawText = data.choices?.[0]?.message?.content || data.text || '';
 
+    // Log pou gade repons dirèk BazaarLink nan Render Logs
+    console.log('🔍 Repons BazaarLink:', rawText);
+
     if (!rawText) {
         throw new Error(`Bazaarlink pa retounen tèks: ${JSON.stringify(data)}`);
     }
