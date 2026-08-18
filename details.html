@@ -227,43 +227,6 @@
 
             <!-- C) DÈNYE AKTYALITE -->
             <div id="tab-aktyalite" class="tab-pane hidden space-y-4">
-                
-                <!-- COMPOSITION 3D (22 JWÈ SOU TEREN) -->
-                <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
-                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-3 mono flex items-center gap-2">
-                        <i class="fa-solid fa-users text-emerald-400"></i>
-                        <span> 11 PROBAB POU KÒMANSE </span>
-                    </h3>
-
-                    <!-- CONTAINER TEREN 3D CSS -->
-                    <div class="relative w-full h-[620px] rounded-3xl overflow-hidden border border-emerald-500/30 shadow-2xl bg-black p-2">
-                        <div class="relative w-full h-full rounded-2xl overflow-hidden border border-emerald-400/40 shadow-2xl"
-                             style="background: radial-gradient(circle, #059669 0%, #065f46 60%, #022c22 100%);">
-                          
-                          <!-- LIY AK SIFAS TEREN AN -->
-                          <div class="absolute inset-2 border-2 border-white/40 rounded-sm pointer-events-none"></div>
-                          <div class="absolute inset-x-2 top-1/2 -translate-y-1/2 border-b-2 border-white/40 pointer-events-none"></div>
-                          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 border-2 border-white/40 rounded-full pointer-events-none"></div>
-                          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full pointer-events-none"></div>
-                          
-                          <!-- KAN ANWO AK ANBA -->
-                          <div class="absolute top-2 left-1/2 -translate-x-1/2 w-40 h-16 border-b-2 border-x-2 border-white/40 pointer-events-none"></div>
-                          <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-40 h-16 border-t-2 border-x-2 border-white/40 pointer-events-none"></div>
-
-                          <!-- OVERLAY JWÈ YO (DINAMIK AVÈK PERSPEKTIV 3D) -->
-                          <div class="absolute inset-0 p-3 flex flex-col justify-between z-10"
-                               style="transform: perspective(900px) rotateX(16deg); transform-origin: center center;">
-                              
-                              <!-- EKIP 1: LAKAY (ANWO) -->
-                              <div id="homeTeamPitch" class="h-1/2 flex flex-col justify-between pt-1"></div>
-
-                              <!-- EKIP 2: DEYÒ (ANBA) -->
-                              <div id="awayTeamPitch" class="h-1/2 flex flex-col justify-between pb-1"></div>
-
-                          </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- LISTE JWÈ KI PA P JWE (SANCTION / BLESI) -->
                 <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
@@ -274,12 +237,12 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                         <div id="absencesHome" class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
-                            <span class="font-extrabold text-emerald-400 block">Lakay</span>
+                            <span id="absenceHomeName" class="font-extrabold text-emerald-400 block">Chaje...</span>
                             <div class="text-gray-400 text-[11px]">Pa gen absans</div>
                         </div>
 
                         <div id="absencesAway" class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
-                            <span class="font-extrabold text-blue-400 block">Deyò</span>
+                            <span id="absenceAwayName" class="font-extrabold text-blue-400 block">Chaje...</span>
                             <div class="text-gray-400 text-[11px]">Pa gen absans</div>
                         </div>
                     </div>
@@ -339,6 +302,8 @@
                     document.getElementById('awayTeamName').innerText = data.matchInfo.awayName;
                     document.getElementById('formHomeName').innerText = data.matchInfo.homeName;
                     document.getElementById('formAwayName').innerText = data.matchInfo.awayName;
+                    document.getElementById('absenceHomeName').innerText = data.matchInfo.homeName;
+                    document.getElementById('absenceAwayName').innerText = data.matchInfo.awayName;
 
                     const homeAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.matchInfo.homeName)}&background=10b981&color=fff`;
                     const awayAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.matchInfo.awayName)}&background=3b82f6&color=fff`;
@@ -383,22 +348,29 @@
                     }
                 }
 
-                // 5. Mete Forme
+                // 5. Mete Forme (Fòm Aktyèl)
                 if (data.forme) {
-                    const renderBadges = (arr) => (arr || []).slice(0, 5).map(f => {
-                        let letter = 'N';
-                        let colorClass = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-
-                        if (f === 'W' || f === 'G') {
-                            letter = 'G';
-                            colorClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-                        } else if (f === 'L' || f === 'P') {
-                            letter = 'P';
-                            colorClass = 'bg-red-500/20 text-red-400 border-red-500/30';
+                    const renderBadges = (arr) => {
+                        const isAllN = !arr || arr.length === 0 || arr.every(f => f === 'N');
+                        if (isAllN) {
+                            return `<span class="text-gray-400 italic font-medium">poko jwe match pou sezon an</span>`;
                         }
 
-                        return `<span class="w-5 h-5 rounded flex items-center justify-center border font-bold ${colorClass}">${letter}</span>`;
-                    }).join('');
+                        return arr.slice(0, 5).map(f => {
+                            let letter = 'N';
+                            let colorClass = 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+
+                            if (f === 'W' || f === 'G') {
+                                letter = 'G';
+                                colorClass = 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+                            } else if (f === 'L' || f === 'P') {
+                                letter = 'P';
+                                colorClass = 'bg-red-500/20 text-red-400 border-red-500/30';
+                            }
+
+                            return `<span class="w-5 h-5 rounded flex items-center justify-center border font-bold ${colorClass}">${letter}</span>`;
+                        }).join('');
+                    };
 
                     document.getElementById('formHome').innerHTML = renderBadges(data.forme.home);
                     document.getElementById('formAway').innerHTML = renderBadges(data.forme.away);
@@ -412,9 +384,15 @@
                             <span class="text-[10px] font-mono text-gray-500">${h.date}</span>
                         </div>
                     `).join('');
+                } else {
+                    document.getElementById('h2hList').innerHTML = `
+                        <div class="p-2 rounded-xl bg-brand-dark text-gray-400 text-center italic">
+                            ekip sa yo poko kwaze pandan on bon moman
+                        </div>
+                    `;
                 }
 
-                // 7. Mete Absences & Lineups
+                // 7. Mete Absences
                 if (data.absences) {
                     if (data.absences.home && data.absences.home.length > 0) {
                         document.getElementById('absencesHome').innerHTML = `
@@ -444,89 +422,8 @@
                     document.getElementById('recommendationText').innerText = data.recommendation;
                 }
 
-                if (data.lineup) {
-                    renderPitchLineup(data.lineup);
-                }
-
             } catch (err) {
                 console.error("Erè pandan n ap chaje detay match la:", err);
-            }
-        }
-
-        // Render Teren 3D
-        function renderPitchLineup(lineupData) {
-            const homeContainer = document.getElementById('homeTeamPitch');
-            if (homeContainer && lineupData.home) {
-                const h = lineupData.home;
-                homeContainer.innerHTML = `
-                    <div class="flex justify-center">
-                        <div class="flex flex-col items-center">
-                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white shadow-lg mb-0.5"></div>
-                            <span class="bg-black/90 text-emerald-300 border-emerald-400/50 text-[9px] font-bold px-2 py-0.5 rounded-full border shadow-md">${h.gk ? h.gk[0] : 'GK'}</span>
-                        </div>
-                    </div>
-                    <div class="flex justify-between px-2">
-                        ${(h.df || []).map(p => `
-                            <div class="flex flex-col items-center">
-                                <div class="w-2 h-2 rounded-full bg-white shadow-md mb-0.5"></div>
-                                <span class="bg-black/80 text-white border-white/20 text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="flex justify-around px-6">
-                        ${(h.mid || []).map(p => `
-                            <div class="flex flex-col items-center">
-                                <div class="w-2 h-2 rounded-full bg-white shadow-md mb-0.5"></div>
-                                <span class="bg-black/80 text-white border-white/20 text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="flex justify-between px-4">
-                        ${(h.fw || []).map(p => `
-                            <div class="flex flex-col items-center">
-                                <div class="w-2 h-2 rounded-full bg-white shadow-md mb-0.5"></div>
-                                <span class="bg-black/80 text-white border-white/20 text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
-
-            const awayContainer = document.getElementById('awayTeamPitch');
-            if (awayContainer && lineupData.away) {
-                const a = lineupData.away;
-                awayContainer.innerHTML = `
-                    <div class="flex justify-between px-4">
-                        ${(a.fw || []).map(p => `
-                            <div class="flex flex-col items-center">
-                                <span class="bg-black/80 text-sky-100 border-sky-400/40 text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
-                                <div class="w-2 h-2 rounded-full bg-sky-400 shadow-md mt-0.5"></div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="flex justify-around px-6">
-                        ${(a.mid || []).map(p => `
-                            <div class="flex flex-col items-center">
-                                <span class="bg-black/80 text-sky-100 border-sky-400/40 text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
-                                <div class="w-2 h-2 rounded-full bg-sky-400 shadow-md mt-0.5"></div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="flex justify-between px-2">
-                        ${(a.df || []).map(p => `
-                            <div class="flex flex-col items-center">
-                                <span class="bg-black/80 text-sky-100 border-sky-400/40 text-[8px] font-medium px-1.5 py-0.5 rounded border">${p}</span>
-                                <div class="w-2 h-2 rounded-full bg-sky-400 shadow-md mt-0.5"></div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="flex justify-center">
-                        <div class="flex flex-col items-center">
-                            <span class="bg-black/90 text-sky-300 border-sky-400/50 text-[9px] font-bold px-2 py-0.5 rounded-full border shadow-md">${a.gk ? a.gk[0] : 'GK'}</span>
-                            <div class="w-2.5 h-2.5 rounded-full bg-sky-400 ring-2 ring-white shadow-lg mt-0.5"></div>
-                        </div>
-                    </div>
-                `;
             }
         }
 
