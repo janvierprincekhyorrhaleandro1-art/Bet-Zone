@@ -43,7 +43,7 @@ function formatDate(date) {
 // Memwa anndan sèvè a pou sere logo ki deja jwenn yo
 const logoCache = {};
 
-// Fonksyon pou rale logo yon ekip nan TheSportsDB
+// Fonksyon pou jwenn pi nouvo logo ekip yo atravè FotMob CDN (ak fallback TheSportsDB)
 async function getTeamLogo(teamName) {
     if (!teamName) return `https://ui-avatars.com/api/?name=Team&background=10b981&color=fff`;
 
@@ -53,11 +53,22 @@ async function getTeamLogo(teamName) {
 
     try {
         const response = await axios.get(
-            `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`
+            `https://www.fotmob.com/api/search/suggest?term=${encodeURIComponent(teamName)}`
         );
 
         if (response.data && response.data.teams && response.data.teams.length > 0) {
-            const logoUrl = response.data.teams[0].strBadge || response.data.teams[0].strLogo;
+            const teamId = response.data.teams[0].id;
+            const logoUrl = `https://images.fotmob.com/image_resources/logo/teamlogo/${teamId}.png`;
+            logoCache[teamName] = logoUrl;
+            return logoUrl;
+        }
+
+        const tsdbRes = await axios.get(
+            `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`
+        );
+
+        if (tsdbRes.data && tsdbRes.data.teams && tsdbRes.data.teams.length > 0) {
+            const logoUrl = tsdbRes.data.teams[0].strBadge || tsdbRes.data.teams[0].strLogo;
             if (logoUrl) {
                 logoCache[teamName] = logoUrl;
                 return logoUrl;
@@ -209,15 +220,15 @@ async function getFootballDataStats(matchId) {
 async function analyzeMatch(match) {
     if (!COHERE_KEY) throw new Error('COHERE_API_KEY pa konfigire');
 
-    const prompt = `Ou se yon ekspè nan analiz matche foutbòl. Fè yon rechèch REYÈL sou entènèt pou match sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
+    const prompt = `Ou se yon ekspè nan analiz matche foutbòl. Fè yon analiz pou match sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
 
 SWIV MANSYON SA YO EGZAKTEMAN:
 
-1. **"pronostik"**: Chèche pronostik ki pibliye sou entènèt pou match sa a (Home Win %, Draw %, Over/Under). Itilize done reyèl ou jwenn yo.
-2. **"analiz_ia"**: Fè yon rechèch sou fòm rezan tou de ekip yo, epi ekri yon ti analiz an Kreyòl ki baze sou sa w jwenn.
-3. **"lineup"**: Chèche 11 jwè ki te kòmanse nan 2 DÈNYE match chak ekip, epi DEDUI yon konpozisyon pwobab.
-4. **"absences"**: Chèche jwè blese oswa sispann pou toude ekip yo.
-5. **"recommendation"**: Yon konsèy final kout baze sou tout rechèch ou fè.
+1. **"pronostik"**: Bay yon estimasyon reyalis pou match sa a (Home Win %, Draw %, Over/Under).
+2. **"analiz_ia"**: Ekri yon ti analiz kout an Kreyòl sou fòm 2 ekip yo ak anje match la.
+3. **"lineup"**: DEDUI yon konpozisyon pwobab pou toude ekip yo.
+4. **"absences"**: Lsite jwè ki blese oswa sispann si genyen.
+5. **"recommendation"**: Yon konsèy final kout.
 
 Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTEMAN estrikti sa a:
 {
@@ -238,9 +249,8 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTE
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'command-a-03-2025',
-            message: prompt,
-            connectors: [{ id: 'web-search' }]
+            model: 'command-r-plus',
+            message: prompt
         })
     });
 
@@ -304,7 +314,6 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             console.error('⚠️ Erè Cohere (Fallback ekzekite):', gemErr.message);
         }
 
-        // Chèche logo 2 ekip yo otomatikman ak TheSportsDB
         const [homeLogo, awayLogo] = await Promise.all([
             getTeamLogo(match.team_a),
             getTeamLogo(match.team_b)
