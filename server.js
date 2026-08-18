@@ -40,45 +40,12 @@ function formatDate(date) {
     return `${year}-${month}-${day}`;
 }
 
-// Memwa anndan sèvè a pou sere logo ki deja jwenn yo
-const logoCache = {};
-
-// Fonksyon pou jwenn pi nouvo logo ekip yo atravè FotMob CDN (ak fallback TheSportsDB)
-async function getTeamLogo(teamName) {
-    if (!teamName) return `https://ui-avatars.com/api/?name=Team&background=10b981&color=fff`;
-
-    if (logoCache[teamName]) {
-        return logoCache[teamName];
+// Generasyon URL Crest/Logo dirèkteman ak Football-Data ID
+function getCrestUrl(teamId, teamName) {
+    if (teamId) {
+        return `https://crests.football-data.org/${teamId}.svg`;
     }
-
-    try {
-        const response = await axios.get(
-            `https://www.fotmob.com/api/search/suggest?term=${encodeURIComponent(teamName)}`
-        );
-
-        if (response.data && response.data.teams && response.data.teams.length > 0) {
-            const teamId = response.data.teams[0].id;
-            const logoUrl = `https://images.fotmob.com/image_resources/logo/teamlogo/${teamId}.png`;
-            logoCache[teamName] = logoUrl;
-            return logoUrl;
-        }
-
-        const tsdbRes = await axios.get(
-            `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`
-        );
-
-        if (tsdbRes.data && tsdbRes.data.teams && tsdbRes.data.teams.length > 0) {
-            const logoUrl = tsdbRes.data.teams[0].strBadge || tsdbRes.data.teams[0].strLogo;
-            if (logoUrl) {
-                logoCache[teamName] = logoUrl;
-                return logoUrl;
-            }
-        }
-
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName)}&background=10b981&color=fff`;
-    } catch (error) {
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName)}&background=10b981&color=fff`;
-    }
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName || 'Team')}&background=10b981&color=fff`;
 }
 
 // 1. Senkronizasyon Match ak Football-Data.org
@@ -117,6 +84,8 @@ async function syncDailyMatches() {
                     match_time: matchUtcDate.toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }),
                     team_a: match.homeTeam.name,
                     team_b: match.awayTeam.name,
+                    team_a_id: match.homeTeam.id,
+                    team_b_id: match.awayTeam.id,
                     victory: existing ? existing.victory : null,
                     percent: existing ? existing.percent : null
                 };
@@ -209,10 +178,16 @@ async function getFootballDataStats(matchId) {
             }
         }
 
-        return { h2h: h2hList, forme: { home: homeForm, away: awayForm }, bilan: { home: homeBilan, away: awayBilan } };
+        return { 
+            homeTeamId,
+            awayTeamId,
+            h2h: h2hList, 
+            forme: { home: homeForm, away: awayForm }, 
+            bilan: { home: homeBilan, away: awayBilan } 
+        };
 
     } catch (e) {
-        return { h2h: [], forme: { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] }, bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } } };
+        return { homeTeamId: null, awayTeamId: null, h2h: [], forme: { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] }, bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } } };
     }
 }
 
@@ -226,18 +201,13 @@ SWIV MANSYON SA YO EGZAKTEMAN:
 
 1. **"pronostik"**: Bay yon estimasyon reyalis pou match sa a (Home Win %, Draw %, Over/Under).
 2. **"analiz_ia"**: Ekri yon ti analiz kout an Kreyòl sou fòm 2 ekip yo ak anje match la.
-3. **"lineup"**: DEDUI yon konpozisyon pwobab pou toude ekip yo.
-4. **"absences"**: Lsite jwè ki blese oswa sispann si genyen.
-5. **"recommendation"**: Yon konsèy final kout.
+3. **"absences"**: Lsite jwè ki blese oswa sispann si genyen.
+4. **"recommendation"**: Yon konsèy final kout.
 
 Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTEMAN estrikti sa a:
 {
   "pronostik": [{"label": "${match.team_a} Win", "confidence": 65}, {"label": "Over 2.5", "confidence": 70}],
   "analiz_ia": "Analiz IA an ap jenere...",
-  "lineup": {
-    "home": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["MID1","MID2","MID3"], "fw":["FW1","FW2","FW3"]},
-    "away": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["MID1","MID2","MID3"], "fw":["FW1","FW2","FW3"]}
-  },
   "absences": {"home": [{"name":"Non Jwè", "status":"Blese"}], "away": [{"name":"Non Jwè", "status":"Sispann"}]},
   "recommendation": "<ti konsèy kout>"
 }`;
@@ -249,7 +219,7 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTE
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'command-r-plus',
+            model: 'command-a-plus-05-2026',
             message: prompt
         })
     });
@@ -303,7 +273,6 @@ app.get('/api/match-details/:matchId', async (req, res) => {
         let geminiParsed = {
             pronostik: [],
             analiz_ia: 'Analiz IA an ap jenere...',
-            lineup: null,
             absences: { home: [], away: [] },
             recommendation: 'Konsèy ap disponib nan kèk sekonn.'
         };
@@ -314,10 +283,9 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             console.error('⚠️ Erè Cohere (Fallback ekzekite):', gemErr.message);
         }
 
-        const [homeLogo, awayLogo] = await Promise.all([
-            getTeamLogo(match.team_a),
-            getTeamLogo(match.team_b)
-        ]);
+        // Generasyon Logo dirèkteman ak ID ekip Football-Data yo
+        const homeLogo = getCrestUrl(match.team_a_id || footballDataStats.homeTeamId, match.team_a);
+        const awayLogo = getCrestUrl(match.team_b_id || footballDataStats.awayTeamId, match.team_b);
 
         const finalResponse = {
             matchInfo: {
@@ -334,7 +302,6 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             bilan: footballDataStats.bilan,
             forme: footballDataStats.forme,
             h2h: footballDataStats.h2h,
-            lineup: geminiParsed.lineup,
             absences: geminiParsed.absences || { home: [], away: [] },
             recommendation: geminiParsed.recommendation || ''
         };
