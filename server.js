@@ -1,6 +1,7 @@
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
+const axios = require('axios');
 
 const app = express();
 
@@ -37,6 +38,36 @@ function formatDate(date) {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+// Memwa anndan sèvè a pou sere logo ki deja jwenn yo
+const logoCache = {};
+
+// Fonksyon pou rale logo yon ekip nan TheSportsDB
+async function getTeamLogo(teamName) {
+    if (!teamName) return `https://ui-avatars.com/api/?name=Team&background=10b981&color=fff`;
+
+    if (logoCache[teamName]) {
+        return logoCache[teamName];
+    }
+
+    try {
+        const response = await axios.get(
+            `https://www.thesportsdb.com/api/v1/json/3/searchteams.php?t=${encodeURIComponent(teamName)}`
+        );
+
+        if (response.data && response.data.teams && response.data.teams.length > 0) {
+            const logoUrl = response.data.teams[0].strBadge || response.data.teams[0].strLogo;
+            if (logoUrl) {
+                logoCache[teamName] = logoUrl;
+                return logoUrl;
+            }
+        }
+
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName)}&background=10b981&color=fff`;
+    } catch (error) {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName)}&background=10b981&color=fff`;
+    }
 }
 
 // 1. Senkronizasyon Match ak Football-Data.org
@@ -191,7 +222,13 @@ SWIV MANSYON SA YO EGZAKTEMAN:
 Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTEMAN estrikti sa a:
 {
   "pronostik": [{"label": "${match.team_a} Win", "confidence": 65}, {"label": "Over 2.5", "confidence": 70}],
-  "analiz_ia": "<ti analiz an kreyòl>",
+  "analiz_ia": "Analiz IA an ap jenere...",
+  "lineup": {
+    "home": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["MID1","MID2","MID3"], "fw":["FW1","FW2","FW3"]},
+    "away": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["MID1","MID2","MID3"], "fw":["FW1","FW2","FW3"]}
+  },
+  "absences": {"home": [{"name":"Non Jwè", "status":"Blese"}], "away": [{"name":"Non Jwè", "status":"Sispann"}]},
+  "recommendation": "<ti konsèy kout>"
 }`;
 
     const coRes = await fetch('https://api.cohere.com/v1/chat', {
@@ -201,7 +238,7 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTE
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            model: 'command-a-plus-05-2026',
+            model: 'command-a-03-2025',
             message: prompt,
             connectors: [{ id: 'web-search' }]
         })
@@ -253,18 +290,25 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 
         const footballDataStats = await getFootballDataStats(matchId);
 
-        let cohereParsed = {
+        let geminiParsed = {
             pronostik: [],
             analiz_ia: 'Analiz IA an ap jenere...',
+            lineup: null,
             absences: { home: [], away: [] },
             recommendation: 'Konsèy ap disponib nan kèk sekonn.'
         };
 
         try {
-            cohereParsed = await analyzeMatch(match);
+            geminiParsed = await analyzeMatch(match);
         } catch (gemErr) {
             console.error('⚠️ Erè Cohere (Fallback ekzekite):', gemErr.message);
         }
+
+        // Chèche logo 2 ekip yo otomatikman ak TheSportsDB
+        const [homeLogo, awayLogo] = await Promise.all([
+            getTeamLogo(match.team_a),
+            getTeamLogo(match.team_b)
+        ]);
 
         const finalResponse = {
             matchInfo: {
@@ -273,16 +317,17 @@ app.get('/api/match-details/:matchId', async (req, res) => {
                 date: match.match_date,
                 homeName: match.team_a,
                 awayName: match.team_b,
-                homeLogo: '',
-                awayLogo: ''
+                homeLogo: homeLogo,
+                awayLogo: awayLogo
             },
-            pronostik: cohereParsed.pronostik || [],
-            analiz_ia: cohereParsed.analiz_ia || '',
+            pronostik: geminiParsed.pronostik || [],
+            analiz_ia: geminiParsed.analiz_ia || '',
             bilan: footballDataStats.bilan,
             forme: footballDataStats.forme,
             h2h: footballDataStats.h2h,
-            absences: cohereParsed.absences || { home: [], away: [] },
-            recommendation: cohereParsed.recommendation || ''
+            lineup: geminiParsed.lineup,
+            absences: geminiParsed.absences || { home: [], away: [] },
+            recommendation: geminiParsed.recommendation || ''
         };
 
         await supabase.from('match_analysis').upsert({
