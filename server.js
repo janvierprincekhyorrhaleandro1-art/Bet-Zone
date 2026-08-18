@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 3000;
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uiepdartkcunumajlwwg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
-const GEMINI_KEY = process.env.GEMINI_API_KEY;
+const COHERE_KEY = process.env.COHERE_API_KEY;
 const FOOTBALL_DATA_API_KEY = process.env.FOOTBALL_DATA_API_KEY || 'YOUR_FOOTBALL_DATA_KEY_HERE';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -174,68 +174,62 @@ async function getFootballDataStats(matchId) {
     }
 }
 
-// 3. PROMPT DETAYE KREYÒL OU AN POU GEMINI
+// 3. ANALIZ MATCH AK COHERE API
 async function analyzeMatch(match) {
-    if (!GEMINI_KEY) throw new Error('GEMINI_API_KEY pa konfigire');
+    if (!COHERE_KEY) throw new Error('COHERE_API_KEY pa konfigire');
 
-    const prompt = `Ou se yon ekspè nan analiz matche foutbòl. Fè yon rechèch REYÈL sou Google ak sou sit forebet.com pou match sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
+    const prompt = `Ou se yon ekspè nan analiz matche foutbòl. Fè yon rechèch REYÈL sou entènèt pou match sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
 
 SWIV MANSYON SA YO EGZAKTEMAN:
 
-1. **"pronostik" (SOTI SOU FOREBET.COM)**:
-   - Chèche match ${match.team_a} vs ${match.team_b} sou site forebet.com.
-   - Pran ekip ki gen plis pousantaj (%) pou genyen an epi evalye pousantaj la sou 100%.
-   - Chèche opsyon Over/Under goal ki pi posib sou forebet.com pou match sa epi evalye l an pousantaj (%).
-
-2. **"analiz_ia" (ANALIZ ENTELIJANS ATIFISYÈL)**:
-   - Fè yon ti rechèch sou Google sou tou de ekip ki pral jwe yo.
-   - Analize epi ekri nan mo pa ou yon ti analiz an kreyòl sou kijan match la ka ye baze sou dinamik ak fòm tou de ekip yo.
-
-3. **"lineup" (11 PROBAB POU KÒMANSE)**:
-   - Fè yon rechèch sou Google pou jwenn 11 jwè chak ekip ki te kòmanse (starting XI) nan 2 DÈNYE MATCH yo te jwe.
-   - Analize jwè ki te titilè yo epi DEDUI pi bon 11 jwè ki gen plis chans pou kòmanse pou chak ekip.
-   - Mete jwè yo byen nan pozisyon yo: gk (1 jwè), df (3-5 jwè), mid (3-5 jwè), fw (1-3 jwè).
-
-4. **"absences" (JWÈ KI ABSAN - BLESI / SANKSYON)**:
-   - Fè yon ti rechèch sou Google pou gade si gen jwè nan 2 ekip sa yo ki blese oswa ki gen sanksyon ki pap ka jwe.
-
-5. **"recommendation" (REKÒMANDASYON AKTYALITE)**:
-   - Entèprete tout done rechèch ou te fè anwo yo pou bay yon ti konsèy final kout pou match sa a.
+1. **"pronostik"**: Chèche pronostik ki pibliye sou entènèt pou match sa a (Home Win %, Draw %, Over/Under). Itilize done reyèl ou jwenn yo.
+2. **"analiz_ia"**: Fè yon rechèch sou fòm rezan tou de ekip yo, epi ekri yon ti analiz an Kreyòl ki baze sou sa w jwenn.
+3. **"lineup"**: Chèche 11 jwè ki te kòmanse nan 2 DÈNYE match chak ekip, epi DEDUI yon konpozisyon pwobab.
+4. **"absences"**: Chèche jwè blese oswa sispann pou toude ekip yo.
+5. **"recommendation"**: Yon konsèy final kout baze sou tout rechèch ou fè.
 
 Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis), ki swiv EGZAKTEMAN estrikti sa a:
 {
-  "pronostik": [
-    {"label": "${match.team_a} Win", "confidence": 65},
-    {"label": "Over 2.5", "confidence": 70}
-  ],
-  "analiz_ia": "<ti analiz an kreyòl sou kijan match la ka ye>",
+  "pronostik": [{"label": "${match.team_a} Win", "confidence": 65}, {"label": "Over 2.5", "confidence": 70}],
+  "analiz_ia": "<ti analiz an kreyòl>",
   "lineup": {
-    "home": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1", "DF2", "DF3", "DF4"], "mid":["MID1", "MID2", "MID3"], "fw":["FW1", "FW2", "FW3"]},
-    "away": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1", "DF2", "DF3", "DF4"], "mid":["MID1", "MID2", "MID3"], "fw":["FW1", "FW2", "FW3"]}
+    "home": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["MID1","MID2","MID3"], "fw":["FW1","FW2","FW3"]},
+    "away": {"formation":"4-3-3", "gk":["Non GK"], "df":["DF1","DF2","DF3","DF4"], "mid":["MID1","MID2","MID3"], "fw":["FW1","FW2","FW3"]}
   },
-  "absences": {
-    "home": [{"name":"Non Jwè", "status":"Blese"}],
-    "away": [{"name":"Non Jwè", "status":"Sispann"}]
-  },
-  "recommendation": "<ti konsèy kout baze sou rechèch yo>"
+  "absences": {"home": [{"name":"Non Jwè", "status":"Blese"}], "away": [{"name":"Non Jwè", "status":"Sispann"}]},
+  "recommendation": "<ti konsèy kout>"
 }`;
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_KEY}`, {
+    const coRes = await fetch('https://api.cohere.com/v1/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Authorization': `Bearer ${COHERE_KEY}`,
+            'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            tools: [{ google_search: {} }]
+            model: 'command-a-03-2025',
+            message: prompt,
+            connectors: [{ id: 'web-search' }]
         })
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || 'Erè Gemini API');
+    const data = await coRes.json();
 
-    let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!coRes.ok) {
+        throw new Error(`Cohere HTTP ${coRes.status}: ${data.message || JSON.stringify(data)}`);
+    }
+
+    let rawText = data.text || '';
+    if (!rawText) {
+        throw new Error(`Cohere pa retounen tèks: ${JSON.stringify(data)}`);
+    }
     rawText = rawText.replace(/```json|```/g, '').trim();
 
-    return JSON.parse(rawText);
+    try {
+        return JSON.parse(rawText);
+    } catch (e) {
+        throw new Error(`JSON envalid soti nan Cohere: ${rawText.substring(0, 200)}`);
+    }
 }
 
 // 4. Endpoint Detay Match
@@ -276,7 +270,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
         try {
             geminiParsed = await analyzeMatch(match);
         } catch (gemErr) {
-            console.error('⚠️ Erè Gemini (Fallback ekzekite):', gemErr.message);
+            console.error('⚠️ Erè Cohere (Fallback ekzekite):', gemErr.message);
         }
 
         const finalResponse = {
