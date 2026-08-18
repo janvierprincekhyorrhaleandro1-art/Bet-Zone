@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uiepdartkcunumajlwwg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
-const COHERE_KEY = process.env.COHERE_API_KEY;
+const BAZAARLINK_KEY = process.env.BAZAARLINK_API_KEY;
 const FOOTBALL_DATA_API_KEY = process.env.FOOTBALL_DATA_API_KEY || 'YOUR_FOOTBALL_DATA_KEY_HERE';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -191,9 +191,9 @@ async function getFootballDataStats(matchId) {
     }
 }
 
-// 3. ANALIZ MATCH AK COHERE API (V2 CHAT)
+// 3. ANALIZ MATCH AK BAZAARLINK API
 async function analyzeMatch(match) {
-    if (!COHERE_KEY) throw new Error('COHERE_API_KEY pa konfigire');
+    if (!BAZAARLINK_KEY) throw new Error('BAZAARLINK_API_KEY pa konfigire');
 
     const prompt = `Fè yon rechèch REYÈL sou entènèt pou match foutbòl sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
 
@@ -211,35 +211,26 @@ Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis, san eksplikasyon
 }
 Si w vrèman pa jwenn done presi pou yon chan apre rechèch ou yo , mete (Done sa inaksesib).`;
 
-    const coRes = await fetch('https://api.cohere.com/v2/chat', {
-        method: 'POST',
+    const response = await axios.post('https://bazaarlink.ai/api/v1/chat/completions', {
+        model: 'auto:free',
+        messages: [
+            {
+                role: 'user',
+                content: prompt
+            }
+        ]
+    }, {
         headers: {
-            'Authorization': `Bearer ${COHERE_KEY}`,
+            'Authorization': `Bearer ${BAZAARLINK_KEY}`,
             'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            model: 'command-a-plus-05-2026',
-            messages: [
-                {
-                    role: 'user',
-                    content: prompt
-                }
-            ]
-        })
+        }
     });
 
-    const data = await coRes.json();
-
-    if (!coRes.ok) {
-        throw new Error(`Cohere HTTP ${coRes.status}: ${data.message || JSON.stringify(data)}`);
-    }
-
-    const contentArray = data.message?.content || [];
-    const textBlock = contentArray.find(c => c.type === 'text');
-    let rawText = textBlock ? textBlock.text : (data.text || '');
+    const data = response.data;
+    let rawText = data.choices?.[0]?.message?.content || data.text || '';
 
     if (!rawText) {
-        throw new Error(`Cohere pa retounen tèks: ${JSON.stringify(data)}`);
+        throw new Error(`Bazaarlink pa retounen tèks: ${JSON.stringify(data)}`);
     }
 
     rawText = rawText.replace(/```json|```/g, '').trim();
@@ -247,7 +238,7 @@ Si w vrèman pa jwenn done presi pou yon chan apre rechèch ou yo , mete (Done s
     try {
         return JSON.parse(rawText);
     } catch (e) {
-        throw new Error(`JSON envalid soti nan Cohere: ${rawText.substring(0, 200)}`);
+        throw new Error(`JSON envalid soti nan Bazaarlink: ${rawText.substring(0, 200)}`);
     }
 }
 
@@ -288,7 +279,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
         try {
             geminiParsed = await analyzeMatch(match);
         } catch (gemErr) {
-            console.error('⚠️ Erè Cohere (Fallback ekzekite):', gemErr.message);
+            console.error('⚠️ Erè Bazaarlink (Fallback ekzekite):', gemErr.message);
         }
 
         // Generasyon Logo dirèkteman ak ID ekip Football-Data yo
