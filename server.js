@@ -253,16 +253,15 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 
         const footballDataStats = await getFootballDataStats(matchId);
 
-        let geminiParsed = {
+        let cohereParsed = {
             pronostik: [],
-            analiz_ia: 'Analiz IA an ap jenere...',
-            lineup: null,
+            analiz_ia: 'Analiz IA an ap jenere...,
             absences: { home: [], away: [] },
             recommendation: 'Konsèy ap disponib nan kèk sekonn.'
         };
 
         try {
-            geminiParsed = await analyzeMatch(match);
+            cohereParsed = await analyzeMatch(match);
         } catch (gemErr) {
             console.error('⚠️ Erè Cohere (Fallback ekzekite):', gemErr.message);
         }
@@ -277,14 +276,13 @@ app.get('/api/match-details/:matchId', async (req, res) => {
                 homeLogo: '',
                 awayLogo: ''
             },
-            pronostik: geminiParsed.pronostik || [],
-            analiz_ia: geminiParsed.analiz_ia || '',
+            pronostik: cohereParsed.pronostik || [],
+            analiz_ia: cohereParsed.analiz_ia || '',
             bilan: footballDataStats.bilan,
             forme: footballDataStats.forme,
             h2h: footballDataStats.h2h,
-            lineup: geminiParsed.lineup,
-            absences: geminiParsed.absences || { home: [], away: [] },
-            recommendation: geminiParsed.recommendation || ''
+            absences: cohereParsed.absences || { home: [], away: [] },
+            recommendation: cohereParsed.recommendation || ''
         };
 
         await supabase.from('match_analysis').upsert({
