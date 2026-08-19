@@ -195,9 +195,12 @@ async function getFootballDataStats(matchId) {
 // Helper pou fè rechèch an tan reyèl ak DuckDuckGo Search (Gratis san API Key)
 async function searchWebFree(query) {
     try {
-        const searchResults = await search(query, { safeSearch: search.SafeSearch.STRICT });
-        const results = searchResults.results || [];
-        return results.slice(0, 3).map(r => `Tit: ${r.title}\nSnippet: ${r.snippet}`).join('\n---\n');
+        const searchResults = await search(query);
+        const results = searchResults.results || searchResults || [];
+        
+        if (!Array.isArray(results)) return '';
+
+        return results.slice(0, 3).map(r => `Tit: ${r.title || ''}\nSnippet: ${r.snippet || r.description || ''}`).join('\n---\n');
     } catch (err) {
         console.error('❌ Erè DuckDuckGo Search:', err.message);
         return '';
