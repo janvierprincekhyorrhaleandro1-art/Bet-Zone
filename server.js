@@ -2,12 +2,6 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
 const axios = require('axios');
-let ddgSearch;
-try {
-    ddgSearch = require('duckduckgo-search');
-} catch (e) {
-    console.log('duckduckgo-search pa disponib, ap sèvi ak fallback HTTP.');
-}
 
 const app = express();
 
@@ -197,53 +191,30 @@ async function getFootballDataStats(matchId) {
     }
 }
 
-// Helper pou fè rechèch an tan reyèl ak DuckDuckGo Search (San okenn brik pou fonksyon envalid)
+// Helper pou fè rechèch an tan reyèl ak Tavily API
 async function searchWebFree(query) {
     try {
-        // Tente sèvi ak modil la si l ap travay byen
-        if (ddgSearch && typeof ddgSearch.search === 'function') {
-            const searchResults = await ddgSearch.search(query);
-            const results = searchResults.results || searchResults || [];
-            if (Array.isArray(results) && results.length > 0) {
-                return results.slice(0, 3).map(r => `Tit: ${r.title || ''}\nSnippet: ${r.snippet || r.description || ''}`).join('\n---\n');
-            }
-        } else if (ddgSearch && typeof ddgSearch === 'function') {
-            const searchResults = await ddgSearch(query);
-            const results = searchResults.results || searchResults || [];
-            if (Array.isArray(results) && results.length > 0) {
-                return results.slice(0, 3).map(r => `Tit: ${r.title || ''}\nSnippet: ${r.snippet || r.description || ''}`).join('\n---\n');
-            }
-        }
+        const res = await axios.post('https://api.tavily.com/search', {
+            api_key: process.env.TAVILY_API_KEY,
+            query: query,
+            max_results: 3
+        });
 
-        // Fallback an tan reyèl pa HTTP dirèkteman sou DuckDuckGo JSON API
-        const res = await axios.get(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`);
-        const data = res.data;
-        let snippets = [];
+        const results = res.data?.results || [];
+        if (results.length === 0) return '';
 
-        if (data.AbstractText) {
-            snippets.push(`Tit: ${data.Heading || query}\nSnippet: ${data.AbstractText}`);
-        }
-
-        if (Array.isArray(data.RelatedTopics)) {
-            data.RelatedTopics.slice(0, 3).forEach(item => {
-                if (item.Text) {
-                    snippets.push(`Snippet: ${item.Text}`);
-                }
-            });
-        }
-
-        return snippets.join('\n---\n');
+        return results.map(r => `Tit: ${r.title || ''}\nSnippet: ${r.content || ''}`).join('\n---\n');
     } catch (err) {
-        console.error('❌ Erè DuckDuckGo Search:', err.message);
+        console.error('❌ Erè Tavily Search:', err.message);
         return '';
     }
 }
 
-// 3. ANALIZ MATCH AK DUCKDUCKGO + BAZAARLINK API
+// 3. ANALIZ MATCH AK TAVILY + BAZAARLINK API
 async function analyzeMatch(match) {
     if (!BAZAARLINK_KEY) throw new Error('BAZAARLINK_API_KEY pa konfigire');
 
-    // 1. DuckDuckGo fè rechèch sou Forebet ak Google/Web pou absans yo
+    // 1. Tavily fè rechèch sou Forebet ak Google/Web pou absans yo
     const forebetQuery = `site:forebet.com ${match.team_a} vs ${match.team_b} prediction`;
     const absenceQuery = `${match.team_a} vs ${match.team_b} injury news missing suspended players`;
 
@@ -252,8 +223,8 @@ async function analyzeMatch(match) {
         searchWebFree(absenceQuery)
     ]);
 
-    console.log('🔍 Done Forebet (DuckDuckGo):\n', forebetResults);
-    console.log('🔍 Done Absans (DuckDuckGo):\n', absenceResults);
+    console.log('🔍 Done Forebet (Tavily):\n', forebetResults);
+    console.log('🔍 Done Absans (Tavily):\n', absenceResults);
 
     // 2. Prompt ak enstriksyon trè strik sou ki done pou BazaarLink filtre ak fòmate
     const prompt = `
