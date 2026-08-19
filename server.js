@@ -363,4 +363,13 @@ app.get('/api/match-details/:matchId', async (req, res) => {
     }
 });
 
+// Otomatisasyon Cron: Ekzekite senkronizasyon match yo otomatikman chak jou a 2:00 AM
+cron.schedule('0 2 * * *', async () => {
+    console.log('⏰ Otomatisasyon cron kòmanse (2:00 AM)...');
+    await syncDailyMatches();
+});
+
+// Ekzekite yon premye senkronizasyon depi sèvè a demare
+syncDailyMatches();
+
 app.listen(PORT, () => console.log(`🚀 Sèvè ap koute sou pò ${PORT}`));
