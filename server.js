@@ -2,6 +2,7 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
 const axios = require('axios');
+const { search } = require('duckduckgo-search');
 
 const app = express();
 
@@ -191,34 +192,75 @@ async function getFootballDataStats(matchId) {
     }
 }
 
-// 3. ANALIZ MATCH AK BAZAARLINK API
+// Helper pou fè rechèch an tan reyèl ak DuckDuckGo Search (Gratis san API Key)
+async function searchWebFree(query) {
+    try {
+        const searchResults = await search(query, { safeSearch: search.SafeSearch.STRICT });
+        const results = searchResults.results || [];
+        return results.slice(0, 3).map(r => `Tit: ${r.title}\nSnippet: ${r.snippet}`).join('\n---\n');
+    } catch (err) {
+        console.error('❌ Erè DuckDuckGo Search:', err.message);
+        return '';
+    }
+}
+
+// 3. ANALIZ MATCH AK DUCKDUCKGO + BAZAARLINK API
 async function analyzeMatch(match) {
     if (!BAZAARLINK_KEY) throw new Error('BAZAARLINK_API_KEY pa konfigire');
 
-    const prompt = `Fè yon rechèch REYÈL sou entènèt pou match foutbòl sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
+    // 1. DuckDuckGo fè rechèch sou Forebet ak Google/Web pou absans yo
+    const forebetQuery = `site:forebet.com ${match.team_a} vs ${match.team_b} prediction`;
+    const absenceQuery = `${match.team_a} vs ${match.team_b} injury news missing suspended players`;
 
-RÈG SOUS POU CHAK SEKSYON (obligatwa, swiv yo egzakteman):
-1. "pronostik": Chèche VRÈ pronostik ki pibliye sou site forebet.com pou match sa a (Home Win %, Draw %, Over/Under, BTTS...). Itilize done sa yo pou ranpli "confidence" ak "risk" — pa envante yo, itilize sa forebet.com pibliye reyèlman.
-2. "analiz_ia": Se PWÒP DEDIKSYON pa ou (AI a) — baze sou rechèch ou fè sou FÒM RESAN tou de ekip yo (dènye match yo, dinamik aktyèl). Ekri yon paragraf ki eksplike konklizyon pa ou.
-3. "absences": Chèche jwè blese oswa sispann ki pp jwe match sa pou toude ekip yo SOU GOOGLE.
+    const [forebetResults, absenceResults] = await Promise.all([
+        searchWebFree(forebetQuery),
+        searchWebFree(absenceQuery)
+    ]);
 
-Reponn SÈLMAN ak yon objè JSON valid (san okenn tèks anplis, san eksplikasyon), ki swiv EGZAKTEMAN estrikti sa a — chak valè ki anba a se yon <deskripsyon>, ranplase l ak vrè done w jwenn:
+    console.log('🔍 Done Forebet (DuckDuckGo):\n', forebetResults);
+    console.log('🔍 Done Absans (DuckDuckGo):\n', absenceResults);
+
+    // 2. Prompt ak enstriksyon trè strik sou ki done pou BazaarLink filtre ak fòmate
+    const prompt = `
+Mwen ba ou done reyèl ki soti dirèkteman sou Forebet ak Entènèt la pou match sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
+
+DONE FOREBET:
+${forebetResults || 'Pa gen done Forebet.'}
+
+DONE BLESUR/SANKSYON (ENTÈNÈT):
+${absenceResults || 'Pa gen enfòmasyon sou absans.'}
+
+RÈG POU PRONOSTIK AK ABSANS YO (OBLIGATWA):
+1. Nan done Forebet yo, gade pousantaj viktwa pou tou de ekip yo. Pran SÈLMAN EKIP KI GEN PI WO POUSANTAJ VIKTWA A (ekip A oswa ekip B) epi mete l kòm premye opsyon nan "pronostik".
+2. Pran pousantaj Over 2.5 lan nan Forebet tou, mete l kòm 2yèm opsyon nan "pronostik".
+3. Nan done entènèt yo, idantifye byen presi jwè ki blese oswa ki sispann (sanksyone) pou tou de ekip yo.
+
+Reponn SÈLMAN ak yon objè JSON valid ki swiv estrikti sa a (san okenn tèks anplis):
 {
-  "pronostik": [{"label": "<pick Forebet>", "confidence": <% Forebet>, "risk": "<Fèb|Modere|Elve, jijman pa ou>"}, {"label": "<2yèm pick>", "confidence": <nonb>, "risk": "<...>"}, {"label": "<3yèm pick>", "confidence": <nonb>, "risk": "<...>"}],
-  "analiz_ia": "<paragraf dediksyon pa ou, baze sou fòm resan>",
-  "absences": {"home": [{"name":"<non jwè Google>", "status":"<blese/sispann>"}], "away": [{"name":"<non>", "status":"<...>"}]},
-  "recommendation": "<konklizyon kout pa ou>"
-}
-Si w vrèman pa jwenn done presi pou yon chan apre rechèch ou yo , mete (Done sa inaksesib).`;
+  "pronostik": [
+    {
+      "label": "<Non ekip ki gen PI WO % win an> Win", 
+      "confidence": <pousantaj win ki pi wo a san siy %>, 
+      "risk": "<Fèb|Modere|Elve>"
+    },
+    {
+      "label": "Over 2.5 Goals", 
+      "confidence": <pousantaj over 2.5 an san siy %>, 
+      "risk": "<Fèb|Modere|Elve>"
+    }
+  ],
+  "analiz_ia": "<paragraf kout ki esplike poukisa ekip ki gen pi wo % sa an avantaj ak efè jwè ki blese/sispann yo>",
+  "absences": {
+    "home": [{"name": "<non jwè>", "status": "<blese/sispann>"}],
+    "away": [{"name": "<non jwè>", "status": "<blese/sispann>"}]
+  },
+  "recommendation": "<konklizyon pi bon opsyon an>"
+}`;
 
+    // 3. BazaarLink entèprete ak fòmate repons lan
     const response = await axios.post('https://bazaarlink.ai/api/v1/chat/completions', {
         model: 'auto:free',
-        messages: [
-            {
-                role: 'user',
-                content: prompt
-            }
-        ]
+        messages: [{ role: 'user', content: prompt }]
     }, {
         headers: {
             'Authorization': `Bearer ${BAZAARLINK_KEY}`,
@@ -229,7 +271,6 @@ Si w vrèman pa jwenn done presi pou yon chan apre rechèch ou yo , mete (Done s
     const data = response.data;
     let rawText = data.choices?.[0]?.message?.content || data.text || '';
 
-    // Log pou gade repons dirèk BazaarLink nan Render Logs
     console.log('🔍 Repons BazaarLink:', rawText);
 
     if (!rawText) {
