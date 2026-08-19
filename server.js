@@ -2,7 +2,12 @@ const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
 const axios = require('axios');
-const { search } = require('duckduckgo-search');
+let ddgSearch;
+try {
+    ddgSearch = require('duckduckgo-search');
+} catch (e) {
+    console.log('duckduckgo-search pa disponib, ap sèvi ak fallback HTTP.');
+}
 
 const app = express();
 
@@ -192,15 +197,42 @@ async function getFootballDataStats(matchId) {
     }
 }
 
-// Helper pou fè rechèch an tan reyèl ak DuckDuckGo Search (Gratis san API Key)
+// Helper pou fè rechèch an tan reyèl ak DuckDuckGo Search (San okenn brik pou fonksyon envalid)
 async function searchWebFree(query) {
     try {
-        const searchResults = await search(query);
-        const results = searchResults.results || searchResults || [];
-        
-        if (!Array.isArray(results)) return '';
+        // Tente sèvi ak modil la si l ap travay byen
+        if (ddgSearch && typeof ddgSearch.search === 'function') {
+            const searchResults = await ddgSearch.search(query);
+            const results = searchResults.results || searchResults || [];
+            if (Array.isArray(results) && results.length > 0) {
+                return results.slice(0, 3).map(r => `Tit: ${r.title || ''}\nSnippet: ${r.snippet || r.description || ''}`).join('\n---\n');
+            }
+        } else if (ddgSearch && typeof ddgSearch === 'function') {
+            const searchResults = await ddgSearch(query);
+            const results = searchResults.results || searchResults || [];
+            if (Array.isArray(results) && results.length > 0) {
+                return results.slice(0, 3).map(r => `Tit: ${r.title || ''}\nSnippet: ${r.snippet || r.description || ''}`).join('\n---\n');
+            }
+        }
 
-        return results.slice(0, 3).map(r => `Tit: ${r.title || ''}\nSnippet: ${r.snippet || r.description || ''}`).join('\n---\n');
+        // Fallback an tan reyèl pa HTTP dirèkteman sou DuckDuckGo JSON API
+        const res = await axios.get(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`);
+        const data = res.data;
+        let snippets = [];
+
+        if (data.AbstractText) {
+            snippets.push(`Tit: ${data.Heading || query}\nSnippet: ${data.AbstractText}`);
+        }
+
+        if (Array.isArray(data.RelatedTopics)) {
+            data.RelatedTopics.slice(0, 3).forEach(item => {
+                if (item.Text) {
+                    snippets.push(`Snippet: ${item.Text}`);
+                }
+            });
+        }
+
+        return snippets.join('\n---\n');
     } catch (err) {
         console.error('❌ Erè DuckDuckGo Search:', err.message);
         return '';
