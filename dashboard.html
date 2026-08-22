@@ -96,7 +96,7 @@
         <div class="grid grid-cols-2 gap-3 mb-5">
             <button id="tabFreeBtn" onclick="switchCategory('free')" class="py-3 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition shadow-md bg-emerald-500/20 border-emerald-500 text-emerald-400">
                 <i class="fa-solid fa-gift text-sm"></i>
-                <span class="truncate">Match gratis jounen an</span>
+                <span class="truncate">Match gratis</span>
             </button>
 
             <button id="tabVipBtn" onclick="switchCategory('vip')" class="py-3 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition shadow-md bg-brand-card border-brand-border text-gray-400 hover:text-amber-400">
@@ -286,7 +286,7 @@
         </nav>
     </div>
 
-    <!-- LOGIK JAVASCRIPT KONBINE -->
+    <!-- LOGIK JAVASCRIPT KONBINE AK MODIFIKASYON YO -->
     <script>
         const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
@@ -294,12 +294,13 @@
 
         let loadedMatches = [];
         let currentUserPlan = 'free';
-        let activeCategory = 'free';
+        // MODIF 2: Sonje seleksyon kategori w la nan SessionStorage
+        let activeCategory = sessionStorage.getItem('bz_active_category') || 'free';
         let currentDayFilter = sessionStorage.getItem('bz_selected_date') || null;
         let currentLeagueFilter = sessionStorage.getItem('bz_selected_league') || 'ALL';
         let currentTab = 'matchs';
 
-        // 1. LIQUID GLASS SLIDE LOGIC (CORRIGE POUR ALIGNEMENT EXACT)
+        // 1. LIQUID GLASS SLIDE LOGIC (ALIGNEMENT EXACT)
         function updateLiquidPill(targetEl) {
             const pill = document.getElementById('liquidPill');
             if (!pill || !targetEl) return;
@@ -327,7 +328,7 @@
             });
         }
 
-        // 2. SWITCH TAB (MATCHS / HISTORIQUE / PROFILE)
+        // 2. SWITCH TAB
         function switchTab(tabName) {
             currentTab = tabName;
             document.querySelectorAll('.app-view').forEach(view => view.classList.add('hidden'));
@@ -352,13 +353,15 @@
             }
         }
 
-        // 3. MATCHS & FILTERS LOGIC
         function toggleDropdown(id) {
             document.getElementById(id).classList.toggle('hidden');
         }
 
+        // MODIF 2: Sove seleksyon ant FREE ak VIP nan sessionStorage
         function switchCategory(cat) {
             activeCategory = cat;
+            sessionStorage.setItem('bz_active_category', cat);
+            
             const freeBtn = document.getElementById('tabFreeBtn');
             const vipBtn = document.getElementById('tabVipBtn');
 
@@ -372,6 +375,7 @@
             applyFilters();
         }
 
+        // MODIF 5: Sèlman 3 jou ki pase ak 2 jou kap vini yo nan opsyon yo
         function renderDynamicDays() {
             const dateModalList = document.getElementById('dateModalList');
             if (!dateModalList) return;
@@ -382,7 +386,8 @@
             const savedDate = sessionStorage.getItem('bz_selected_date');
             const savedDateLabel = sessionStorage.getItem('bz_selected_date_label');
 
-            for (let i = -1; i <= 8; i++) {
+            // Interval: -3 jou a +2 jou sèlman (Antou 6 jou)
+            for (let i = -3; i <= 2; i++) {
                 const targetDate = new Date(targetToday);
                 targetDate.setDate(targetToday.getDate() + i);
                 const dayName = daysOfWeek[targetDate.getDay()];
@@ -443,9 +448,28 @@
             renderMatches(currentUserPlan, filtered);
         }
 
+        // Helper pou chèche opsyon ki gen pi gwo pousantaj (MODIF 1)
+        function getBestPredictionOption(match) {
+            let bestLabel = match.victory || 'N/A';
+            let bestPercent = parseInt(match.percent) || 0;
+
+            if (match.analysis_data && match.analysis_data.pronostik) {
+                const list = match.analysis_data.pronostik;
+                list.forEach(item => {
+                    const pVal = parseInt(item.percent) || 0;
+                    if (pVal > bestPercent) {
+                        bestPercent = pVal;
+                        bestLabel = item.label;
+                    }
+                });
+            }
+            return { label: bestLabel, percent: bestPercent ? `${bestPercent}%` : 'N/A' };
+        }
+
         async function fetchLiveMatches() {
             const container = document.getElementById('matchesContainer');
             try {
+                // Rale match yo nan Supabase
                 const { data: matches, error } = await supabaseClient.from('daily_matches').select('*');
                 if (error) throw error;
 
@@ -460,7 +484,10 @@
                         teamA: m.team_a,
                         teamB: m.team_b,
                         victory: m.victory,
-                        percent: m.percent
+                        percent: m.percent,
+                        homeScore: m.home_score ?? null, // MODIF 4: Vrè score ki soti nan data org
+                        awayScore: m.away_score ?? null,
+                        analysis_data: m.analysis_data || null
                     }));
                     applyFilters();
                 } else {
@@ -474,18 +501,17 @@
         function renderMatches(plan, list) {
             const container = document.getElementById('matchesContainer');
             const isUserFree = (plan === 'free');
-            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
             if (!list || list.length === 0) {
                 container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400 text-xs font-bold">Pa gen match pou chanpyona sa nan date sa</div>`;
                 return;
             }
 
-            const isSelectedToday = (currentDayFilter === todayStr || !currentDayFilter);
             const totalCount = list.length;
-            let freeCount = totalCount <= 1 ? 0 : (totalCount <= 3 ? 1 : (totalCount <= 5 ? 2 : 3));
+            let freeCount = totalCount <= 1 ? 1 : (totalCount <= 3 ? 1 : (totalCount <= 5 ? 2 : 3));
 
-            const freeList = isSelectedToday ? list.slice(0, freeCount) : [];
+            // MODIF 3 & 5: Match gratis yo vizib pou tout dat filtre (pase oswa 2 jou pwochen)
+            const freeList = list.slice(0, freeCount);
             const freeIds = new Set(freeList.map(m => m.id));
 
             let displayList = [];
@@ -493,12 +519,11 @@
             let canClickDetails = !isUserFree;
 
             if (activeCategory === 'free') {
-                if (!isSelectedToday || freeList.length === 0) {
+                if (freeList.length === 0) {
                     container.innerHTML = `
                         <div class="col-span-full text-center py-12 px-4 rounded-xl bg-brand-card/50 border border-brand-border">
                             <i class="fa-solid fa-calendar-xmark text-3xl text-emerald-400/50 mb-3 block"></i>
-                            <p class="text-sm font-extrabold text-white">Match gratis jodia poko disponib</p>
-                            <p class="text-xs text-gray-400 mt-1">Gade match VIP / ELITE yo oswa retounen sou dat jodi a.</p>
+                            <p class="text-sm font-extrabold text-white">Match gratis poko disponib pou dat sa.</p>
                         </div>`;
                     return;
                 }
@@ -506,7 +531,8 @@
                 isBlurredList = false;
             } else {
                 if (isUserFree) {
-                    displayList = (isSelectedToday && freeList.length > 0) ? list.filter(m => !freeIds.has(m.id)) : list;
+                    displayList = list.filter(m => !freeIds.has(m.id));
+                    if (displayList.length === 0) displayList = list;
                     isBlurredList = true;
                     canClickDetails = false;
                 } else {
@@ -518,6 +544,16 @@
 
             container.innerHTML = displayList.map(m => {
                 let cardClickAttr = canClickDetails ? `onclick="window.location.href='details.html?id=${m.id}'"` : '';
+                
+                // MODIF 1: Pran pi bon pronostik ak pi wo pousantaj
+                const bestPred = getBestPredictionOption(m);
+
+                // MODIF 4: Vrè score dirèk bò kote non ekip yo si match la ap jwe oswa li fini
+                const hasScore = (m.homeScore !== null && m.homeScore !== undefined && m.awayScore !== null && m.awayScore !== undefined);
+                const scoreDisplayHtml = hasScore ? 
+                    `<span class="bg-black/80 px-2 py-0.5 rounded text-emerald-400 font-mono text-xs border border-emerald-500/30">${m.homeScore} - ${m.awayScore}</span>` : 
+                    `<span class="text-[10px] text-gray-500 font-extrabold px-1">VS</span>`;
+
                 return `
                     <div ${cardClickAttr} class="relative p-4 rounded-xl bg-brand-card border border-brand-border ${canClickDetails ? 'hover:border-emerald-500/40 cursor-pointer group' : ''} transition shadow-md flex flex-col justify-between overflow-hidden">
                         <div>
@@ -527,19 +563,23 @@
                                 </span>
                                 <span class="text-xs text-gray-400 font-medium truncate max-w-[130px]">${m.league}</span>
                             </div>
+                            
+                            <!-- MODIF 4: Ekip ak Score an tan reyèl -->
                             <div class="flex items-center justify-between text-sm font-bold text-white ${canClickDetails ? 'group-hover:text-emerald-400' : ''} transition my-3 px-1">
-                                <span class="truncate max-w-[42%]">${m.teamA}</span>
-                                <span class="text-[10px] text-gray-500 font-extrabold px-1">VS</span>
-                                <span class="truncate max-w-[42%] text-right">${m.teamB}</span>
+                                <span class="truncate max-w-[38%]">${m.teamA}</span>
+                                ${scoreDisplayHtml}
+                                <span class="truncate max-w-[38%] text-right">${m.teamB}</span>
                             </div>
+
                             <div class="relative mt-3 rounded-lg overflow-hidden">
                                 <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center ${isBlurredList ? 'blur-sm select-none opacity-40' : ''}">
                                     <div class="flex flex-col">
                                         <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Pronostik Bazik:</span>
-                                        <span class="text-xs font-extrabold text-emerald-400">${m.victory || 'N/A'}</span>
+                                        <!-- MODIF 1: Afiche gwo % an -->
+                                        <span class="text-xs font-extrabold text-emerald-400">${bestPred.label}</span>
                                     </div>
                                     <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold text-xs border border-emerald-500/30">
-                                        ${m.percent || 'N/A'}
+                                        ${bestPred.percent}
                                     </span>
                                 </div>
                                 ${isBlurredList ? `
@@ -562,7 +602,7 @@
             }).join('');
         }
 
-        // 4. ISTORIK DINAMIK
+        // MODIF 6: Dat ke pronostik la te bay ak verifye an parèt byen klè nan istorik
         async function fetchDynamicHistory() {
             const container = document.getElementById('historyListContainer');
             try {
@@ -593,6 +633,10 @@
                     const homeScore = parseInt(info.homeScore, 10);
                     const awayScore = parseInt(info.awayScore, 10);
 
+                    // MODIF 6: Fòmate dat analiz ak dat match la
+                    const analysisDateStr = m.created_at ? new Date(m.created_at).toLocaleDateString('ht-HT', { day: '2-digit', month: '2-digit', year: 'numeric' }) : info.date;
+                    const matchDateStr = info.date || '--/--/----';
+
                     let isWon = false;
                     if (pronostik.toLowerCase().includes(info.homeName.toLowerCase()) && homeScore > awayScore) isWon = true;
                     else if (pronostik.toLowerCase().includes(info.awayName.toLowerCase()) && awayScore > homeScore) isWon = true;
@@ -615,9 +659,13 @@
                                 <span class="bg-black px-2 py-0.5 rounded text-emerald-400 font-mono border border-brand-border">${homeScore} - ${awayScore}</span>
                                 <span class="truncate max-w-[38%] text-right">${info.awayName}</span>
                             </div>
-                            <div class="text-[10px] text-gray-400 flex justify-between pt-1">
+                            <!-- MODIF 6: Afiche Dat Analiz vs Dat Match -->
+                            <div class="text-[10px] text-gray-400 flex flex-wrap justify-between pt-1 gap-1 border-t border-brand-border/30 mt-1">
                                 <span>Pronostik: <strong class="text-emerald-400">${pronostik}</strong></span>
-                                <span>Date: ${info.date}</span>
+                                <div class="flex gap-2 text-[9px] text-gray-500">
+                                    <span>Analiz: <strong class="text-gray-300">${analysisDateStr}</strong></span>
+                                    <span>Jou Match: <strong class="text-gray-300">${matchDateStr}</strong></span>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -738,6 +786,9 @@
                     planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase">GRATIS</span>`;
                     if (vipTabLockIcon) vipTabLockIcon.classList.remove('hidden');
                 }
+
+                // Restore active category UI state (MODIF 2)
+                switchCategory(activeCategory);
 
                 await fetchLiveMatches();
             } catch (err) {
