@@ -192,13 +192,16 @@ async function getFootballDataStats(matchId) {
 }
 
 // Helper pou fè rechèch an tan reyèl ak Tavily API
-async function searchWebFree(query) {
+async function searchWebFree(query, domains = null) {
     try {
-        const res = await axios.post('https://api.tavily.com/search', {
+        const payload = {
             api_key: process.env.TAVILY_API_KEY,
             query: query,
             max_results: 3
-        });
+        };
+        if (domains) payload.include_domains = domains;
+
+        const res = await axios.post('https://api.tavily.com/search', payload);
 
         const results = res.data?.results || [];
         if (results.length === 0) return '';
@@ -219,7 +222,7 @@ async function analyzeMatch(match) {
     const absenceQuery = `${match.team_a} vs ${match.team_b} injury news missing suspended players`;
 
     const [forebetResults, absenceResults] = await Promise.all([
-        searchWebFree(forebetQuery),
+        searchWebFree(forebetQuery, ['forebet.com']),
         searchWebFree(absenceQuery)
     ]);
 
@@ -321,15 +324,21 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 
         let geminiParsed = {
             pronostik: [],
-            analiz_ia: 'Analiz IA an ap jenere...',
+            analiz_ia: 'Analiz pa disponib pou match sa a.',
             absences: { home: [], away: [] },
-            recommendation: 'Konsèy ap disponib nan kèk sekonn.'
+            recommendation: 'Match sa a fini deja.'
         };
 
-        try {
-            geminiParsed = await analyzeMatch(match);
-        } catch (gemErr) {
-            console.error('⚠️ Erè Bazaarlink (Fallback ekzekite):', gemErr.message);
+        // Tcheke si dat match la pase deja anvan nou lanse analiz IA
+        const todayStr = formatDate(new Date());
+        const isMatchPassed = match.match_date < todayStr;
+
+        if (!isMatchPassed) {
+            try {
+                geminiParsed = await analyzeMatch(match);
+            } catch (gemErr) {
+                console.error('⚠️ Erè Bazaarlink (Fallback ekzekite):', gemErr.message);
+            }
         }
 
         // Generasyon Logo dirèkteman ak ID ekip Football-Data yo
@@ -339,7 +348,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
         const finalResponse = {
             matchInfo: {
                 league: match.league_name,
-                status: 'Annatant',
+                status: isMatchPassed ? 'Fini' : 'Annatant',
                 date: match.match_date,
                 homeName: match.team_a,
                 awayName: match.team_b,
