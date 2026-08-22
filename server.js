@@ -99,21 +99,35 @@ async function syncDailyMatches() {
     }
 }
 
-// 2. Fetch H2H, Form, ak Bilan soti nan Football-Data.org
+// 2. Fetch H2H, Form, Bilan ak Score dirèk yon match nan Football-Data.org
 async function getFootballDataStats(matchId) {
     try {
         const headers = { 'X-Auth-Token': FOOTBALL_DATA_API_KEY };
-        const h2hRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}/head2head?limit=10`, { headers });
-        
-        let h2hList = [];
+        let liveMatchScore = { home: null, away: null, status: 'TIMED' };
+
+        // Fetch detay match la menm pou konnen score an tan reyèl
+        const matchRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}`, { headers });
         let homeTeamId = null, awayTeamId = null;
+
+        if (matchRes.ok) {
+            const mData = await matchRes.json();
+            homeTeamId = mData.homeTeam?.id;
+            awayTeamId = mData.awayTeam?.id;
+            liveMatchScore = {
+                home: mData.score?.fullTime?.home ?? null,
+                away: mData.score?.fullTime?.away ?? null,
+                status: mData.status || 'TIMED'
+            };
+        }
+
+        const h2hRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}/head2head?limit=10`, { headers });
+        let h2hList = [];
 
         if (h2hRes.ok) {
             const h2hData = await h2hRes.json();
-            homeTeamId = h2hData.resultSet?.homeTeam?.id || h2hData.aggregates?.homeTeam?.id;
-            awayTeamId = h2hData.resultSet?.awayTeam?.id || h2hData.aggregates?.awayTeam?.id;
+            if (!homeTeamId) homeTeamId = h2hData.resultSet?.homeTeam?.id || h2hData.aggregates?.homeTeam?.id;
+            if (!awayTeamId) awayTeamId = h2hData.resultSet?.awayTeam?.id || h2hData.aggregates?.awayTeam?.id;
 
-            // Filtre sèlman match ki FINI yo pou pran score reyèl yo
             const finishedMatches = (h2hData.matches || []).filter(m => m.status === 'FINISHED');
 
             h2hList = finishedMatches.slice(0, 5).map(m => {
@@ -126,15 +140,6 @@ async function getFootballDataStats(matchId) {
             });
         }
 
-        if (!homeTeamId || !awayTeamId) {
-            const matchRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}`, { headers });
-            if (matchRes.ok) {
-                const mData = await matchRes.json();
-                homeTeamId = mData.homeTeam?.id;
-                awayTeamId = mData.awayTeam?.id;
-            }
-        }
-
         let homeForm = ['N','N','N','N','N'], awayForm = ['N','N','N','N','N'];
         let homeBilan = { win: 0, draw: 0, loss: 0 };
         let awayBilan = { win: 0, draw: 0, loss: 0 };
@@ -142,8 +147,6 @@ async function getFootballDataStats(matchId) {
         const parseFormAndBilan = (matches, teamId) => {
             let form = [];
             let win = 0, draw = 0, loss = 0;
-            
-            // Filtre match ki fin jwe sèlman
             const finished = matches.filter(m => m.status === 'FINISHED');
 
             finished.forEach(m => {
@@ -185,6 +188,7 @@ async function getFootballDataStats(matchId) {
         return { 
             homeTeamId,
             awayTeamId,
+            liveMatchScore,
             h2h: h2hList, 
             forme: { home: homeForm, away: awayForm }, 
             bilan: { home: homeBilan, away: awayBilan } 
@@ -192,7 +196,14 @@ async function getFootballDataStats(matchId) {
 
     } catch (e) {
         console.error('❌ Erè getFootballDataStats:', e.message);
-        return { homeTeamId: null, awayTeamId: null, h2h: [], forme: { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] }, bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } } };
+        return { 
+            homeTeamId: null, 
+            awayTeamId: null, 
+            liveMatchScore: { home: null, away: null, status: 'TIMED' },
+            h2h: [], 
+            forme: { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] }, 
+            bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } } 
+        };
     }
 }
 
@@ -222,7 +233,6 @@ async function searchWebFree(query, domains = null) {
 async function analyzeMatch(match) {
     if (!BAZAARLINK_KEY) throw new Error('BAZAARLINK_API_KEY pa konfigire');
 
-    // 1. Tavily fè rechèch sou Forebet ak Google/Web pou absans yo
     const forebetQuery = `site:forebet.com ${match.team_a} vs ${match.team_b} prediction`;
     const absenceQuery = `${match.team_a} vs ${match.team_b} injury news missing suspended players`;
 
@@ -231,10 +241,6 @@ async function analyzeMatch(match) {
         searchWebFree(absenceQuery)
     ]);
 
-    console.log('🔍 Done Forebet (Tavily):\n', forebetResults);
-    console.log('🔍 Done Absans (Tavily):\n', absenceResults);
-
-    // 2. Prompt ak enstriksyon trè strik sou ki done pou BazaarLink filtre ak fòmate
     const prompt = `
 Mwen ba ou done reyèl ki soti dirèkteman sou Forebet ak Entènèt la pou match sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
 
@@ -271,7 +277,6 @@ Reponn SÈLMAN ak yon objè JSON valid ki swiv estrikti sa a (san okenn tèks an
   "recommendation": "<konklizyon pi bon opsyon an>"
 }`;
 
-    // 3. BazaarLink entèprete ak fòmate repons lan
     const response = await axios.post('https://bazaarlink.ai/api/v1/chat/completions', {
         model: 'auto:free',
         messages: [{ role: 'user', content: prompt }]
@@ -284,8 +289,6 @@ Reponn SÈLMAN ak yon objè JSON valid ki swiv estrikti sa a (san okenn tèks an
 
     const data = response.data;
     let rawText = data.choices?.[0]?.message?.content || data.text || '';
-
-    console.log('🔍 Repons BazaarLink:', rawText);
 
     if (!rawText) {
         throw new Error(`Bazaarlink pa retounen tèks: ${JSON.stringify(data)}`);
@@ -334,9 +337,8 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             recommendation: 'Match sa a fini deja.'
         };
 
-        // Tcheke si dat match la pase deja anvan nou lanse analiz IA
         const todayStr = formatDate(new Date());
-        const isMatchPassed = match.match_date < todayStr;
+        const isMatchPassed = match.match_date < todayStr || footballDataStats.liveMatchScore.status === 'FINISHED';
 
         if (!isMatchPassed) {
             try {
@@ -346,7 +348,6 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             }
         }
 
-        // Generasyon Logo dirèkteman ak ID ekip Football-Data yo
         const homeLogo = getCrestUrl(match.team_a_id || footballDataStats.homeTeamId, match.team_a);
         const awayLogo = getCrestUrl(match.team_b_id || footballDataStats.awayTeamId, match.team_b);
 
@@ -358,7 +359,9 @@ app.get('/api/match-details/:matchId', async (req, res) => {
                 homeName: match.team_a,
                 awayName: match.team_b,
                 homeLogo: homeLogo,
-                awayLogo: awayLogo
+                awayLogo: awayLogo,
+                homeScore: footballDataStats.liveMatchScore.home,
+                awayScore: footballDataStats.liveMatchScore.away
             },
             pronostik: geminiParsed.pronostik || [],
             analiz_ia: geminiParsed.analiz_ia || '',
@@ -383,13 +386,12 @@ app.get('/api/match-details/:matchId', async (req, res) => {
     }
 });
 
-// Otomatisasyon Cron: Ekzekite senkronizasyon match yo otomatikman chak jou a 2:00 AM
+// Otomatisasyon Cron
 cron.schedule('0 2 * * *', async () => {
     console.log('⏰ Otomatisasyon cron kòmanse (2:00 AM)...');
     await syncDailyMatches();
 });
 
-// Ekzekite yon premye senkronizasyon depi sèvè a demare
 syncDailyMatches();
 
 app.listen(PORT, () => console.log(`🚀 Sèvè ap koute sou pò ${PORT}`));
