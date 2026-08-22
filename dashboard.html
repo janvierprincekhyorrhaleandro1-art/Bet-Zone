@@ -37,14 +37,16 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* EFFET LIQUID GLASS IOS DEPLACEMENT */
+        /* EFFET LIQUID GLASS IOS DEPLACEMENT - CORRIGE */
         .glass-pill {
             background: rgba(16, 185, 129, 0.22);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(16, 185, 129, 0.45);
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.2);
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s ease, height 0.35s ease;
+            top: 0;
+            left: 0;
         }
     </style>
 </head>
@@ -75,7 +77,6 @@
 
     <!-- ==================== VIEW 1: MATCHS DASHBOARD ==================== -->
     <main id="viewMatchs" class="app-view flex-grow max-w-6xl w-full mx-auto px-4 py-5">
-        <!-- BYENVENI BANNER -->
         <div class="p-3 sm:p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-brand-card to-brand-card border border-emerald-500/30 mb-5 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
                 <div class="w-2.5 h-8 bg-emerald-500 rounded-full hidden sm:block"></div>
@@ -92,7 +93,6 @@
             </div>
         </div>
 
-        <!-- ONGLÈ FREE / VIP -->
         <div class="grid grid-cols-2 gap-3 mb-5">
             <button id="tabFreeBtn" onclick="switchCategory('free')" class="py-3 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 transition shadow-md bg-emerald-500/20 border-emerald-500 text-emerald-400">
                 <i class="fa-solid fa-gift text-sm"></i>
@@ -106,7 +106,6 @@
             </button>
         </div>
 
-        <!-- FILTÈ CHANPYONA AK DATE -->
         <div class="grid grid-cols-2 gap-3 mb-5 relative z-30">
             <div class="relative">
                 <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
@@ -143,7 +142,6 @@
             </div>
         </div>
 
-        <!-- GRID MATCH YO -->
         <div id="matchesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
             <div class="col-span-full text-center py-10 text-gray-400">
                 <i class="fa-solid fa-circle-notch fa-spin text-xl text-emerald-400 mb-2"></i>
@@ -154,7 +152,6 @@
 
     <!-- ==================== VIEW 2: ISTORIK ==================== -->
     <main id="viewHistorique" class="app-view hidden flex-grow max-w-4xl w-full mx-auto px-4 py-5 space-y-4">
-        <!-- STATS ISTORIK -->
         <div class="p-4 rounded-2xl bg-brand-card border border-brand-border">
             <div class="grid grid-cols-3 gap-2 text-center">
                 <div class="p-2 rounded-xl bg-black/40 border border-brand-border">
@@ -172,7 +169,6 @@
             </div>
         </div>
 
-        <!-- LIS MATCH ISTORIK YO DINAMIK -->
         <div id="historyListContainer" class="space-y-3">
             <div class="text-center py-10 text-gray-400 text-xs">
                 <i class="fa-solid fa-circle-notch fa-spin text-emerald-400 mb-2"></i>
@@ -183,7 +179,6 @@
 
     <!-- ==================== VIEW 3: PROFIL ==================== -->
     <main id="viewProfile" class="app-view hidden flex-grow max-w-4xl w-full mx-auto px-4 py-8">
-        <!-- HEADER PROFIL -->
         <div class="p-6 rounded-3xl bg-brand-card border border-brand-border mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
             <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
             <div class="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 font-extrabold text-2xl shadow-xl shadow-emerald-500/10 shrink-0">
@@ -207,7 +202,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- PLAN -->
             <div class="md:col-span-1 p-6 rounded-3xl bg-brand-card border border-brand-border flex flex-col justify-between">
                 <div>
                     <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -228,7 +222,6 @@
                 </button>
             </div>
 
-            <!-- SETTINGS -->
             <div class="md:col-span-2 p-6 rounded-3xl bg-brand-card border border-brand-border">
                 <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
                     <i class="fa-solid fa-sliders text-emerald-400"></i>
@@ -306,34 +299,28 @@
         let currentLeagueFilter = sessionStorage.getItem('bz_selected_league') || 'ALL';
         let currentTab = 'matchs';
 
-        // 1. LIQUID GLASS SLIDE LOGIC (iOS 26 Style)
+        // 1. LIQUID GLASS SLIDE LOGIC (CORRIGE POUR ALIGNEMENT EXACT)
         function updateLiquidPill(targetEl) {
             const pill = document.getElementById('liquidPill');
-            const nav = document.getElementById('bottomNav');
-            if (!pill || !targetEl || !nav) return;
+            if (!pill || !targetEl) return;
 
-            const navRect = nav.getBoundingClientRect();
-            const targetRect = targetEl.getBoundingClientRect();
-
-            const left = targetRect.left - navRect.left;
-            const top = targetRect.top - navRect.top;
-            const width = targetRect.width;
-            const height = targetRect.height;
+            const left = targetEl.offsetLeft;
+            const top = targetEl.offsetTop;
+            const width = targetEl.offsetWidth;
+            const height = targetEl.offsetHeight;
 
             pill.style.width = `${width}px`;
             pill.style.height = `${height}px`;
-            pill.style.transform = `translate(${left}px, ${top}px)`;
+            pill.style.transform = `translate3d(${left}px, ${top}px, 0)`;
         }
 
         function setupLiquidGlass() {
             const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
-                // Lè w kenbe dwèt ou oswa hover sou li, ti fòm glass la glise vini sou li
                 item.addEventListener('mouseenter', () => updateLiquidPill(item));
                 item.addEventListener('touchstart', () => updateLiquidPill(item), { passive: true });
             });
 
-            // Lè w retire dwèt ou, li tounen sou bouton ki aktiv la
             document.getElementById('bottomNav').addEventListener('mouseleave', () => {
                 const activeBtn = document.getElementById(`btnNav${currentTab.charAt(0).toUpperCase() + currentTab.slice(1)}`);
                 updateLiquidPill(activeBtn);
@@ -575,7 +562,7 @@
             }).join('');
         }
 
-        // 4. ISTORIK DINAMIK KI SOTI NAN SUPABASE MATCH ANALYSIS
+        // 4. ISTORIK DINAMIK
         async function fetchDynamicHistory() {
             const container = document.getElementById('historyListContainer');
             try {
@@ -586,7 +573,6 @@
 
                 if (error) throw error;
 
-                // Konsidere match yo kòm fini si yo gen score
                 const finishedMatches = (historyMatches || []).filter(m => 
                     m.data && m.data.matchInfo && 
                     m.data.matchInfo.homeScore !== null && 
@@ -607,13 +593,12 @@
                     const homeScore = parseInt(info.homeScore, 10);
                     const awayScore = parseInt(info.awayScore, 10);
 
-                    // Lojik Senp pou tcheke si pronostik la pase (Win/Lose)
                     let isWon = false;
                     if (pronostik.toLowerCase().includes(info.homeName.toLowerCase()) && homeScore > awayScore) isWon = true;
                     else if (pronostik.toLowerCase().includes(info.awayName.toLowerCase()) && awayScore > homeScore) isWon = true;
                     else if (pronostik.toLowerCase().includes('over 2.5') && (homeScore + awayScore) > 2) isWon = true;
                     else if (pronostik.toLowerCase().includes('over 1.5') && (homeScore + awayScore) > 1) isWon = true;
-                    else isWon = (homeScore > 0 || awayScore > 0); // Default simulation fallback
+                    else isWon = (homeScore > 0 || awayScore > 0);
 
                     if (isWon) wonCount++; else lostCount++;
 
@@ -640,7 +625,6 @@
 
                 container.innerHTML = html;
 
-                // Calculation STATS
                 const total = wonCount + lostCount;
                 const rate = total > 0 ? Math.round((wonCount / total) * 100) : 0;
                 document.getElementById('statSuccessRate').innerText = `${rate}%`;
@@ -800,7 +784,6 @@
             checkAuth();
             setupLiquidGlass();
             
-            // Initial positioning for the liquid pill on load
             setTimeout(() => {
                 updateLiquidPill(document.getElementById('btnNavMatchs'));
             }, 200);
