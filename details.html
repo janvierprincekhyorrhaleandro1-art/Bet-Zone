@@ -49,13 +49,25 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between antialiased relative">
 
-    <!-- LOADING OVERLAY ANIMASYON -->
+    <!-- LOADING OVERLAY ANIMASYON AK BOUL FOUTBÒL AK POUSANTAJ -->
     <div id="pageLoader" class="fixed inset-0 bg-[#05070a] z-50 flex flex-col items-center justify-center transition-opacity duration-300">
-        <div class="relative flex items-center justify-center">
-            <div class="w-16 h-16 rounded-full border-4 border-brand-border border-t-emerald-400 animate-spin"></div>
-            <i class="fa-solid fa-futbol text-emerald-400 absolute text-xl"></i>
+        <div class="relative flex flex-col items-center justify-center w-64">
+            <!-- BOUL FOUTBÒL K AP ROUL / ANIME -->
+            <div class="mb-4 text-emerald-400 text-3xl animate-bounce">
+                <i class="fa-solid fa-futbol"></i>
+            </div>
+            
+            <!-- PROGRESS BAR SEGMENT -->
+            <div class="w-full h-2.5 bg-brand-border rounded-full overflow-hidden p-0.5 border border-brand-border">
+                <div id="loaderProgressBar" class="h-full bg-emerald-400 rounded-full transition-all duration-200 w-0"></div>
+            </div>
+
+            <!-- POUSANTAJ EVOLISYON DINAMIK -->
+            <div class="flex justify-between items-center w-full mt-3 text-xs mono">
+                <span class="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Chaje done...</span>
+                <span id="loaderPercent" class="text-emerald-400 font-extrabold text-xs">0%</span>
+            </div>
         </div>
-        <span class="mt-4 text-xs font-bold text-gray-400 uppercase tracking-widest mono">Chaje done match la...</span>
     </div>
 
     <!-- NAVBAR -->
@@ -89,7 +101,7 @@
             </span>
         </div>
 
-        <!-- SCOREBOARD CARD -->
+        <!-- SCOREBOARD CARD AK SCORE/GOAL LIVESTREAM DISPLAY -->
         <div class="p-6 rounded-3xl bg-brand-card border border-brand-border relative overflow-hidden">
             <div class="flex items-center justify-between gap-4">
                 
@@ -102,10 +114,15 @@
                     <span class="text-[10px] text-gray-500 font-medium">Lakay</span>
                 </div>
 
-                <!-- VS / SCORE -->
+                <!-- VS / SCORE / GOALS -->
                 <div class="flex flex-col items-center justify-center shrink-0">
-                    <span class="text-2xl sm:text-3xl font-black text-emerald-400 mono tracking-widest">VS</span>
-                    <span id="matchDate" class="text-[10px] font-bold text-gray-400 mt-1 mono">--/--/----</span>
+                    <!-- SCORE GOAL CHAK EKIP -->
+                    <div class="flex items-center gap-2 text-2xl sm:text-4xl font-black text-emerald-400 mono tracking-widest bg-brand-dark px-4 py-1.5 rounded-2xl border border-brand-border shadow-md">
+                        <span id="homeGoals">0</span>
+                        <span class="text-gray-600 text-lg sm:text-2xl">-</span>
+                        <span id="awayGoals">0</span>
+                    </div>
+                    <span id="matchDate" class="text-[10px] font-bold text-gray-400 mt-2 mono">--/--/----</span>
                 </div>
 
                 <!-- AWAY TEAM -->
@@ -179,6 +196,42 @@
                     </p>
                 </div>
 
+                <!-- TI BWAT REKÒMANDASYON AKTYALITE NAN ANALIZ AI -->
+                <div class="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                        <i class="fa-solid fa-lightbulb text-sm"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-emerald-400">Rekòmandasyon Aktyalite</h4>
+                        <p id="recommendationText" class="text-[11px] text-gray-400">Nenpòt analiz aktyalite ap parèt isit la.</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- C) DÈNYE AKTYALITE -->
+            <div id="tab-aktyalite" class="tab-pane hidden space-y-4">
+
+                <!-- LISTE JWÈ KI PA P JWE (SANCTION / BLESI) -->
+                <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
+                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-3 mono flex items-center gap-2">
+                        <i class="fa-solid fa-user-xmark text-red-400"></i>
+                        <span>Jwè ki Absan (Blesi / Sanksyon)</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div id="absencesHome" class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
+                            <span id="absenceHomeName" class="font-extrabold text-emerald-400 block">Chaje...</span>
+                            <div class="text-gray-400 text-[11px]">Pa gen absans</div>
+                        </div>
+
+                        <div id="absencesAway" class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
+                            <span id="absenceAwayName" class="font-extrabold text-blue-400 block">Chaje...</span>
+                            <div class="text-gray-400 text-[11px]">Pa gen absans</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- BILAN LAKAY AK DEYÒ -->
                 <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
                     <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-4 mono flex items-center gap-2">
@@ -242,42 +295,6 @@
 
             </div>
 
-            <!-- C) DÈNYE AKTYALITE -->
-            <div id="tab-aktyalite" class="tab-pane hidden space-y-4">
-
-                <!-- LISTE JWÈ KI PA P JWE (SANCTION / BLESI) -->
-                <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
-                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-3 mono flex items-center gap-2">
-                        <i class="fa-solid fa-user-xmark text-red-400"></i>
-                        <span>Jwè ki Absan (Blesi / Sanksyon)</span>
-                    </h3>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <div id="absencesHome" class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
-                            <span id="absenceHomeName" class="font-extrabold text-emerald-400 block">Chaje...</span>
-                            <div class="text-gray-400 text-[11px]">Pa gen absans</div>
-                        </div>
-
-                        <div id="absencesAway" class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
-                            <span id="absenceAwayName" class="font-extrabold text-blue-400 block">Chaje...</span>
-                            <div class="text-gray-400 text-[11px]">Pa gen absans</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TI BWAT KONSÈY ANBA -->
-                <div class="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
-                        <i class="fa-solid fa-lightbulb text-sm"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-bold text-emerald-400">Rekòmandasyon Aktyalite</h4>
-                        <p id="recommendationText" class="text-[11px] text-gray-400">Nenpòt analiz aktyalite ap parèt isit la.</p>
-                    </div>
-                </div>
-
-            </div>
-
         </div>
 
     </main>
@@ -291,6 +308,24 @@
     <script>
         const BACKEND_URL = 'https://bet-zone.onrender.com'; 
 
+        let loadProgress = 0;
+        const progressBar = document.getElementById('loaderProgressBar');
+        const progressPercent = document.getElementById('loaderPercent');
+
+        // Mèt pousantaj evolisyon chajman paj la an tan reyèl
+        function updateLoaderProgress(percent) {
+            loadProgress = Math.min(100, Math.max(loadProgress, percent));
+            if (progressBar) progressBar.style.width = `${loadProgress}%`;
+            if (progressPercent) progressPercent.innerText = `${loadProgress}%`;
+        }
+
+        // Kòmanse yon ti animasyon pousantaj otomatik pandan rezo a ap chaje
+        const progressInterval = setInterval(() => {
+            if (loadProgress < 85) {
+                updateLoaderProgress(loadProgress + Math.floor(Math.random() * 8) + 2);
+            }
+        }, 150);
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -299,17 +334,20 @@
             const activeBtn = document.getElementById('btn-' + tabId);
             activeBtn.classList.add('active');
 
-            // Scroll otomatik sou bar tabs la pou opsyon an ka parèt byen
             activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
 
         function hideLoader() {
+            updateLoaderProgress(100);
+            clearInterval(progressInterval);
             const loader = document.getElementById('pageLoader');
             if (loader) {
-                loader.classList.add('opacity-0');
                 setTimeout(() => {
-                    loader.style.display = 'none';
-                }, 300);
+                    loader.classList.add('opacity-0');
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                    }, 300);
+                }, 200);
             }
         }
 
@@ -323,11 +361,13 @@
             }
 
             try {
+                updateLoaderProgress(30);
                 const res = await fetch(`${BACKEND_URL}/api/match-details/${matchId}`);
                 if (!res.ok) throw new Error('Erè nan chaje done');
                 const data = await res.json();
+                updateLoaderProgress(70);
 
-                // 1. Mete Enfo Header & Teams
+                // 1. Mete Enfo Header, Teams & Score/Goals
                 if (data.matchInfo) {
                     document.getElementById('matchLeague').innerText = data.matchInfo.league || 'UEFA League';
                     document.getElementById('matchStatus').innerText = data.matchInfo.status || 'Annatant';
@@ -338,6 +378,10 @@
                     document.getElementById('formAwayName').innerText = data.matchInfo.awayName;
                     document.getElementById('absenceHomeName').innerText = data.matchInfo.homeName;
                     document.getElementById('absenceAwayName').innerText = data.matchInfo.awayName;
+
+                    // Done score/goal soti nan api Football Data org oswa nan matchInfo
+                    document.getElementById('homeGoals').innerText = data.matchInfo.homeScore ?? (data.matchInfo.score?.home ?? '0');
+                    document.getElementById('awayGoals').innerText = data.matchInfo.awayScore ?? (data.matchInfo.score?.away ?? '0');
 
                     const homeAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.matchInfo.homeName)}&background=10b981&color=fff`;
                     const awayAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.matchInfo.awayName)}&background=3b82f6&color=fff`;
