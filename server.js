@@ -102,28 +102,32 @@ async function syncDailyMatches() {
 // 2. Fetch H2H, Form, ak Bilan soti nan Football-Data.org
 async function getFootballDataStats(matchId) {
     try {
-        const h2hRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}/head2head`, {
-            headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
-        });
+        const headers = { 'X-Auth-Token': FOOTBALL_DATA_API_KEY };
+        const h2hRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}/head2head?limit=10`, { headers });
         
         let h2hList = [];
         let homeTeamId = null, awayTeamId = null;
 
         if (h2hRes.ok) {
             const h2hData = await h2hRes.json();
-            homeTeamId = h2hData.resultSet?.homeTeam?.id;
-            awayTeamId = h2hData.resultSet?.awayTeam?.id;
+            homeTeamId = h2hData.resultSet?.homeTeam?.id || h2hData.aggregates?.homeTeam?.id;
+            awayTeamId = h2hData.resultSet?.awayTeam?.id || h2hData.aggregates?.awayTeam?.id;
 
-            h2hList = (h2hData.matches || []).slice(0, 5).map(m => ({
-                result: `${m.homeTeam.shortName || m.homeTeam.name} ${m.score.fullTime.home ?? 0} - ${m.score.fullTime.away ?? 0} ${m.awayTeam.shortName || m.awayTeam.name}`,
-                date: new Date(m.utcDate).toLocaleDateString('ht-HT')
-            }));
+            // Filtre sèlman match ki FINI yo pou pran score reyèl yo
+            const finishedMatches = (h2hData.matches || []).filter(m => m.status === 'FINISHED');
+
+            h2hList = finishedMatches.slice(0, 5).map(m => {
+                const homeScore = m.score?.fullTime?.home ?? 0;
+                const awayScore = m.score?.fullTime?.away ?? 0;
+                return {
+                    result: `${m.homeTeam.shortName || m.homeTeam.name} ${homeScore} - ${awayScore} ${m.awayTeam.shortName || m.awayTeam.name}`,
+                    date: new Date(m.utcDate).toLocaleDateString('ht-HT')
+                };
+            });
         }
 
         if (!homeTeamId || !awayTeamId) {
-            const matchRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}`, {
-                headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
-            });
+            const matchRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}`, { headers });
             if (matchRes.ok) {
                 const mData = await matchRes.json();
                 homeTeamId = mData.homeTeam?.id;
@@ -138,10 +142,14 @@ async function getFootballDataStats(matchId) {
         const parseFormAndBilan = (matches, teamId) => {
             let form = [];
             let win = 0, draw = 0, loss = 0;
-            matches.forEach(m => {
+            
+            // Filtre match ki fin jwe sèlman
+            const finished = matches.filter(m => m.status === 'FINISHED');
+
+            finished.forEach(m => {
                 const isHome = m.homeTeam.id === teamId;
-                const homeScore = m.score.fullTime.home;
-                const awayScore = m.score.fullTime.away;
+                const homeScore = m.score?.fullTime?.home ?? 0;
+                const awayScore = m.score?.fullTime?.away ?? 0;
 
                 if (homeScore === awayScore) {
                     form.push('N'); draw++;
@@ -155,9 +163,7 @@ async function getFootballDataStats(matchId) {
         };
 
         if (homeTeamId) {
-            const hFormRes = await fetch(`https://api.football-data.org/v4/teams/${homeTeamId}/matches?status=FINISHED&limit=5`, {
-                headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
-            });
+            const hFormRes = await fetch(`https://api.football-data.org/v4/teams/${homeTeamId}/matches?status=FINISHED&limit=5`, { headers });
             if (hFormRes.ok) {
                 const hData = await hFormRes.json();
                 const resParsed = parseFormAndBilan(hData.matches || [], homeTeamId);
@@ -167,9 +173,7 @@ async function getFootballDataStats(matchId) {
         }
 
         if (awayTeamId) {
-            const aFormRes = await fetch(`https://api.football-data.org/v4/teams/${awayTeamId}/matches?status=FINISHED&limit=5`, {
-                headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY }
-            });
+            const aFormRes = await fetch(`https://api.football-data.org/v4/teams/${awayTeamId}/matches?status=FINISHED&limit=5`, { headers });
             if (aFormRes.ok) {
                 const aData = await aFormRes.json();
                 const resParsed = parseFormAndBilan(aData.matches || [], awayTeamId);
@@ -187,6 +191,7 @@ async function getFootballDataStats(matchId) {
         };
 
     } catch (e) {
+        console.error('❌ Erè getFootballDataStats:', e.message);
         return { homeTeamId: null, awayTeamId: null, h2h: [], forme: { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] }, bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } } };
     }
 }
