@@ -396,9 +396,9 @@
                 const dateStr = targetDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
                 let label = `${dayName} ${dayNumber}/${monthNumber}`;
-                if (i === -1) label = `Yè (${dayName} ${dayNumber}/${monthNumber})`;
+                if (i === -1) label = `(${dayName} ${dayNumber}/${monthNumber})`;
                 else if (i === 0) label = `Jodi a (${dayName} ${dayNumber}/${monthNumber})`;
-                else if (i === 1) label = `Demen (${dayName} ${dayNumber}/${monthNumber})`;
+                else if (i === 1) label = `(${dayName} ${dayNumber}/${monthNumber})`;
 
                 if (i === 0 && !savedDate) {
                     currentDayFilter = dateStr;
