@@ -64,8 +64,12 @@ async function syncDailyMatches() {
             percent: null
         }));
 
-        await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
-        console.log(`✅ ${formattedMatches.length} match senkronize ak siksè.`);
+        const { error: upsertErr } = await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
+        if (upsertErr) {
+            console.error('❌ Erè ensèsyon Supabase:', upsertErr.message);
+        } else {
+            console.log(`✅ ${formattedMatches.length} match senkronize ak siksè.`);
+        }
     } catch (err) {
         console.error(`❌ Erè senkronizasyon API-FOOTBALL:`, err.message);
     }
@@ -110,7 +114,7 @@ async function generateShortAnalysis(match, apiData) {
     const prompt = `
 Ou se yon ekspè analiz espòtif. Fè yon KOUT ANALIZ (2 jiska 3 fraz maksimòm) an Kreyòl Ayisyen pou match sa a: ${match.team_a} vs ${match.team_b}.
 
-Mwen ba ou done done sa yo:
+Mwen ba ou done sa yo:
 - Konsèy Prediksyon: ${apiData.rawPred?.advice || 'Match la ap trè sere'}
 - Pousantaj Viktwa: Lakay (${apiData.rawPred?.percent?.home}), Nul (${apiData.rawPred?.percent?.draw}), Deyò (${apiData.rawPred?.percent?.away})
 - Ekip ki an avantaaj: ${apiData.rawPred?.winner?.name || 'Okenn'}
