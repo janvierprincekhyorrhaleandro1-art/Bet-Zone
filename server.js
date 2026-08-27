@@ -22,6 +22,16 @@ const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY || 'VOTRE_API_FOOTBALL_KEY
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+// ID Numeryik API-FOOTBALL pou gwo lig yo ak kòd Frontend ou a
+const TARGET_LEAGUES = {
+    39: { code: 'PL', name: 'English Premier League' },
+    140: { code: 'PD', name: 'Spanish La Liga' },
+    78: { code: 'BL1', name: 'German Bundesliga' },
+    61: { code: 'FL1', name: 'French Ligue 1' },
+    135: { code: 'SA', name: 'Italian Serie A' },
+    2: { code: 'CL', name: 'UEFA Champions League' }
+};
+
 function formatDate(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -29,7 +39,6 @@ function formatDate(date) {
     return `${year}-${month}-${day}`;
 }
 
-// Generasyon URL Logo anndan API-FOOTBALL dirèkteman
 function getCrestUrl(teamId, teamName) {
     if (teamId) {
         return `https://media.api-sports.io/football/teams/${teamId}.png`;
@@ -37,9 +46,9 @@ function getCrestUrl(teamId, teamName) {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName || 'Team')}&background=10b981&color=fff`;
 }
 
-// 1. Senkronizasyon Match prensipal yo soti nan API-FOOTBALL
+// 1. Senkronizasyon SÈLMAN gwo lig yo soti nan API-FOOTBALL
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match via API-FOOTBALL...`);
+    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match sèlman pou gwo lig yo...`);
     const todayStr = formatDate(new Date());
 
     try {
@@ -47,29 +56,40 @@ async function syncDailyMatches() {
             headers: { 'x-apisports-key': API_FOOTBALL_KEY }
         });
 
-        const matches = response.data?.response || [];
-        if (matches.length === 0) return;
+        const allMatches = response.data?.response || [];
+        if (allMatches.length === 0) return;
 
-        const formattedMatches = matches.map(m => ({
-            id: m.fixture.id,
-            league_code: String(m.league.id),
-            league_name: m.league.name,
-            match_date: m.fixture.date.split('T')[0],
-            match_time: new Date(m.fixture.date).toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }),
-            team_a: m.teams.home.name,
-            team_b: m.teams.away.name,
-            team_a_id: m.teams.home.id,
-            team_b_id: m.teams.away.id,
-            victory: null,
-            percent: null
-        }));
+        // Filtre sèlman lig ki nan lis TARGET_LEAGUES la
+        const filteredMatches = allMatches.filter(m => TARGET_LEAGUES[m.league.id]);
 
-        const { error: upsertErr } = await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
-        if (upsertErr) {
-            console.error('❌ Erè ensèsyon Supabase:', upsertErr.message);
+        const formattedMatches = filteredMatches.map(m => {
+            const leagueInfo = TARGET_LEAGUES[m.league.id];
+            return {
+                id: m.fixture.id,
+                league_code: leagueInfo.code, // Korije kòd la pou l aliyen ak seleksyon Frontend lan (ex: 'PD', 'PL')
+                league_name: leagueInfo.name,
+                match_date: m.fixture.date.split('T')[0],
+                match_time: new Date(m.fixture.date).toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }),
+                team_a: m.teams.home.name,
+                team_b: m.teams.away.name,
+                team_a_id: m.teams.home.id,
+                team_b_id: m.teams.away.id,
+                victory: null,
+                percent: null
+            };
+        });
+
+        if (formattedMatches.length > 0) {
+            const { error: upsertErr } = await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
+            if (upsertErr) {
+                console.error('❌ Erè ensèsyon Supabase:', upsertErr.message);
+            } else {
+                console.log(`✅ ${formattedMatches.length} gwo match senkronize ak siksè.`);
+            }
         } else {
-            console.log(`✅ ${formattedMatches.length} match senkronize ak siksè.`);
+            console.log('ℹ️ Pa gen match pou gwo lig sa yo jodi a.');
         }
+
     } catch (err) {
         console.error(`❌ Erè senkronizasyon API-FOOTBALL:`, err.message);
     }
@@ -142,12 +162,12 @@ RÈG STRICT:
     }
 }
 
-// 4. Endpoint Detay Match (Sove nan Supabase match_analysis)
+// 4. Endpoint Detay Match (Sove ak re-sèvi ak kach Supabase)
 app.get('/api/match-details/:matchId', async (req, res) => {
     const matchId = req.params.matchId;
 
     try {
-        // Caching nan Supabase
+        // VÈRIFIKASYON CACHING: Si match sa a te analize jodi a deja, pa re-analize l!
         const { data: cached } = await supabase
             .from('match_analysis')
             .select('data, created_at')
@@ -155,6 +175,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             .maybeSingle();
 
         if (cached && (new Date(cached.created_at).toDateString() === new Date().toDateString())) {
+            console.log(`⚡ Match ${matchId} retounen soti nan CACHE Supabase (0 API Call / 0 AI)`);
             return res.json({ ...cached.data, cached: true });
         }
 
@@ -198,7 +219,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             recommendation = p.advice ? `Opsyon ki pi sekirize: ${p.advice}` : recommendation;
         }
 
-        // 2. AI fè kout analiz la sèlman
+        // 2. AI fè kout analiz la sèlman yon sèl fwa
         const analiz_ia = await generateShortAnalysis(match, apiData);
 
         // 3. Logo yo soti nan API-FOOTBALL CDN
@@ -226,7 +247,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             recommendation: recommendation
         };
 
-        // Anrejistre prediksyon yo anndan tab Supabase la
+        // Anrejistre repons lan pou pwochen fwa
         await supabase.from('match_analysis').upsert({
             match_id: matchId,
             data: finalResponse,
