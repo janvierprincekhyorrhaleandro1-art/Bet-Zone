@@ -46,15 +46,15 @@ function getCrestUrl(teamId, teamName) {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName || 'Team')}&background=10b981&color=fff`;
 }
 
-// 1. Senkronizasyon Match soti nan -2 Jou avan jodia jiska +4 Jou apre (Antou 7 Jou)
+// 1. Senkronizasyon Match soti nan -1 Jou (Yè) jiska +4 Jou apre jodia
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match (2 jou pase + jodia + 4 jou apre)...`);
+    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match (yè [-1] jiska 4 jou apre [+4])...`);
     
     let allFormattedMatches = [];
     const today = new Date();
 
-    // Loop soti nan -2 jou (2 jou pase) pou rive +4 jou
-    for (let i = -2; i <= 4; i++) {
+    // Loop soti nan -1 jou (yè) pou rive +4 jou
+    for (let i = -1; i <= 4; i++) {
         const targetDate = new Date(today);
         targetDate.setDate(today.getDate() + i);
         const dateStr = formatDate(targetDate);
@@ -85,9 +85,7 @@ async function syncDailyMatches() {
                     team_b_id: m.teams.away.id,
                     home_score: m.goals.home,
                     away_score: m.goals.away,
-                    status: (statusShort === 'FT' || statusShort === 'AET' || statusShort === 'PEN') ? 'FINI' : (statusShort === '1H' || statusShort === '2H' || statusShort === 'HT') ? 'LIVE' : 'ANNATANT',
-                    victory: null,
-                    percent: null
+                    status: (statusShort === 'FT' || statusShort === 'AET' || statusShort === 'PEN') ? 'FINI' : (statusShort === '1H' || statusShort === '2H' || statusShort === 'HT') ? 'LIVE' : 'ANNATANT'
                 };
             });
 
@@ -177,21 +175,17 @@ RÈG STRICT:
     }
 }
 
-// 4. Endpoint Detay Match (Sove ak re-sèvi ak kach Supabase)
+// 4. Endpoint Detay Match (Avèk kontwòl strik sou prediksyon pou match ki pase deja)
 app.get('/api/match-details/:matchId', async (req, res) => {
     const matchId = req.params.matchId;
 
     try {
+        // Tcheke si analiz la te sove deja anvan nan kach la
         const { data: cached } = await supabase
             .from('match_analysis')
             .select('data, created_at')
             .eq('match_id', matchId)
             .maybeSingle();
-
-        if (cached && (new Date(cached.created_at).toDateString() === new Date().toDateString())) {
-            console.log(`⚡ Match ${matchId} retounen soti nan CACHE Supabase`);
-            return res.json({ ...cached.data, cached: true });
-        }
 
         const { data: match } = await supabase
             .from('daily_matches')
@@ -203,14 +197,57 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             return res.status(404).json({ error: 'Match pa jwenn' });
         }
 
-        const isMatchFinished = match.status === 'FINI';
+        const isMatchStartedOrFinished = match.status === 'FINI' || match.status === 'LIVE';
+
+        // Si match la pase deja OUBYEN l ap jwe epi nou TE GENTAN gen yon prediksyon sove pou li avan
+        if (cached && cached.data) {
+            // Mettre à jour sèlman sikonstans match la (jis pou score ak status la reste à jour)
+            cached.data.matchInfo.status = match.status;
+            cached.data.matchInfo.homeScore = match.home_score ?? null;
+            cached.data.matchInfo.awayScore = match.away_score ?? null;
+            
+            console.log(`⚡ Match ${matchId} retounen ak ansyen prediksyon kach li a.`);
+            return res.json({ ...cached.data, cached: true });
+        }
+
+        // Si match la pase deja (FINI/LIVE) epi l PAT gentan gen yon prediksyon sove:
+        // Nou p ap rele API pou fè prediksyon pou li kounye a paske match sa pase deja!
+        if (isMatchStartedOrFinished) {
+            const homeLogo = getCrestUrl(match.team_a_id, match.team_a);
+            const awayLogo = getCrestUrl(match.team_b_id, match.team_b);
+
+            const pastMatchResponse = {
+                matchInfo: {
+                    league: match.league_name,
+                    status: match.status,
+                    date: match.match_date,
+                    homeName: match.team_a,
+                    awayName: match.team_b,
+                    homeLogo: homeLogo,
+                    awayLogo: awayLogo,
+                    homeScore: match.home_score ?? null,
+                    awayScore: match.away_score ?? null
+                },
+                pronostik: [], // Okenn nouvo prediksyon paske match la jwe deja
+                analiz_ia: "Match sa a jwe deja. Yo pa ka bay prediksyon pou yon match ki te fini oswa k ap jwe an tan reyèl.",
+                bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } },
+                forme: { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] },
+                h2h: [],
+                absences: { home: [], away: [] },
+                recommendation: "Match sa a jwe deja."
+            };
+
+            return res.json({ ...pastMatchResponse, cached: false });
+        }
+
+        // Si match la se yon match k ap vini (ANNATANT) epi li poko gen kach
         const apiData = await getApiFootballPrediction(matchId);
 
         let pronostik = [];
-        let recommendation = isMatchFinished ? "match sa fini" : "Match sa a sanble balanse.";
-        let analiz_ia = isMatchFinished ? "match sa fini" : "Analiz taktik: De ekip yo ap rantre nan match sa a ak anpil motivasyon.";
+        let recommendation = "Match sa a sanble balanse.";
+        let analiz_ia = "Analiz taktik: De ekip yo ap rantre nan match sa a ak anpil motivasyon.";
 
-        if (!isMatchFinished && apiData && apiData.rawPred) {
+        if (apiData && apiData.rawPred) {
             const p = apiData.rawPred;
             const homePercent = parseInt(p.percent.home) || 0;
             const awayPercent = parseInt(p.percent.away) || 0;
@@ -259,6 +296,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             recommendation: recommendation
         };
 
+        // Sove done prediksyon an nan Supabase pou li ka rete fiks menm lè match la vini ap jwe oswa fini pita
         await supabase.from('match_analysis').upsert({
             match_id: matchId,
             data: finalResponse,
