@@ -262,20 +262,27 @@
             const dateModalList = document.getElementById('dateModalList');
             if (!dateModalList) return;
 
+            // Lis non jou yo an kreyòl (0 = Dimanch, 1 = Lendi, etc.)
+            const daysOfWeek = ['Dimanch', 'Lendi', 'Madi', 'Mèkredi', 'Jedi', 'Vandredi', 'Samdi'];
             const targetToday = new Date();
             let htmlContent = '';
 
             const savedDate = sessionStorage.getItem('bz_selected_date');
             const savedDateLabel = sessionStorage.getItem('bz_selected_date_label');
 
-            // Boukle ant -1 (yè) rive +2 (aprè demen) pou aksè aksèkteman sou 4 dat
+            // Boukle de -1 (yè) rive +2 (aprè demen)
             for (let i = -1; i <= 2; i++) {
                 const targetDate = new Date(targetToday);
                 targetDate.setDate(targetToday.getDate() + i);
 
-                // Format YYYY-MM-DD pou filte ak afichaj sèlman date la
+                // Dat nan fòma YYYY-MM-DD pou filte baz de done a
                 const dateStr = targetDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-                const label = dateStr;
+                
+                // Jwenn non jou nan semèn nan selon dat la
+                const dayName = daysOfWeek[targetDate.getDay()];
+
+                // Afiche Non Jou a ak Dat la (egz: Lendi (2026-08-27))
+                const label = `${dayName} (${dateStr})`;
 
                 if (i === 0 && !savedDate) {
                     currentDayFilter = dateStr;
