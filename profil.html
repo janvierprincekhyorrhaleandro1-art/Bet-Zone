@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ht" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bet Zone - Profil</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#05070a',
+                            card: '#0d1117',
+                            border: '#1e293b',
+                            emerald: '#10b981'
+                        }
+                    },
+                    keyframes: {
+                        navZoom: {
+                            '0%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.15)' },
+                            '100%': { transform: 'scale(1)' }
+                        }
+                    },
+                    animation: {
+                        'nav-zoom': 'navZoom 0.25s ease-in-out'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #05070a; color: #f1f5f9; }
+        .glass-panel { background: rgba(13, 17, 23, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .glass-nav { background: rgba(13, 17, 23, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .glass-pill {
+            background: rgba(16, 185, 129, 0.22);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(16, 185, 129, 0.45);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.2);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s ease, height 0.35s ease;
+            top: 0;
+            left: 0;
+        }
+
+        .zoom-anim {
+            animation: navZoom 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased pb-28">
+
+    <!-- NAVBAR DASHBOARD -->
+    <nav class="w-full px-4 sm:px-6 py-3 flex justify-between items-center border-b border-brand-border glass-panel sticky top-0 z-40">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <span class="font-extrabold text-base sm:text-lg text-white tracking-wide">BET<span class="text-emerald-400">ZONE</span></span>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <div id="userPlanBadge" class="flex items-center">
+                <span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase tracking-wider">
+                    ...
+                </span>
+            </div>
+
+            <button id="logoutBtn" class="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition text-xs font-bold flex items-center gap-1.5">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span class="hidden sm:inline">Dekonekte</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ==================== VIEW 3: PROFIL ==================== -->
+    <main id="viewProfile" class="app-view flex-grow max-w-4xl w-full mx-auto px-4 py-8">
+        <div class="p-6 rounded-3xl bg-brand-card border border-brand-border mb-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 font-extrabold text-2xl shadow-xl shadow-emerald-500/10 shrink-0">
+                <span id="profileInitials">--</span>
+            </div>
+            <div class="flex-grow text-center sm:text-left">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+                    <h1 id="profileFullName" class="text-xl sm:text-2xl font-extrabold text-white">...</h1>
+                    <span class="inline-flex items-center justify-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold w-max mx-auto sm:mx-0">
+                        <i class="fa-solid fa-circle-check text-[10px]"></i>
+                        <span>Kont Verifye</span>
+                    </span>
+                </div>
+                <div class="mb-2">
+                    <span class="text-xs text-gray-400">ID Kont: </span>
+                    <span id="userCustomId" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20 mono">BZ-.....</span>
+                </div>
+                <p id="profileEmail" class="text-gray-400 text-xs sm:text-sm mb-3">...</p>
+                <p class="text-gray-500 text-[11px]">Enskri depi: <span id="createdAtDisplay" class="text-gray-300 font-semibold">--/--/----</span></p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-1 p-6 rounded-3xl bg-brand-card border border-brand-border flex flex-col justify-between">
+                <div>
+                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-gem text-emerald-400"></i>
+                        <span>Plan Aktyèl</span>
+                    </h2>
+                    <div id="planBox" class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-4 transition-all">
+                        <span class="text-[10px] text-gray-400 font-extrabold uppercase">Estatut Abonman</span>
+                        <h3 id="currentPlanBadge" class="text-lg font-black text-emerald-400 uppercase mt-0.5">...</h3>
+                        <p id="planExpiryDate" class="text-[11px] text-gray-400 mt-2 hidden"></p>
+                    </div>
+                    <p id="planInfoText" class="text-xs text-gray-400 leading-relaxed mb-6">
+                        Aksè an fonksyone byen. Ou ka chanje nivo plan w lan nenpòt ki lè pou w debloke plis avantaj.
+                    </p>
+                </div>
+                <button type="button" onclick="window.location.href='checkout.html'" class="w-full py-3 rounded-xl bg-emerald-500 text-black text-center text-xs font-extrabold hover:bg-emerald-400 transition block shadow-lg shadow-emerald-500/10">
+                    Chanje oswa Upgrade Plan
+                </button>
+            </div>
+
+            <div class="md:col-span-2 p-6 rounded-3xl bg-brand-card border border-brand-border">
+                <h2 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-emerald-400"></i>
+                    <span>Paramèt Kont Ak Sekirite</span>
+                </h2>
+                <form id="updateNameForm" class="space-y-4 mb-8 pb-6 border-b border-brand-border">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 mb-2">Non Konplè</label>
+                        <input type="text" id="fullNameInput" required class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
+                    </div>
+                    <button type="submit" id="saveNameBtn" class="px-5 py-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-xs hover:bg-emerald-500 hover:text-black transition">
+                        Mete Non an ajou
+                    </button>
+                </form>
+
+                <form id="updatePasswordForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 mb-2">Nouvè Modpas</label>
+                        <input type="password" id="newPasswordInput" placeholder="Sere yon nouvo modpas" required minlength="6" class="w-full px-4 py-3 rounded-xl bg-brand-dark border border-brand-border text-white text-xs focus:outline-none focus:border-emerald-500 transition">
+                    </div>
+                    <button type="submit" id="savePasswordBtn" class="px-5 py-2.5 rounded-xl border border-brand-border text-gray-300 font-bold text-xs hover:border-emerald-500 hover:text-white transition">
+                        Chanje Modpas La
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-brand-border flex justify-end">
+            <button id="logoutProfileBtn" class="px-5 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition text-xs font-bold flex items-center gap-2">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Dekonekte nan Kont Sa A</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="py-6 text-center border-t border-brand-border text-xs text-gray-500 mb-16">
+        &copy; 2026 Bet Zone. Tout dwa rezève.
+    </footer>
+
+    <!-- BOTTOM NAV -->
+    <div class="fixed bottom-4 left-0 right-0 z-50 px-4 pointer-events-none">
+        <nav id="bottomNav" class="relative max-w-xs mx-auto glass-nav border border-emerald-500/30 rounded-full p-1.5 flex justify-between items-center shadow-2xl shadow-emerald-950/50 pointer-events-auto">
+            <div id="liquidPill" class="glass-pill absolute rounded-full pointer-events-none z-0"></div>
+
+            <a href="dashboard.html" id="btnNavMatchs" class="nav-item relative z-10 w-1/3 flex flex-col items-center py-1.5 gap-0.5 text-gray-400 hover:text-emerald-400 font-medium transition">
+                <i class="fa-solid fa-futbol text-sm"></i>
+                <span class="text-[10px]">Matchs</span>
+            </a>
+
+            <a href="historik.html" id="btnNavHistorique" class="nav-item relative z-10 w-1/3 flex flex-col items-center py-1.5 gap-0.5 text-gray-400 hover:text-emerald-400 font-medium transition">
+                <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+                <span class="text-[10px]">Istorik</span>
+            </a>
+
+            <a href="profil.html" id="btnNavProfile" class="nav-item relative z-10 w-1/3 flex flex-col items-center py-1.5 gap-0.5 text-emerald-400 font-bold transition">
+                <i class="fa-solid fa-user text-sm"></i>
+                <span class="text-[10px]">Profil</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const SUPABASE_URL = 'https://uiepdartkcunumajlwwg.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_OQCeY9-h1_xqOHUeMiLHcQ_uxDGmFx_';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function updateLiquidPill(targetEl, triggerZoom = false) {
+            const pill = document.getElementById('liquidPill');
+            if (!pill || !targetEl) return;
+
+            const left = targetEl.offsetLeft;
+            const top = targetEl.offsetTop;
+            const width = targetEl.offsetWidth;
+            const height = targetEl.offsetHeight;
+
+            pill.style.width = `${width}px`;
+            pill.style.height = `${height}px`;
+            pill.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+
+            if (triggerZoom) {
+                pill.classList.remove('zoom-anim');
+                void pill.offsetWidth;
+                pill.classList.add('zoom-anim');
+            }
+        }
+
+        function setupLiquidGlass() {
+            const activeBtn = document.getElementById('btnNavProfile');
+            updateLiquidPill(activeBtn, false);
+
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('mouseenter', () => updateLiquidPill(item, false));
+                item.addEventListener('touchstart', () => updateLiquidPill(item, false), { passive: true });
+            });
+
+            document.getElementById('bottomNav').addEventListener('mouseleave', () => {
+                updateLiquidPill(activeBtn, false);
+            });
+        }
+
+        async function loadUserProfile() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) return;
+            const user = session.user;
+
+            document.getElementById('profileEmail').innerText = user.email;
+            if (user.created_at) {
+                document.getElementById('createdAtDisplay').innerText = new Date(user.created_at).toLocaleDateString('ht-HT');
+            }
+
+            const generatedCustomId = "BZ-" + user.id.substring(0, 5).toUpperCase();
+            const currentPlanBadge = document.getElementById('currentPlanBadge');
+            const planBox = document.getElementById('planBox');
+            const planExpiryDate = document.getElementById('planExpiryDate');
+            const planInfoText = document.getElementById('planInfoText');
+
+            try {
+                let { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).maybeSingle();
+
+                document.getElementById('userCustomId').innerText = profile?.custom_id || generatedCustomId;
+                const fullName = profile?.full_name || user.user_metadata?.full_name || user.email.split('@')[0];
+                document.getElementById('profileFullName').innerText = fullName;
+                document.getElementById('fullNameInput').value = fullName;
+
+                let initials = "BZ";
+                if (fullName && fullName.trim() !== "") {
+                    const names = fullName.trim().split(" ");
+                    initials = names.length >= 2 ? (names[0][0] + names[1][0]).toUpperCase() : names[0].substring(0, 2).toUpperCase();
+                }
+                document.getElementById('profileInitials').innerText = initials;
+
+                const rawPlan = profile?.plan || user.user_metadata?.plan || 'free';
+                const detectedPlan = rawPlan.toString().toLowerCase().trim();
+                const expDateVal = profile?.plan_expires_at || user.user_metadata?.plan_expires_at;
+                const isExpired = expDateVal && new Date(expDateVal) < new Date();
+
+                if (isExpired) {
+                    currentPlanBadge.innerText = "PLAN EKSPİRE";
+                    currentPlanBadge.className = "text-lg font-black text-red-400 uppercase mt-0.5";
+                    planBox.className = "p-4 rounded-2xl bg-red-500/10 border border-red-500/30 mb-4";
+                    planInfoText.innerText = "Abònman ou an ekspire. Tanpri renouvle plan ou.";
+                } else if (detectedPlan.includes('elite')) {
+                    currentPlanBadge.innerText = "PLAN ELITE";
+                    currentPlanBadge.className = "text-lg font-black text-emerald-400 uppercase mt-0.5";
+                    planBox.className = "p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 mb-4";
+                    planInfoText.innerText = "Ou gen aksè ak tout tike ak prediksyon kouran sou plan Élite la.";
+                } else if (detectedPlan.includes('vip')) {
+                    currentPlanBadge.innerText = "PLAN VIP";
+                    currentPlanBadge.className = "text-lg font-black text-purple-400 uppercase mt-0.5";
+                    planBox.className = "p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 mb-4";
+                    planInfoText.innerText = "Ou gen aksè konplè ak tout tike VIP.";
+                } else {
+                    currentPlanBadge.innerText = "PLAN GRATIS";
+                    currentPlanBadge.className = "text-lg font-black text-gray-400 uppercase mt-0.5";
+                    planBox.className = "p-4 rounded-2xl bg-gray-500/10 border border-brand-border mb-4";
+                    planInfoText.innerText = "Ou sou plan gratis la kounye a.";
+                }
+
+                if (expDateVal && !isExpired && !detectedPlan.includes('free')) {
+                    planExpiryDate.innerText = `L ap ekspire le: ${new Date(expDateVal).toLocaleDateString('ht-HT')}`;
+                    planExpiryDate.classList.remove('hidden');
+                } else {
+                    planExpiryDate.classList.add('hidden');
+                }
+            } catch (err) {
+                currentPlanBadge.innerText = "PLAN GRATIS";
+            }
+        }
+
+        async function checkAuth() {
+            const { data: { session }, error } = await supabaseClient.auth.getSession();
+            if (error || !session) { window.location.href = "auth.html"; return; }
+            const user = session.user;
+
+            try {
+                const { data: profile } = await supabaseClient.from('profiles').select('plan, plan_expires_at').eq('id', user.id).maybeSingle();
+                const rawPlan = profile?.plan || user.user_metadata?.plan || 'free';
+                let currentPlan = rawPlan.toString().toLowerCase().trim();
+                const expDateVal = profile?.plan_expires_at || user.user_metadata?.plan_expires_at;
+
+                if (expDateVal && new Date(expDateVal) < new Date()) currentPlan = 'free';
+
+                const planBadge = document.getElementById('userPlanBadge');
+                if (currentPlan.includes('elite')) {
+                    planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-extrabold uppercase flex items-center gap-1"><i class="fa-solid fa-star text-[10px]"></i> ÉLITE</span>`;
+                } else if (currentPlan.includes('vip')) {
+                    planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[11px] font-extrabold uppercase flex items-center gap-1"><i class="fa-solid fa-crown text-[10px]"></i> VIP</span>`;
+                } else {
+                    planBadge.innerHTML = `<span class="px-2.5 py-1 rounded-xl bg-gray-500/10 border border-brand-border text-gray-400 text-[11px] font-bold uppercase">GRATIS</span>`;
+                }
+            } catch (err) {}
+        }
+
+        document.getElementById('updateNameForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newName = document.getElementById('fullNameInput').value;
+            const btn = document.getElementById('saveNameBtn');
+            btn.innerText = "N ap mete l ajou...";
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                await supabaseClient.auth.updateUser({ data: { full_name: newName } });
+                await supabaseClient.from('profiles').update({ full_name: newName }).eq('id', session.user.id);
+                alert("Non w mete ajou ak siksè!");
+                loadUserProfile();
+            }
+            btn.innerText = "Mete Non an ajou";
+        });
+
+        document.getElementById('updatePasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPass = document.getElementById('newPasswordInput').value;
+            const btn = document.getElementById('savePasswordBtn');
+            btn.innerText = "N ap chanje l...";
+            const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+            if (error) alert("Erè: " + error.message);
+            else { alert("Modpas ou chanje ak siksè!"); document.getElementById('newPasswordInput').value = ""; }
+            btn.innerText = "Chanje Modpas La";
+        });
+
+        const logoutHandler = async () => {
+            await supabaseClient.auth.signOut();
+            window.location.href = "auth.html";
+        };
+        document.getElementById('logoutBtn').addEventListener('click', logoutHandler);
+        document.getElementById('logoutProfileBtn').addEventListener('click', logoutHandler);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadUserProfile();
+            setupLiquidGlass();
+        });
+    </script>
+</body>
+</html>
