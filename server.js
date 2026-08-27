@@ -32,11 +32,16 @@ const TARGET_LEAGUES = {
     2: { code: 'CL', name: 'UEFA Champions League' }
 };
 
-function formatDate(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+// Fonksyon pou jwenn dat "YYYY-MM-DD" nan timezone lokal Nouyòk/Ayiti
+function getLocalDateString(offsetDays = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/New_York',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(d);
 }
 
 function getCrestUrl(teamId, teamName) {
@@ -48,16 +53,13 @@ function getCrestUrl(teamId, teamName) {
 
 // 1. Senkronizasyon Match soti nan -1 Jou (Yè) jiska +4 Jou apre jodia
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match (yè [-1] jiska 4 jou apre [+4])...`);
+    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match kòmanse (yè [-1] jiska 4 jou apre [+4])...`);
     
     let allFormattedMatches = [];
-    const today = new Date();
 
-    // Loop soti nan -1 jou (yè) pou rive +4 jou
+    // Loop soti nan -1 jou (yè) pou rive +4 jou apre jodia
     for (let i = -1; i <= 4; i++) {
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + i);
-        const dateStr = formatDate(targetDate);
+        const dateStr = getLocalDateString(i);
 
         try {
             const response = await axios.get(`https://v3.football.api-sports.io/fixtures?date=${dateStr}`, {
@@ -68,6 +70,8 @@ async function syncDailyMatches() {
             
             // Filtre match yo pa lig nou konsène yo
             const filteredMatches = dayMatches.filter(m => TARGET_LEAGUES[m.league.id]);
+
+            console.log(`📅 Dat: ${dateStr} (i=${i}) | Match API: ${dayMatches.length} | Match nan Lig nou yo: ${filteredMatches.length}`);
 
             const formatted = filteredMatches.map(m => {
                 const leagueInfo = TARGET_LEAGUES[m.league.id];
