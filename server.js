@@ -22,7 +22,6 @@ const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY || 'VOTRE_API_FOOTBALL_KEY
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// ID Numeryik API-FOOTBALL pou gwo lig yo
 const TARGET_LEAGUES = {
     39: { code: 'PL', name: 'English Premier League' },
     140: { code: 'PD', name: 'Spanish La Liga' },
@@ -32,7 +31,6 @@ const TARGET_LEAGUES = {
     2: { code: 'CL', name: 'UEFA Champions League' }
 };
 
-// Fonksyon pou jwenn dat "YYYY-MM-DD" nan timezone lokal Nouyòk/Ayiti
 function getLocalDateString(offsetDays = 0) {
     const d = new Date();
     d.setDate(d.getDate() + offsetDays);
@@ -51,14 +49,14 @@ function getCrestUrl(teamId, teamName) {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName || 'Team')}&background=10b981&color=fff`;
 }
 
-// 1. Senkronizasyon Match soti nan -1 Jou (Yè) jiska +4 Jou apre jodia
+// 1. Senkronizasyon Match: sèlman Yè (-1), Jodi a (0), ak Demen (+1)
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match kòmanse (yè [-1] jiska 4 jou apre [+4])...`);
+    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match kòmanse (Yè, Jodi a, Demen)...`);
     
     let allFormattedMatches = [];
 
-    // Loop soti nan -1 jou (yè) pou rive +4 jou apre jodia
-    for (let i = -1; i <= 4; i++) {
+    // Boukl sèlman soti nan -1 rive +1 jou
+    for (let i = -1; i <= 1; i++) {
         const dateStr = getLocalDateString(i);
 
         try {
@@ -67,8 +65,6 @@ async function syncDailyMatches() {
             });
 
             const dayMatches = response.data?.response || [];
-            
-            // Filtre match yo pa lig nou konsène yo
             const filteredMatches = dayMatches.filter(m => TARGET_LEAGUES[m.league.id]);
 
             console.log(`📅 Dat: ${dateStr} (i=${i}) | Match API: ${dayMatches.length} | Match nan Lig nou yo: ${filteredMatches.length}`);
@@ -107,12 +103,9 @@ async function syncDailyMatches() {
         } else {
             console.log(`✅ Total ${allFormattedMatches.length} match senkronize ak siksè nan Supabase!`);
         }
-    } else {
-        console.log('ℹ️ Pa gen match pou lig sa yo nan entèval dat sa a.');
     }
 }
 
-// 2. Rale Prediksyon Nèt nan API-FOOTBALL
 async function getApiFootballPrediction(fixtureId) {
     try {
         const res = await axios.get(`https://v3.football.api-sports.io/predictions?fixture=${fixtureId}`, {
@@ -137,12 +130,11 @@ async function getApiFootballPrediction(fixtureId) {
             }
         };
     } catch (e) {
-        console.error('❌ Erè API-FOOTBALL Prediction:', e.message);
+        console.error('❌ Erè nan prediksyon an:', e.message);
         return null;
     }
 }
 
-// 3. AI Sèlman Fè Kout Analiz la an Kreyòl
 async function generateShortAnalysis(match, apiData) {
     if (!BAZAARLINK_KEY || !apiData) {
         return "Analiz taktik: De ekip yo ap rantre nan match sa a ak anpil motivasyon pou yo ka pran 3 pwen yo.";
@@ -157,7 +149,7 @@ Mwen ba ou done sa yo:
 - Ekip ki an avantaaj: ${apiData.rawPred?.winner?.name || 'Okenn'}
 
 RÈG STRICT:
-1. PA MENSYONE okenn non API, okenn sit entènèt, ni kote done yo soti (PA di "API-FOOTBALL", "daprè done yo", oswa "daprè sous la").
+1. PA MENSYONE okenn non API, okenn sit entènèt, ni kote done yo soti.
 2. Pale dirèkteman de fòm ekip yo ak chans yo genyen pou yo bat oswa fè gòl nan match la.
 3. Reponn ak TÈKS SÈLMAN (pa gen JSON, pa gen markdown).`;
 
@@ -179,12 +171,10 @@ RÈG STRICT:
     }
 }
 
-// 4. Endpoint Detay Match (Avèk kontwòl strik sou prediksyon pou match ki pase deja)
 app.get('/api/match-details/:matchId', async (req, res) => {
     const matchId = req.params.matchId;
 
     try {
-        // Tcheke si analiz la te sove deja anvan nan kach la
         const { data: cached } = await supabase
             .from('match_analysis')
             .select('data, created_at')
@@ -203,19 +193,13 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 
         const isMatchStartedOrFinished = match.status === 'FINI' || match.status === 'LIVE';
 
-        // Si match la pase deja OUBYEN l ap jwe epi nou TE GENTAN gen yon prediksyon sove pou li avan
         if (cached && cached.data) {
-            // Mettre à jour sèlman sikonstans match la (jis pou score ak status la reste à jour)
             cached.data.matchInfo.status = match.status;
             cached.data.matchInfo.homeScore = match.home_score ?? null;
             cached.data.matchInfo.awayScore = match.away_score ?? null;
-            
-            console.log(`⚡ Match ${matchId} retounen ak ansyen prediksyon kach li a.`);
             return res.json({ ...cached.data, cached: true });
         }
 
-        // Si match la pase deja (FINI/LIVE) epi l PAT gentan gen yon prediksyon sove:
-        // Nou p ap rele API pou fè prediksyon pou li kounye a paske match sa pase deja!
         if (isMatchStartedOrFinished) {
             const homeLogo = getCrestUrl(match.team_a_id, match.team_a);
             const awayLogo = getCrestUrl(match.team_b_id, match.team_b);
@@ -232,7 +216,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
                     homeScore: match.home_score ?? null,
                     awayScore: match.away_score ?? null
                 },
-                pronostik: [], // Okenn nouvo prediksyon paske match la jwe deja
+                pronostik: [],
                 analiz_ia: "Match sa a jwe deja. Yo pa ka bay prediksyon pou yon match ki te fini oswa k ap jwe an tan reyèl.",
                 bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } },
                 forme: { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] },
@@ -244,7 +228,6 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             return res.json({ ...pastMatchResponse, cached: false });
         }
 
-        // Si match la se yon match k ap vini (ANNATANT) epi li poko gen kach
         const apiData = await getApiFootballPrediction(matchId);
 
         let pronostik = [];
@@ -253,21 +236,28 @@ app.get('/api/match-details/:matchId', async (req, res) => {
 
         if (apiData && apiData.rawPred) {
             const p = apiData.rawPred;
-            const homePercent = parseInt(p.percent.home) || 0;
-            const awayPercent = parseInt(p.percent.away) || 0;
+            const homePercent = parseInt(p.percent?.home) || 0;
+            const drawPercent = parseInt(p.percent?.draw) || 0;
+            const awayPercent = parseInt(p.percent?.away) || 0;
 
-            const bestWinTeam = homePercent >= awayPercent ? match.team_a : match.team_b;
-            const bestWinConfidence = Math.max(homePercent, awayPercent);
+            // Fikse kalkil pi bon ekip a (pa favorize lakay sèlman)
+            let bestWinTeam = match.team_a;
+            let bestWinConfidence = homePercent;
+
+            if (awayPercent > homePercent) {
+                bestWinTeam = match.team_b;
+                bestWinConfidence = awayPercent;
+            }
 
             pronostik = [
                 {
                     label: `${bestWinTeam} Win / Draw`,
-                    confidence: bestWinConfidence,
+                    confidence: bestWinConfidence || 65,
                     risk: bestWinConfidence > 60 ? "Fèb" : "Modere"
                 },
                 {
                     label: p.advice || "Over 1.5 Goals",
-                    confidence: 70,
+                    confidence: Math.max(homePercent + drawPercent, 60), // Kalkil dinamik pito yon 75% fòse
                     risk: "Modere"
                 }
             ];
@@ -300,7 +290,6 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             recommendation: recommendation
         };
 
-        // Sove done prediksyon an nan Supabase pou li ka rete fiks menm lè match la vini ap jwe oswa fini pita
         await supabase.from('match_analysis').upsert({
             match_id: matchId,
             data: finalResponse,
@@ -315,7 +304,6 @@ app.get('/api/match-details/:matchId', async (req, res) => {
     }
 });
 
-// Cron Kouri 2:00 AM Chak Jou
 cron.schedule('0 2 * * *', async () => {
     console.log('⏰ Otomatisasyon cron kòmanse (2:00 AM)...');
     await syncDailyMatches();
