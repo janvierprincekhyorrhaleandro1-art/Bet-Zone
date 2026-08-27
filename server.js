@@ -22,7 +22,7 @@ const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY || 'VOTRE_API_FOOTBALL_KEY
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// ID Numeryik API-FOOTBALL pou gwo lig yo ak kòd Frontend ou a
+// ID Numeryik API-FOOTBALL pou gwo lig yo
 const TARGET_LEAGUES = {
     39: { code: 'PL', name: 'English Premier League' },
     140: { code: 'PD', name: 'Spanish La Liga' },
@@ -46,52 +46,61 @@ function getCrestUrl(teamId, teamName) {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName || 'Team')}&background=10b981&color=fff`;
 }
 
-// 1. Senkronizasyon SÈLMAN gwo lig yo soti nan API-FOOTBALL
+// 1. Senkronizasyon Match pou Jodi a + 4 Jou Apre (Antou 5 Jou)
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match sèlman pou gwo lig yo...`);
-    const todayStr = formatDate(new Date());
+    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match sou 5 jou (Jodi a + 4 jou apre)...`);
+    
+    let allFormattedMatches = [];
+    const today = new Date();
 
-    try {
-        const response = await axios.get(`https://v3.football.api-sports.io/fixtures?date=${todayStr}`, {
-            headers: { 'x-apisports-key': API_FOOTBALL_KEY }
-        });
+    for (let i = 0; i <= 4; i++) {
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() + i);
+        const dateStr = formatDate(targetDate);
 
-        const allMatches = response.data?.response || [];
-        if (allMatches.length === 0) return;
+        try {
+            const response = await axios.get(`https://v3.football.api-sports.io/fixtures?date=${dateStr}`, {
+                headers: { 'x-apisports-key': API_FOOTBALL_KEY }
+            });
 
-        // Filtre sèlman lig ki nan lis TARGET_LEAGUES la
-        const filteredMatches = allMatches.filter(m => TARGET_LEAGUES[m.league.id]);
+            const dayMatches = response.data?.response || [];
+            
+            // Filtre match yo pa lig nou konsène yo
+            const filteredMatches = dayMatches.filter(m => TARGET_LEAGUES[m.league.id]);
 
-        const formattedMatches = filteredMatches.map(m => {
-            const leagueInfo = TARGET_LEAGUES[m.league.id];
-            return {
-                id: m.fixture.id,
-                league_code: leagueInfo.code, // Korije kòd la pou l aliyen ak seleksyon Frontend lan (ex: 'PD', 'PL')
-                league_name: leagueInfo.name,
-                match_date: m.fixture.date.split('T')[0],
-                match_time: new Date(m.fixture.date).toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }),
-                team_a: m.teams.home.name,
-                team_b: m.teams.away.name,
-                team_a_id: m.teams.home.id,
-                team_b_id: m.teams.away.id,
-                victory: null,
-                percent: null
-            };
-        });
+            const formatted = filteredMatches.map(m => {
+                const leagueInfo = TARGET_LEAGUES[m.league.id];
+                return {
+                    id: m.fixture.id,
+                    league_code: leagueInfo.code,
+                    league_name: leagueInfo.name,
+                    match_date: m.fixture.date.split('T')[0],
+                    match_time: new Date(m.fixture.date).toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }),
+                    team_a: m.teams.home.name,
+                    team_b: m.teams.away.name,
+                    team_a_id: m.teams.home.id,
+                    team_b_id: m.teams.away.id,
+                    victory: null,
+                    percent: null
+                };
+            });
 
-        if (formattedMatches.length > 0) {
-            const { error: upsertErr } = await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
-            if (upsertErr) {
-                console.error('❌ Erè ensèsyon Supabase:', upsertErr.message);
-            } else {
-                console.log(`✅ ${formattedMatches.length} gwo match senkronize ak siksè.`);
-            }
-        } else {
-            console.log('ℹ️ Pa gen match pou gwo lig sa yo jodi a.');
+            allFormattedMatches.push(...formatted);
+
+        } catch (err) {
+            console.error(`❌ Erè nan rale dat ${dateStr}:`, err.message);
         }
+    }
 
-    } catch (err) {
-        console.error(`❌ Erè senkronizasyon API-FOOTBALL:`, err.message);
+    if (allFormattedMatches.length > 0) {
+        const { error: upsertErr } = await supabase.from('daily_matches').upsert(allFormattedMatches, { onConflict: 'id' });
+        if (upsertErr) {
+            console.error('❌ Erè ensèsyon Supabase:', upsertErr.message);
+        } else {
+            console.log(`✅ Total ${allFormattedMatches.length} match senkronize sou 5 jou ak siksè nan Supabase!`);
+        }
+    } else {
+        console.log('ℹ️ Pa gen match pou lig sa yo nan 5 jou k ap vini yo.');
     }
 }
 
@@ -125,7 +134,7 @@ async function getApiFootballPrediction(fixtureId) {
     }
 }
 
-// 3. AI Sèlman Fè Kout Analiz la an Kreyòl (San bay okenn sous)
+// 3. AI Sèlman Fè Kout Analiz la an Kreyòl
 async function generateShortAnalysis(match, apiData) {
     if (!BAZAARLINK_KEY || !apiData) {
         return "Analiz taktik: De ekip yo ap rantre nan match sa a ak anpil motivasyon pou yo ka pran 3 pwen yo.";
@@ -167,7 +176,6 @@ app.get('/api/match-details/:matchId', async (req, res) => {
     const matchId = req.params.matchId;
 
     try {
-        // VÈRIFIKASYON CACHING: Si match sa a te analize jodi a deja, pa re-analize l!
         const { data: cached } = await supabase
             .from('match_analysis')
             .select('data, created_at')
@@ -175,7 +183,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             .maybeSingle();
 
         if (cached && (new Date(cached.created_at).toDateString() === new Date().toDateString())) {
-            console.log(`⚡ Match ${matchId} retounen soti nan CACHE Supabase (0 API Call / 0 AI)`);
+            console.log(`⚡ Match ${matchId} retounen soti nan CACHE Supabase`);
             return res.json({ ...cached.data, cached: true });
         }
 
@@ -189,7 +197,6 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             return res.status(404).json({ error: 'Match pa jwenn' });
         }
 
-        // 1. Done soti nan API-FOOTBALL
         const apiData = await getApiFootballPrediction(matchId);
 
         let pronostik = [];
@@ -219,10 +226,8 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             recommendation = p.advice ? `Opsyon ki pi sekirize: ${p.advice}` : recommendation;
         }
 
-        // 2. AI fè kout analiz la sèlman yon sèl fwa
         const analiz_ia = await generateShortAnalysis(match, apiData);
 
-        // 3. Logo yo soti nan API-FOOTBALL CDN
         const homeLogo = getCrestUrl(match.team_a_id, match.team_a);
         const awayLogo = getCrestUrl(match.team_b_id, match.team_b);
 
@@ -247,7 +252,6 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             recommendation: recommendation
         };
 
-        // Anrejistre repons lan pou pwochen fwa
         await supabase.from('match_analysis').upsert({
             match_id: matchId,
             data: finalResponse,
@@ -262,7 +266,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
     }
 });
 
-// Otomatisasyon Cron (2:00 AM)
+// Cron Kouri 2:00 AM Chak Jou
 cron.schedule('0 2 * * *', async () => {
     console.log('⏰ Otomatisasyon cron kòmanse (2:00 AM)...');
     await syncDailyMatches();
