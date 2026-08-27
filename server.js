@@ -46,14 +46,15 @@ function getCrestUrl(teamId, teamName) {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName || 'Team')}&background=10b981&color=fff`;
 }
 
-// 1. Senkronizasyon Match pou Jodi a + 4 Jou Apre (Antou 5 Jou)
+// 1. Senkronizasyon Match soti nan -2 Jou avan jodia jiska +4 Jou apre (Antou 7 Jou)
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match sou 5 jou (Jodi a + 4 jou apre)...`);
+    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match (2 jou pase + jodia + 4 jou apre)...`);
     
     let allFormattedMatches = [];
     const today = new Date();
 
-    for (let i = 0; i <= 4; i++) {
+    // Loop soti nan -2 jou (2 jou pase) pou rive +4 jou
+    for (let i = -2; i <= 4; i++) {
         const targetDate = new Date(today);
         targetDate.setDate(today.getDate() + i);
         const dateStr = formatDate(targetDate);
@@ -70,6 +71,8 @@ async function syncDailyMatches() {
 
             const formatted = filteredMatches.map(m => {
                 const leagueInfo = TARGET_LEAGUES[m.league.id];
+                const statusShort = m.fixture.status?.short || 'NS';
+                
                 return {
                     id: m.fixture.id,
                     league_code: leagueInfo.code,
@@ -80,6 +83,9 @@ async function syncDailyMatches() {
                     team_b: m.teams.away.name,
                     team_a_id: m.teams.home.id,
                     team_b_id: m.teams.away.id,
+                    home_score: m.goals.home,
+                    away_score: m.goals.away,
+                    status: (statusShort === 'FT' || statusShort === 'AET' || statusShort === 'PEN') ? 'FINI' : (statusShort === '1H' || statusShort === '2H' || statusShort === 'HT') ? 'LIVE' : 'ANNATANT',
                     victory: null,
                     percent: null
                 };
@@ -97,10 +103,10 @@ async function syncDailyMatches() {
         if (upsertErr) {
             console.error('❌ Erè ensèsyon Supabase:', upsertErr.message);
         } else {
-            console.log(`✅ Total ${allFormattedMatches.length} match senkronize sou 5 jou ak siksè nan Supabase!`);
+            console.log(`✅ Total ${allFormattedMatches.length} match senkronize ak siksè nan Supabase!`);
         }
     } else {
-        console.log('ℹ️ Pa gen match pou lig sa yo nan 5 jou k ap vini yo.');
+        console.log('ℹ️ Pa gen match pou lig sa yo nan entèval dat sa a.');
     }
 }
 
@@ -197,12 +203,14 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             return res.status(404).json({ error: 'Match pa jwenn' });
         }
 
+        const isMatchFinished = match.status === 'FINI';
         const apiData = await getApiFootballPrediction(matchId);
 
         let pronostik = [];
-        let recommendation = "Match sa a sanble balanse.";
+        let recommendation = isMatchFinished ? "match sa fini" : "Match sa a sanble balanse.";
+        let analiz_ia = isMatchFinished ? "match sa fini" : "Analiz taktik: De ekip yo ap rantre nan match sa a ak anpil motivasyon.";
 
-        if (apiData && apiData.rawPred) {
+        if (!isMatchFinished && apiData && apiData.rawPred) {
             const p = apiData.rawPred;
             const homePercent = parseInt(p.percent.home) || 0;
             const awayPercent = parseInt(p.percent.away) || 0;
@@ -224,9 +232,8 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             ];
 
             recommendation = p.advice ? `Opsyon ki pi sekirize: ${p.advice}` : recommendation;
+            analiz_ia = await generateShortAnalysis(match, apiData);
         }
-
-        const analiz_ia = await generateShortAnalysis(match, apiData);
 
         const homeLogo = getCrestUrl(match.team_a_id, match.team_a);
         const awayLogo = getCrestUrl(match.team_b_id, match.team_b);
@@ -234,14 +241,14 @@ app.get('/api/match-details/:matchId', async (req, res) => {
         const finalResponse = {
             matchInfo: {
                 league: match.league_name,
-                status: 'Annatant',
+                status: match.status || 'ANNATANT',
                 date: match.match_date,
                 homeName: match.team_a,
                 awayName: match.team_b,
                 homeLogo: homeLogo,
                 awayLogo: awayLogo,
-                homeScore: null,
-                awayScore: null
+                homeScore: match.home_score ?? null,
+                awayScore: match.away_score ?? null
             },
             pronostik: pronostik,
             analiz_ia: analiz_ia,

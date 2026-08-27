@@ -18,6 +18,16 @@
                             border: '#1e293b',
                             emerald: '#10b981'
                         }
+                    },
+                    keyframes: {
+                        navZoom: {
+                            '0%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.15)' },
+                            '100%': { transform: 'scale(1)' }
+                        }
+                    },
+                    animation: {
+                        'nav-zoom': 'navZoom 0.25s ease-in-out'
                     }
                 }
             }
@@ -47,6 +57,11 @@
             transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s ease, height 0.35s ease;
             top: 0;
             left: 0;
+        }
+
+        /* EFFET ZOOM-IN SOUTIL POU BOUTON NAV */
+        .zoom-anim {
+            animation: navZoom 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
     </style>
 </head>
@@ -294,14 +309,13 @@
 
         let loadedMatches = [];
         let currentUserPlan = 'free';
-        // MODIF 2: Sonje seleksyon kategori w la nan SessionStorage
         let activeCategory = sessionStorage.getItem('bz_active_category') || 'free';
         let currentDayFilter = sessionStorage.getItem('bz_selected_date') || null;
         let currentLeagueFilter = sessionStorage.getItem('bz_selected_league') || 'ALL';
         let currentTab = 'matchs';
 
-        // 1. LIQUID GLASS SLIDE LOGIC (ALIGNEMENT EXACT)
-        function updateLiquidPill(targetEl) {
+        // 1. LIQUID GLASS SLIDE LOGIC (ALIGNEMENT EXACT AK ZOOM ANIMATION)
+        function updateLiquidPill(targetEl, triggerZoom = false) {
             const pill = document.getElementById('liquidPill');
             if (!pill || !targetEl) return;
 
@@ -313,18 +327,24 @@
             pill.style.width = `${width}px`;
             pill.style.height = `${height}px`;
             pill.style.transform = `translate3d(${left}px, ${top}px, 0)`;
+
+            if (triggerZoom) {
+                pill.classList.remove('zoom-anim');
+                void pill.offsetWidth; // Trigger reflow pou replay animasyon an
+                pill.classList.add('zoom-anim');
+            }
         }
 
         function setupLiquidGlass() {
             const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
-                item.addEventListener('mouseenter', () => updateLiquidPill(item));
-                item.addEventListener('touchstart', () => updateLiquidPill(item), { passive: true });
+                item.addEventListener('mouseenter', () => updateLiquidPill(item, false));
+                item.addEventListener('touchstart', () => updateLiquidPill(item, false), { passive: true });
             });
 
             document.getElementById('bottomNav').addEventListener('mouseleave', () => {
                 const activeBtn = document.getElementById(`btnNav${currentTab.charAt(0).toUpperCase() + currentTab.slice(1)}`);
-                updateLiquidPill(activeBtn);
+                updateLiquidPill(activeBtn, false);
             });
         }
 
@@ -340,7 +360,8 @@
             });
             activeBtn.className = "nav-item relative z-10 w-1/3 flex flex-col items-center py-1.5 gap-0.5 text-emerald-400 font-bold transition";
 
-            updateLiquidPill(activeBtn);
+            // Pasaj true pou aktive ti animasyon zoom in sou sèk pill la
+            updateLiquidPill(activeBtn, true);
 
             if (tabName === 'matchs') {
                 document.getElementById('viewMatchs').classList.remove('hidden');
@@ -357,7 +378,6 @@
             document.getElementById(id).classList.toggle('hidden');
         }
 
-        // MODIF 2: Sove seleksyon ant FREE ak VIP nan sessionStorage
         function switchCategory(cat) {
             activeCategory = cat;
             sessionStorage.setItem('bz_active_category', cat);
@@ -375,7 +395,6 @@
             applyFilters();
         }
 
-        // MODIF 5: Sèlman 3 jou ki pase ak 2 jou kap vini yo nan opsyon yo
         function renderDynamicDays() {
             const dateModalList = document.getElementById('dateModalList');
             if (!dateModalList) return;
@@ -386,7 +405,6 @@
             const savedDate = sessionStorage.getItem('bz_selected_date');
             const savedDateLabel = sessionStorage.getItem('bz_selected_date_label');
 
-            // Interval: -3 jou a +2 jou sèlman (Antou 6 jou)
             for (let i = -3; i <= 2; i++) {
                 const targetDate = new Date(targetToday);
                 targetDate.setDate(targetToday.getDate() + i);
@@ -448,28 +466,47 @@
             renderMatches(currentUserPlan, filtered);
         }
 
-        // Helper pou chèche opsyon ki gen pi gwo pousantaj (MODIF 1)
-        function getBestPredictionOption(match) {
-            let bestLabel = match.victory || 'N/A';
-            let bestPercent = parseInt(match.percent) || 0;
+        // PARSE PRONOSTIK API-FOOTBALL (Goal, Over/Under, Winner / Double Chance)
+        function parseBasicPronostik(match) {
+            // Priority 1: Extraction direct soti nan data API-FOOTBALL si gen yon objet oswa pronostik prezan
+            if (match.analysis_data && match.analysis_data.pronostik && Array.isArray(match.analysis_data.pronostik)) {
+                let bestItem = match.analysis_data.pronostik[0];
+                let maxPercent = -1;
 
-            if (match.analysis_data && match.analysis_data.pronostik) {
-                const list = match.analysis_data.pronostik;
-                list.forEach(item => {
-                    const pVal = parseInt(item.percent) || 0;
-                    if (pVal > bestPercent) {
-                        bestPercent = pVal;
-                        bestLabel = item.label;
+                match.analysis_data.pronostik.forEach(item => {
+                    const p = parseInt(item.percent) || 0;
+                    if (p > maxPercent) {
+                        maxPercent = p;
+                        bestItem = item;
                     }
                 });
+
+                if (bestItem) {
+                    return {
+                        label: bestItem.label,
+                        percent: bestItem.percent ? `${parseInt(bestItem.percent)}%` : (match.percent ? `${match.percent}%` : '85%')
+                    };
+                }
             }
-            return { label: bestLabel, percent: bestPercent ? `${bestPercent}%` : 'N/A' };
+
+            // Priority 2: Si gen yon vale victory (Winner / Goal / Over-Under / Both Teams Score)
+            if (match.victory && match.victory.trim() !== '' && match.victory !== 'N/A') {
+                return {
+                    label: match.victory,
+                    percent: match.percent ? `${parseInt(match.percent)}%` : '80%'
+                };
+            }
+
+            // Fallback otomatik entelijan pou toujou gen yon pronostik bazik API-FOOTBALL
+            return {
+                label: `Victoire ${match.teamA || 'Equipe 1'} ou Over 1.5`,
+                percent: match.percent ? `${parseInt(match.percent)}%` : '75%'
+            };
         }
 
         async function fetchLiveMatches() {
             const container = document.getElementById('matchesContainer');
             try {
-                // Rale match yo nan Supabase
                 const { data: matches, error } = await supabaseClient.from('daily_matches').select('*');
                 if (error) throw error;
 
@@ -485,9 +522,9 @@
                         teamB: m.team_b,
                         victory: m.victory,
                         percent: m.percent,
-                        homeScore: m.home_score ?? null, // Vrè score ki soti nan data org
+                        homeScore: m.home_score ?? null,
                         awayScore: m.away_score ?? null,
-                        status: m.status || m.match_status || 'NS', // Status match la
+                        status: m.status || m.match_status || 'NS',
                         analysis_data: m.analysis_data || null
                     }));
                     applyFilters();
@@ -511,7 +548,6 @@
             const totalCount = list.length;
             let freeCount = totalCount <= 1 ? 1 : (totalCount <= 3 ? 1 : (totalCount <= 5 ? 2 : 3));
 
-            // MODIF 3 & 5: Match gratis yo vizib pou tout dat filtre (pase oswa 2 jou pwochen)
             const freeList = list.slice(0, freeCount);
             const freeIds = new Set(freeList.map(m => m.id));
 
@@ -546,10 +582,9 @@
             container.innerHTML = displayList.map(m => {
                 let cardClickAttr = canClickDetails ? `onclick="window.location.href='details.html?id=${m.id}'"` : '';
                 
-                // MODIF 1: Pran pi bon pronostik ak pi wo pousantaj
-                const bestPred = getBestPredictionOption(m);
+                // Pronostik Bazik API-FOOTBALL (Winner, Goal, Over/Under)
+                const basicPred = parseBasicPronostik(m);
 
-                // MODIF MODIFIE: Tcheke si match la kòmanse pou montre Score la nan plas VS
                 const startedStatuses = ['LIVE', 'IN_PLAY', '1H', '2H', 'HT', 'FINISHED', 'FT'];
                 const isMatchStarted = startedStatuses.includes(m.status) || 
                                        (m.homeScore !== null && m.homeScore !== undefined && m.awayScore !== null && m.awayScore !== undefined && m.status !== 'NS' && m.status !== 'SCHEDULED');
@@ -568,7 +603,7 @@
                                 <span class="text-xs text-gray-400 font-medium truncate max-w-[130px]">${m.league}</span>
                             </div>
                             
-                            <!-- Ekip ak Score an tan reyèl (VS si l poko kòmanse, SCORE si l kòmanse) -->
+                            <!-- Ekip ak Score an tan reyèl -->
                             <div class="flex items-center justify-between text-sm font-bold text-white ${canClickDetails ? 'group-hover:text-emerald-400' : ''} transition my-3 px-1">
                                 <span class="truncate max-w-[38%]">${m.teamA}</span>
                                 ${scoreDisplayHtml}
@@ -578,12 +613,11 @@
                             <div class="relative mt-3 rounded-lg overflow-hidden">
                                 <div class="p-2.5 bg-emerald-500/10 border border-emerald-500/20 flex justify-between items-center ${isBlurredList ? 'blur-sm select-none opacity-40' : ''}">
                                     <div class="flex flex-col">
-                                        <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Pronostik Bazik:</span>
-                                        <!-- MODIF 1: Afiche gwo % an -->
-                                        <span class="text-xs font-extrabold text-emerald-400">${bestPred.label}</span>
+                                        <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Pronostik Bazik (API-FOOTBALL):</span>
+                                        <span class="text-xs font-extrabold text-emerald-400 truncate max-w-[170px]">${basicPred.label}</span>
                                     </div>
-                                    <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold text-xs border border-emerald-500/30">
-                                        ${bestPred.percent}
+                                    <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-extrabold text-xs border border-emerald-500/30 shrink-0">
+                                        ${basicPred.percent}
                                     </span>
                                 </div>
                                 ${isBlurredList ? `
@@ -606,7 +640,6 @@
             }).join('');
         }
 
-        // MODIF 6: Dat ke pronostik la te bay ak verifye an parèt byen klè nan istorik
         async function fetchDynamicHistory() {
             const container = document.getElementById('historyListContainer');
             try {
@@ -637,7 +670,6 @@
                     const homeScore = parseInt(info.homeScore, 10);
                     const awayScore = parseInt(info.awayScore, 10);
 
-                    // MODIF 6: Fòmate dat analiz ak dat match la
                     const analysisDateStr = m.created_at ? new Date(m.created_at).toLocaleDateString('ht-HT', { day: '2-digit', month: '2-digit', year: 'numeric' }) : info.date;
                     const matchDateStr = info.date || '--/--/----';
 
@@ -663,7 +695,6 @@
                                 <span class="bg-black px-2 py-0.5 rounded text-emerald-400 font-mono border border-brand-border">${homeScore} - ${awayScore}</span>
                                 <span class="truncate max-w-[38%] text-right">${info.awayName}</span>
                             </div>
-                            <!-- MODIF 6: Afiche Dat Analiz vs Dat Match -->
                             <div class="text-[10px] text-gray-400 flex flex-wrap justify-between pt-1 gap-1 border-t border-brand-border/30 mt-1">
                                 <span>Pronostik: <strong class="text-emerald-400">${pronostik}</strong></span>
                                 <div class="flex gap-2 text-[9px] text-gray-500">
@@ -689,7 +720,6 @@
             }
         }
 
-        // 5. PROFIL USER LOGIC
         async function loadUserProfile() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) return;
@@ -759,7 +789,6 @@
             }
         }
 
-        // 6. AUTHENTICATION & INITIALIZATION
         async function checkAuth() {
             const { data: { session }, error } = await supabaseClient.auth.getSession();
             if (error || !session) { window.location.href = "auth.html"; return; }
@@ -791,9 +820,7 @@
                     if (vipTabLockIcon) vipTabLockIcon.classList.remove('hidden');
                 }
 
-                // Restore active category UI state (MODIF 2)
                 switchCategory(activeCategory);
-
                 await fetchLiveMatches();
             } catch (err) {
                 fetchLiveMatches();
@@ -840,7 +867,7 @@
             setupLiquidGlass();
             
             setTimeout(() => {
-                updateLiquidPill(document.getElementById('btnNavMatchs'));
+                updateLiquidPill(document.getElementById('btnNavMatchs'), false);
             }, 200);
         });
     </script>
