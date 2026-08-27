@@ -146,7 +146,7 @@
                     <span>Date</span>
                 </span>
                 <button onclick="toggleDropdown('dateDropdown')" class="w-full bg-brand-card border border-brand-border hover:border-emerald-500/50 text-white text-xs font-bold rounded-xl px-3 py-2.5 flex items-center justify-between transition shadow-sm">
-                    <span id="selectedDateLabel" class="truncate text-emerald-400">Jodi a</span>
+                    <span id="selectedDateLabel" class="truncate text-emerald-400">...</span>
                     <i class="fa-solid fa-chevron-down text-xs text-gray-400 ml-1"></i>
                 </button>
                 <div id="dateDropdown" class="hidden absolute left-0 right-0 top-full mt-1 bg-brand-card border border-emerald-500/30 rounded-xl p-2 shadow-2xl space-y-1 max-h-60 overflow-y-auto no-scrollbar z-50">
@@ -261,25 +261,21 @@
         function renderDynamicDays() {
             const dateModalList = document.getElementById('dateModalList');
             if (!dateModalList) return;
-            const daysOfWeek = ['Dimanch', 'Lendi', 'Mardi', 'Mèkredi', 'Jedi', 'Vandredi', 'Samdi'];
+
             const targetToday = new Date();
             let htmlContent = '';
 
             const savedDate = sessionStorage.getItem('bz_selected_date');
             const savedDateLabel = sessionStorage.getItem('bz_selected_date_label');
 
-            for (let i = -3; i <= 2; i++) {
+            // Boukle ant -1 (yè) rive +2 (aprè demen) pou aksè aksèkteman sou 4 dat
+            for (let i = -1; i <= 2; i++) {
                 const targetDate = new Date(targetToday);
                 targetDate.setDate(targetToday.getDate() + i);
-                const dayName = daysOfWeek[targetDate.getDay()];
-                const dayNumber = String(targetDate.getDate()).padStart(2, '0');
-                const monthNumber = String(targetDate.getMonth() + 1).padStart(2, '0');
-                const dateStr = targetDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
 
-                let label = `${dayName} ${dayNumber}/${monthNumber}`;
-                if (i === -1) label = `(${dayName} ${dayNumber}/${monthNumber})`;
-                else if (i === 0) label = `Jodi a (${dayName} ${dayNumber}/${monthNumber})`;
-                else if (i === 1) label = `(${dayName} ${dayNumber}/${monthNumber})`;
+                // Format YYYY-MM-DD pou filte ak afichaj sèlman date la
+                const dateStr = targetDate.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+                const label = dateStr;
 
                 if (i === 0 && !savedDate) {
                     currentDayFilter = dateStr;
