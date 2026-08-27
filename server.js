@@ -18,20 +18,9 @@ const PORT = process.env.PORT || 3000;
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://uiepdartkcunumajlwwg.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_QkRjPE0nGdy5Y74SOAaoDw_BUrAn7ju';
 const BAZAARLINK_KEY = process.env.BAZAARLINK_API_KEY;
-const FOOTBALL_DATA_API_KEY = process.env.FOOTBALL_DATA_API_KEY || 'YOUR_FOOTBALL_DATA_KEY_HERE';
+const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY || 'VOTRE_API_FOOTBALL_KEY';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-const LEAGUES = [
-    { code: 'PL', name: 'English Premier League' },
-    { code: 'PD', name: 'Spanish La Liga' },
-    { code: 'BL1', name: 'German Bundesliga' },
-    { code: 'FL1', name: 'French Ligue 1' },
-    { code: 'SA', name: 'Italian Serie A' },
-    { code: 'CL', name: 'UEFA Champions League' }
-];
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function formatDate(date) {
     const year = date.getFullYear();
@@ -40,274 +29,121 @@ function formatDate(date) {
     return `${year}-${month}-${day}`;
 }
 
-// Generasyon URL Crest/Logo dirèkteman ak Football-Data ID
+// Generasyon URL Logo anndan API-FOOTBALL dirèkteman
 function getCrestUrl(teamId, teamName) {
     if (teamId) {
-        return `https://crests.football-data.org/${teamId}.svg`;
+        return `https://media.api-sports.io/football/teams/${teamId}.png`;
     }
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(teamName || 'Team')}&background=10b981&color=fff`;
 }
 
-// 1. Senkronizasyon Match ak Football-Data.org
+// 1. Senkronizasyon Match prensipal yo soti nan API-FOOTBALL
 async function syncDailyMatches() {
-    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match...`);
-    const now = new Date();
-    const todayStr = formatDate(now);
-    const futureDate = new Date();
-    futureDate.setDate(now.getDate() + 9);
-    const maxStr = formatDate(futureDate);
+    console.log(`⏰ [${new Date().toISOString()}] Senkronizasyon match via API-FOOTBALL...`);
+    const todayStr = formatDate(new Date());
 
-    for (const league of LEAGUES) {
-        try {
-            const url = `https://api.football-data.org/v4/competitions/${league.code}/matches?dateFrom=${todayStr}&dateTo=${maxStr}`;
-            const response = await fetch(url, { headers: { 'X-Auth-Token': FOOTBALL_DATA_API_KEY } });
-
-            if (!response.ok) continue;
-
-            const data = await response.json();
-            const matches = data.matches || [];
-            if (matches.length === 0) continue;
-
-            const { data: existingMatches } = await supabase.from('daily_matches').select('id, victory, percent');
-            const existingMap = new Map(existingMatches?.map(m => [m.id, m]) || []);
-
-            const formattedMatches = matches.map(match => {
-                const matchId = match.id;
-                const existing = existingMap.get(matchId);
-                const matchUtcDate = new Date(match.utcDate);
-
-                return {
-                    id: matchId,
-                    league_code: league.code,
-                    league_name: league.name,
-                    match_date: formatDate(matchUtcDate),
-                    match_time: matchUtcDate.toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }),
-                    team_a: match.homeTeam.name,
-                    team_b: match.awayTeam.name,
-                    team_a_id: match.homeTeam.id,
-                    team_b_id: match.awayTeam.id,
-                    victory: existing ? existing.victory : null,
-                    percent: existing ? existing.percent : null
-                };
-            });
-
-            await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
-            await sleep(6000);
-        } catch (err) {
-            console.error(`❌ Erè senkronizasyon (${league.name}):`, err.message);
-        }
-    }
-}
-
-// 2. Fetch H2H, Form, Bilan ak Score dirèk yon match nan Football-Data.org
-async function getFootballDataStats(matchId) {
     try {
-        const headers = { 'X-Auth-Token': FOOTBALL_DATA_API_KEY };
-        let liveMatchScore = { home: null, away: null, status: 'TIMED' };
+        const response = await axios.get(`https://v3.football.api-sports.io/fixtures?date=${todayStr}`, {
+            headers: { 'x-apisports-key': API_FOOTBALL_KEY }
+        });
 
-        // Fetch detay match la menm pou konnen score an tan reyèl
-        const matchRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}`, { headers });
-        let homeTeamId = null, awayTeamId = null;
+        const matches = response.data?.response || [];
+        if (matches.length === 0) return;
 
-        if (matchRes.ok) {
-            const mData = await matchRes.json();
-            homeTeamId = mData.homeTeam?.id;
-            awayTeamId = mData.awayTeam?.id;
-            liveMatchScore = {
-                home: mData.score?.fullTime?.home ?? null,
-                away: mData.score?.fullTime?.away ?? null,
-                status: mData.status || 'TIMED'
-            };
-        }
+        const formattedMatches = matches.map(m => ({
+            id: m.fixture.id,
+            league_code: String(m.league.id),
+            league_name: m.league.name,
+            match_date: m.fixture.date.split('T')[0],
+            match_time: new Date(m.fixture.date).toLocaleTimeString('en-GB', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }),
+            team_a: m.teams.home.name,
+            team_b: m.teams.away.name,
+            team_a_id: m.teams.home.id,
+            team_b_id: m.teams.away.id,
+            victory: null,
+            percent: null
+        }));
 
-        const h2hRes = await fetch(`https://api.football-data.org/v4/matches/${matchId}/head2head?limit=10`, { headers });
-        let h2hList = [];
-
-        if (h2hRes.ok) {
-            const h2hData = await h2hRes.json();
-            if (!homeTeamId) homeTeamId = h2hData.resultSet?.homeTeam?.id || h2hData.aggregates?.homeTeam?.id;
-            if (!awayTeamId) awayTeamId = h2hData.resultSet?.awayTeam?.id || h2hData.aggregates?.awayTeam?.id;
-
-            const finishedMatches = (h2hData.matches || []).filter(m => m.status === 'FINISHED');
-
-            h2hList = finishedMatches.slice(0, 5).map(m => {
-                const homeScore = m.score?.fullTime?.home ?? 0;
-                const awayScore = m.score?.fullTime?.away ?? 0;
-                return {
-                    result: `${m.homeTeam.shortName || m.homeTeam.name} ${homeScore} - ${awayScore} ${m.awayTeam.shortName || m.awayTeam.name}`,
-                    date: new Date(m.utcDate).toLocaleDateString('ht-HT')
-                };
-            });
-        }
-
-        let homeForm = ['N','N','N','N','N'], awayForm = ['N','N','N','N','N'];
-        let homeBilan = { win: 0, draw: 0, loss: 0 };
-        let awayBilan = { win: 0, draw: 0, loss: 0 };
-
-        const parseFormAndBilan = (matches, teamId) => {
-            let form = [];
-            let win = 0, draw = 0, loss = 0;
-            const finished = matches.filter(m => m.status === 'FINISHED');
-
-            finished.forEach(m => {
-                const isHome = m.homeTeam.id === teamId;
-                const homeScore = m.score?.fullTime?.home ?? 0;
-                const awayScore = m.score?.fullTime?.away ?? 0;
-
-                if (homeScore === awayScore) {
-                    form.push('N'); draw++;
-                } else if ((isHome && homeScore > awayScore) || (!isHome && awayScore > homeScore)) {
-                    form.push('G'); win++;
-                } else {
-                    form.push('P'); loss++;
-                }
-            });
-            return { form: form.length ? form : ['N','N','N','N','N'], bilan: { win, draw, loss } };
-        };
-
-        if (homeTeamId) {
-            const hFormRes = await fetch(`https://api.football-data.org/v4/teams/${homeTeamId}/matches?status=FINISHED&limit=5`, { headers });
-            if (hFormRes.ok) {
-                const hData = await hFormRes.json();
-                const resParsed = parseFormAndBilan(hData.matches || [], homeTeamId);
-                homeForm = resParsed.form;
-                homeBilan = resParsed.bilan;
-            }
-        }
-
-        if (awayTeamId) {
-            const aFormRes = await fetch(`https://api.football-data.org/v4/teams/${awayTeamId}/matches?status=FINISHED&limit=5`, { headers });
-            if (aFormRes.ok) {
-                const aData = await aFormRes.json();
-                const resParsed = parseFormAndBilan(aData.matches || [], awayTeamId);
-                awayForm = resParsed.form;
-                awayBilan = resParsed.bilan;
-            }
-        }
-
-        return { 
-            homeTeamId,
-            awayTeamId,
-            liveMatchScore,
-            h2h: h2hList, 
-            forme: { home: homeForm, away: awayForm }, 
-            bilan: { home: homeBilan, away: awayBilan } 
-        };
-
-    } catch (e) {
-        console.error('❌ Erè getFootballDataStats:', e.message);
-        return { 
-            homeTeamId: null, 
-            awayTeamId: null, 
-            liveMatchScore: { home: null, away: null, status: 'TIMED' },
-            h2h: [], 
-            forme: { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] }, 
-            bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } } 
-        };
-    }
-}
-
-// Helper pou fè rechèch an tan reyèl ak Tavily API
-async function searchWebFree(query, domains = null) {
-    try {
-        const payload = {
-            api_key: process.env.TAVILY_API_KEY,
-            query: query,
-            max_results: 3
-        };
-        if (domains) payload.include_domains = domains;
-
-        const res = await axios.post('https://api.tavily.com/search', payload);
-
-        const results = res.data?.results || [];
-        if (results.length === 0) return '';
-
-        return results.map(r => `Tit: ${r.title || ''}\nSnippet: ${r.content || ''}`).join('\n---\n');
+        await supabase.from('daily_matches').upsert(formattedMatches, { onConflict: 'id' });
+        console.log(`✅ ${formattedMatches.length} match senkronize ak siksè.`);
     } catch (err) {
-        console.error('❌ Erè Tavily Search:', err.message);
-        return '';
+        console.error(`❌ Erè senkronizasyon API-FOOTBALL:`, err.message);
     }
 }
 
-// 3. ANALIZ MATCH AK TAVILY + BAZAARLINK API
-async function analyzeMatch(match) {
-    if (!BAZAARLINK_KEY) throw new Error('BAZAARLINK_API_KEY pa konfigire');
+// 2. Rale Prediksyon Nèt nan API-FOOTBALL
+async function getApiFootballPrediction(fixtureId) {
+    try {
+        const res = await axios.get(`https://v3.football.api-sports.io/predictions?fixture=${fixtureId}`, {
+            headers: { 'x-apisports-key': API_FOOTBALL_KEY }
+        });
 
-    const forebetQuery = `site:forebet.com ${match.team_a} vs ${match.team_b} prediction`;
-    const absenceQuery = `${match.team_a} vs ${match.team_b} injury news missing suspended players`;
+        const item = res.data?.response?.[0];
+        if (!item) return null;
 
-    const [forebetResults, absenceResults] = await Promise.all([
-        searchWebFree(forebetQuery, ['forebet.com']),
-        searchWebFree(absenceQuery)
-    ]);
+        const h2h = (item.h2h || []).slice(0, 5).map(m => ({
+            result: `${m.teams.home.name} ${m.goals.home ?? 0} - ${m.goals.away ?? 0} ${m.teams.away.name}`,
+            date: m.fixture.date.split('T')[0]
+        }));
+
+        return {
+            rawPred: item.predictions,
+            teams: item.teams,
+            h2h: h2h,
+            forme: {
+                home: item.teams.home.league.form ? item.teams.home.league.form.split('').slice(-5) : ['N','N','N','N','N'],
+                away: item.teams.away.league.form ? item.teams.away.league.form.split('').slice(-5) : ['N','N','N','N','N']
+            }
+        };
+    } catch (e) {
+        console.error('❌ Erè API-FOOTBALL Prediction:', e.message);
+        return null;
+    }
+}
+
+// 3. AI Sèlman Fè Kout Analiz la an Kreyòl (San bay okenn sous)
+async function generateShortAnalysis(match, apiData) {
+    if (!BAZAARLINK_KEY || !apiData) {
+        return "Analiz taktik: De ekip yo ap rantre nan match sa a ak anpil motivasyon pou yo ka pran 3 pwen yo.";
+    }
 
     const prompt = `
-Mwen ba ou done reyèl ki soti dirèkteman sou Forebet ak Entènèt la pou match sa a: ${match.team_a} vs ${match.team_b} (${match.league_name}).
+Ou se yon ekspè analiz espòtif. Fè yon KOUT ANALIZ (2 jiska 3 fraz maksimòm) an Kreyòl Ayisyen pou match sa a: ${match.team_a} vs ${match.team_b}.
 
-DONE FOREBET:
-${forebetResults || 'Pa gen done Forebet.'}
+Mwen ba ou done done sa yo:
+- Konsèy Prediksyon: ${apiData.rawPred?.advice || 'Match la ap trè sere'}
+- Pousantaj Viktwa: Lakay (${apiData.rawPred?.percent?.home}), Nul (${apiData.rawPred?.percent?.draw}), Deyò (${apiData.rawPred?.percent?.away})
+- Ekip ki an avantaaj: ${apiData.rawPred?.winner?.name || 'Okenn'}
 
-DONE BLESUR/SANKSYON (ENTÈNÈT):
-${absenceResults || 'Pa gen enfòmasyon sou absans.'}
-
-RÈG POU PRONOSTIK AK ABSANS YO (OBLIGATWA):
-1. Nan done Forebet yo, gade pousantaj viktwa pou tou de ekip yo. Pran SÈLMAN EKIP KI GEN PI WO POUSANTAJ VIKTWA A (ekip A oswa ekip B) epi mete l kòm premye opsyon nan "pronostik".
-2. Pran pousantaj Over 2.5 lan nan Forebet tou, mete l kòm 2yèm opsyon nan "pronostik".
-3. Nan done entènèt yo, idantifye byen presi jwè ki blese oswa ki sispann (sanksyone) pou tou de ekip yo.
-
-Reponn SÈLMAN ak yon objè JSON valid ki swiv estrikti sa a (san okenn tèks anplis):
-{
-  "pronostik": [
-    {
-      "label": "<Non ekip ki gen PI WO % win an> Win", 
-      "confidence": <pousantaj win ki pi wo a san siy %>, 
-      "risk": "<Fèb|Modere|Elve>"
-    },
-    {
-      "label": "Over 2.5 Goals", 
-      "confidence": <pousantaj over 2.5 an san siy %>, 
-      "risk": "<Fèb|Modere|Elve>"
-    }
-  ],
-  "analiz_ia": "<paragraf kout ki esplike poukisa ekip ki gen pi wo % sa an avantaj ak efè jwè ki blese/sispann yo>",
-  "absences": {
-    "home": [{"name": "<non jwè>", "status": "<blese/sispann>"}],
-    "away": [{"name": "<non jwè>", "status": "<blese/sispann>"}]
-  },
-  "recommendation": "<konklizyon pi bon opsyon an>"
-}`;
-
-    const response = await axios.post('https://bazaarlink.ai/api/v1/chat/completions', {
-        model: 'auto:free',
-        messages: [{ role: 'user', content: prompt }]
-    }, {
-        headers: {
-            'Authorization': `Bearer ${BAZAARLINK_KEY}`,
-            'Content-Type': 'application/json'
-        }
-    });
-
-    const data = response.data;
-    let rawText = data.choices?.[0]?.message?.content || data.text || '';
-
-    if (!rawText) {
-        throw new Error(`Bazaarlink pa retounen tèks: ${JSON.stringify(data)}`);
-    }
-
-    rawText = rawText.replace(/```json|```/g, '').trim();
+RÈG STRICT:
+1. PA MENSYONE okenn non API, okenn sit entènèt, ni kote done yo soti (PA di "API-FOOTBALL", "daprè done yo", oswa "daprè sous la").
+2. Pale dirèkteman de fòm ekip yo ak chans yo genyen pou yo bat oswa fè gòl nan match la.
+3. Reponn ak TÈKS SÈLMAN (pa gen JSON, pa gen markdown).`;
 
     try {
-        return JSON.parse(rawText);
-    } catch (e) {
-        throw new Error(`JSON envalid soti nan Bazaarlink: ${rawText.substring(0, 200)}`);
+        const response = await axios.post('https://bazaarlink.ai/api/v1/chat/completions', {
+            model: 'auto:free',
+            messages: [{ role: 'user', content: prompt }]
+        }, {
+            headers: {
+                'Authorization': `Bearer ${BAZAARLINK_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        return response.data?.choices?.[0]?.message?.content?.trim() || "Match sa a ap trè sere ant de ekip yo daprè fòm yo montre nan dènye soti yo.";
+    } catch (err) {
+        console.error('⚠️ Erè Bazaarlink:', err.message);
+        return "De ekip sa yo ap chèche reprezante yon bon nivo jwèt pou yo ka rache viktwa a jodi a.";
     }
 }
 
-// 4. Endpoint Detay Match
+// 4. Endpoint Detay Match (Sove nan Supabase match_analysis)
 app.get('/api/match-details/:matchId', async (req, res) => {
     const matchId = req.params.matchId;
 
     try {
+        // Caching nan Supabase
         const { data: cached } = await supabase
             .from('match_analysis')
             .select('data, created_at')
@@ -328,50 +164,65 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             return res.status(404).json({ error: 'Match pa jwenn' });
         }
 
-        const footballDataStats = await getFootballDataStats(matchId);
+        // 1. Done soti nan API-FOOTBALL
+        const apiData = await getApiFootballPrediction(matchId);
 
-        let geminiParsed = {
-            pronostik: [],
-            analiz_ia: 'Analiz pa disponib pou match sa a.',
-            absences: { home: [], away: [] },
-            recommendation: 'Match sa a fini deja.'
-        };
+        let pronostik = [];
+        let recommendation = "Match sa a sanble balanse.";
 
-        const todayStr = formatDate(new Date());
-        const isMatchPassed = match.match_date < todayStr || footballDataStats.liveMatchScore.status === 'FINISHED';
+        if (apiData && apiData.rawPred) {
+            const p = apiData.rawPred;
+            const homePercent = parseInt(p.percent.home) || 0;
+            const awayPercent = parseInt(p.percent.away) || 0;
 
-        if (!isMatchPassed) {
-            try {
-                geminiParsed = await analyzeMatch(match);
-            } catch (gemErr) {
-                console.error('⚠️ Erè Bazaarlink (Fallback ekzekite):', gemErr.message);
-            }
+            const bestWinTeam = homePercent >= awayPercent ? match.team_a : match.team_b;
+            const bestWinConfidence = Math.max(homePercent, awayPercent);
+
+            pronostik = [
+                {
+                    label: `${bestWinTeam} Win / Draw`,
+                    confidence: bestWinConfidence,
+                    risk: bestWinConfidence > 60 ? "Fèb" : "Modere"
+                },
+                {
+                    label: p.advice || "Over 1.5 Goals",
+                    confidence: 70,
+                    risk: "Modere"
+                }
+            ];
+
+            recommendation = p.advice ? `Opsyon ki pi sekirize: ${p.advice}` : recommendation;
         }
 
-        const homeLogo = getCrestUrl(match.team_a_id || footballDataStats.homeTeamId, match.team_a);
-        const awayLogo = getCrestUrl(match.team_b_id || footballDataStats.awayTeamId, match.team_b);
+        // 2. AI fè kout analiz la sèlman
+        const analiz_ia = await generateShortAnalysis(match, apiData);
+
+        // 3. Logo yo soti nan API-FOOTBALL CDN
+        const homeLogo = getCrestUrl(match.team_a_id, match.team_a);
+        const awayLogo = getCrestUrl(match.team_b_id, match.team_b);
 
         const finalResponse = {
             matchInfo: {
                 league: match.league_name,
-                status: isMatchPassed ? 'Fini' : 'Annatant',
+                status: 'Annatant',
                 date: match.match_date,
                 homeName: match.team_a,
                 awayName: match.team_b,
                 homeLogo: homeLogo,
                 awayLogo: awayLogo,
-                homeScore: footballDataStats.liveMatchScore.home,
-                awayScore: footballDataStats.liveMatchScore.away
+                homeScore: null,
+                awayScore: null
             },
-            pronostik: geminiParsed.pronostik || [],
-            analiz_ia: geminiParsed.analiz_ia || '',
-            bilan: footballDataStats.bilan,
-            forme: footballDataStats.forme,
-            h2h: footballDataStats.h2h,
-            absences: geminiParsed.absences || { home: [], away: [] },
-            recommendation: geminiParsed.recommendation || ''
+            pronostik: pronostik,
+            analiz_ia: analiz_ia,
+            bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } },
+            forme: apiData ? apiData.forme : { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] },
+            h2h: apiData ? apiData.h2h : [],
+            absences: { home: [], away: [] },
+            recommendation: recommendation
         };
 
+        // Anrejistre prediksyon yo anndan tab Supabase la
         await supabase.from('match_analysis').upsert({
             match_id: matchId,
             data: finalResponse,
@@ -386,7 +237,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
     }
 });
 
-// Otomatisasyon Cron
+// Otomatisasyon Cron (2:00 AM)
 cron.schedule('0 2 * * *', async () => {
     console.log('⏰ Otomatisasyon cron kòmanse (2:00 AM)...');
     await syncDailyMatches();
