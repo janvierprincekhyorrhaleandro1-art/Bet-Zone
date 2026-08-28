@@ -201,6 +201,96 @@ RÈG STRICT:
     }
 }
 
+async function buildMatchAnalysis(match) {
+    const apiData = await getApiFootballPrediction(match.id);
+
+    let pronostik = [];
+    let recommendation = "Match sa a sanble balanse.";
+    let analiz_ia = "Analiz taktik: De ekip yo ap rantre nan match sa a ak anpil motivasyon.";
+
+    if (apiData && apiData.rawPred) {
+        const p = apiData.rawPred;
+        const homePercent = parseInt(p.percent?.home) || 0;
+        const drawPercent = parseInt(p.percent?.draw) || 0;
+        const awayPercent = parseInt(p.percent?.away) || 0;
+
+        let bestWinTeam = match.team_a;
+        let bestWinConfidence = homePercent;
+        if (awayPercent > homePercent) {
+            bestWinTeam = match.team_b;
+            bestWinConfidence = awayPercent;
+        }
+
+        pronostik = [
+            { label: `${bestWinTeam} Win / Draw`, confidence: bestWinConfidence || 65, risk: bestWinConfidence > 60 ? "Fèb" : "Modere" },
+            { label: p.advice || "Over 1.5 Goals", confidence: Math.max(homePercent + drawPercent, 60), risk: "Modere" }
+        ];
+
+        recommendation = p.advice ? `Opsyon ki pi sekirize: ${p.advice}` : recommendation;
+        analiz_ia = await generateShortAnalysis(match, apiData);
+    }
+
+    return {
+        matchInfo: {
+            league: match.league_name, status: match.status || 'ANNATANT', date: match.match_date,
+            homeName: match.team_a, awayName: match.team_b,
+            homeLogo: getCrestUrl(match.team_a_id, match.team_a),
+            awayLogo: getCrestUrl(match.team_b_id, match.team_b),
+            homeScore: match.home_score ?? null, awayScore: match.away_score ?? null
+        },
+        pronostik, analiz_ia,
+        bilan: apiData ? apiData.bilan : { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } },
+        forme: apiData ? apiData.forme : { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] },
+        h2h: apiData ? apiData.h2h : [],
+        absences: { home: [], away: [] },
+        recommendation
+    };
+}
+
+async function saveMatchAnalysis(matchId, finalResponse) {
+    await supabase.from('match_analysis').upsert({
+        match_id: matchId, data: finalResponse, created_at: new Date().toISOString()
+    });
+
+    const bestPick = finalResponse.pronostik.reduce((best, cur) =>
+        (!best || cur.confidence > best.confidence) ? cur : best, null);
+
+    if (bestPick) {
+        await supabase.from('daily_matches').update({
+            victory: bestPick.label,
+            percent: bestPick.confidence
+        }).eq('id', matchId);
+    }
+}
+
+async function generatePendingAnalysis() {
+    console.log('🧠 Chèche match Jodi a/Demen ki bezwen analiz...');
+    const todayStr = getLocalDateString(0);
+    const tomorrowStr = getLocalDateString(1);
+
+    const { data: pending, error } = await supabase
+        .from('daily_matches')
+        .select('*')
+        .in('match_date', [todayStr, tomorrowStr])
+        .is('percent', null)
+        .eq('status', 'ANNATANT')
+        .limit(15);
+
+    if (error) { console.error('❌ Erè chèche match pou analize:', error.message); return; }
+    if (!pending || pending.length === 0) { console.log('✅ Tout match Jodi a/Demen deja analize.'); return; }
+
+    console.log(`🧠 ${pending.length} match pou analize...`);
+    for (const match of pending) {
+        try {
+            const finalResponse = await buildMatchAnalysis(match);
+            await saveMatchAnalysis(match.id, finalResponse);
+            console.log(`✅ Analize: ${match.team_a} vs ${match.team_b}`);
+        } catch (err) {
+            console.error(`❌ Erè analiz pou ${match.team_a} vs ${match.team_b}:`, err.message);
+        }
+    }
+}
+
 app.get('/api/match-details/:matchId', async (req, res) => {
     const matchId = req.params.matchId;
 
@@ -258,72 +348,8 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             return res.json({ ...pastMatchResponse, cached: false });
         }
 
-        const apiData = await getApiFootballPrediction(matchId);
-
-        let pronostik = [];
-        let recommendation = "Match sa a sanble balanse.";
-        let analiz_ia = "Analiz taktik: De ekip yo ap rantre nan match sa a ak anpil motivasyon.";
-
-        if (apiData && apiData.rawPred) {
-            const p = apiData.rawPred;
-            const homePercent = parseInt(p.percent?.home) || 0;
-            const drawPercent = parseInt(p.percent?.draw) || 0;
-            const awayPercent = parseInt(p.percent?.away) || 0;
-
-            let bestWinTeam = match.team_a;
-            let bestWinConfidence = homePercent;
-
-            if (awayPercent > homePercent) {
-                bestWinTeam = match.team_b;
-                bestWinConfidence = awayPercent;
-            }
-
-            pronostik = [
-                {
-                    label: `${bestWinTeam} Win / Draw`,
-                    confidence: bestWinConfidence || 65,
-                    risk: bestWinConfidence > 60 ? "Fèb" : "Modere"
-                },
-                {
-                    label: p.advice || "Over 1.5 Goals",
-                    confidence: Math.max(homePercent + drawPercent, 60),
-                    risk: "Modere"
-                }
-            ];
-
-            recommendation = p.advice ? `Opsyon ki pi sekirize: ${p.advice}` : recommendation;
-            analiz_ia = await generateShortAnalysis(match, apiData);
-        }
-
-        const homeLogo = getCrestUrl(match.team_a_id, match.team_a);
-        const awayLogo = getCrestUrl(match.team_b_id, match.team_b);
-
-        const finalResponse = {
-            matchInfo: {
-                league: match.league_name,
-                status: match.status || 'ANNATANT',
-                date: match.match_date,
-                homeName: match.team_a,
-                awayName: match.team_b,
-                homeLogo: homeLogo,
-                awayLogo: awayLogo,
-                homeScore: match.home_score ?? null,
-                awayScore: match.away_score ?? null
-            },
-            pronostik: pronostik,
-            analiz_ia: analiz_ia,
-            bilan: apiData ? apiData.bilan : { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } },
-            forme: apiData ? apiData.forme : { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] },
-            h2h: apiData ? apiData.h2h : [],
-            absences: { home: [], away: [] },
-            recommendation: recommendation
-        };
-
-        await supabase.from('match_analysis').upsert({
-            match_id: matchId,
-            data: finalResponse,
-            created_at: new Date().toISOString()
-        });
+        const finalResponse = await buildMatchAnalysis(match);
+        await saveMatchAnalysis(matchId, finalResponse);
 
         return res.json({ ...finalResponse, cached: false });
 
@@ -333,11 +359,17 @@ app.get('/api/match-details/:matchId', async (req, res) => {
     }
 });
 
+app.get('/api/trigger-analysis', async (req, res) => {
+    await generatePendingAnalysis();
+    res.json({ ok: true, message: 'Analiz lanse manyèlman.' });
+});
+
 cron.schedule('0 2 * * *', async () => {
     console.log('⏰ Otomatisasyon cron kòmanse (2:00 AM)...');
     await syncDailyMatches();
+    await generatePendingAnalysis();
 });
 
-syncDailyMatches();
+syncDailyMatches().then(() => generatePendingAnalysis());
 
 app.listen(PORT, () => console.log(`🚀 Sèvè ap koute sou pò ${PORT}`));
