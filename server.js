@@ -55,7 +55,6 @@ async function syncDailyMatches() {
     
     let allFormattedMatches = [];
 
-    // Boukl sèlman soti nan -1 rive +1 jou
     for (let i = -1; i <= 1; i++) {
         const dateStr = getLocalDateString(i);
 
@@ -115,15 +114,46 @@ async function getApiFootballPrediction(fixtureId) {
         const item = res.data?.response?.[0];
         if (!item) return null;
 
-        const h2h = (item.h2h || []).slice(0, 5).map(m => ({
+        const h2hRaw = item.h2h || [];
+        const h2hFormatted = h2hRaw.slice(0, 5).map(m => ({
             result: `${m.teams.home.name} ${m.goals.home ?? 0} - ${m.goals.away ?? 0} ${m.teams.away.name}`,
             date: m.fixture.date.split('T')[0]
         }));
 
+        // Kalkil Bilan Lakay vs Deyò dirèkteman nan H2H API-FOOTBALL la
+        let homeStats = { win: 0, draw: 0, loss: 0 };
+        let awayStats = { win: 0, draw: 0, loss: 0 };
+
+        const homeTeamId = item.teams?.home?.id;
+        const awayTeamId = item.teams?.away?.id;
+
+        h2hRaw.forEach(m => {
+            const hGoals = m.goals.home ?? 0;
+            const aGoals = m.goals.away ?? 0;
+
+            // Stats pou Ekip Lakay la
+            if (m.teams.home.id === homeTeamId) {
+                if (hGoals > aGoals) homeStats.win++;
+                else if (hGoals === aGoals) homeStats.draw++;
+                else homeStats.loss++;
+            }
+
+            // Stats pou Ekip Deyò a
+            if (m.teams.away.id === awayTeamId) {
+                if (aGoals > hGoals) awayStats.win++;
+                else if (aGoals === hGoals) awayStats.draw++;
+                else awayStats.loss++;
+            }
+        });
+
         return {
             rawPred: item.predictions,
             teams: item.teams,
-            h2h: h2h,
+            h2h: h2hFormatted,
+            bilan: {
+                home: homeStats,
+                away: awayStats
+            },
             forme: {
                 home: item.teams.home.league.form ? item.teams.home.league.form.split('').slice(-5) : ['N','N','N','N','N'],
                 away: item.teams.away.league.form ? item.teams.away.league.form.split('').slice(-5) : ['N','N','N','N','N']
@@ -240,7 +270,6 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             const drawPercent = parseInt(p.percent?.draw) || 0;
             const awayPercent = parseInt(p.percent?.away) || 0;
 
-            // Fikse kalkil pi bon ekip a (pa favorize lakay sèlman)
             let bestWinTeam = match.team_a;
             let bestWinConfidence = homePercent;
 
@@ -257,7 +286,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
                 },
                 {
                     label: p.advice || "Over 1.5 Goals",
-                    confidence: Math.max(homePercent + drawPercent, 60), // Kalkil dinamik pito yon 75% fòse
+                    confidence: Math.max(homePercent + drawPercent, 60),
                     risk: "Modere"
                 }
             ];
@@ -283,7 +312,7 @@ app.get('/api/match-details/:matchId', async (req, res) => {
             },
             pronostik: pronostik,
             analiz_ia: analiz_ia,
-            bilan: { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } },
+            bilan: apiData ? apiData.bilan : { home: { win: 0, draw: 0, loss: 0 }, away: { win: 0, draw: 0, loss: 0 } },
             forme: apiData ? apiData.forme : { home: ['N','N','N','N','N'], away: ['N','N','N','N','N'] },
             h2h: apiData ? apiData.h2h : [],
             absences: { home: [], away: [] },

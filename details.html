@@ -207,25 +207,6 @@
             <div id="tab-aktyalite" class="tab-pane hidden space-y-4">
 
                 <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
-                    <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-3 mono flex items-center gap-2">
-                        <i class="fa-solid fa-user-xmark text-red-400"></i>
-                        <span>Jwè ki Absan (Blesi / Sanksyon)</span>
-                    </h3>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <div id="absencesHome" class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
-                            <span id="absenceHomeName" class="font-extrabold text-emerald-400 block">Chaje...</span>
-                            <div class="text-gray-400 text-[11px]">Pa gen absans</div>
-                        </div>
-
-                        <div id="absencesAway" class="p-3 rounded-2xl bg-brand-dark border border-brand-border space-y-1">
-                            <span id="absenceAwayName" class="font-extrabold text-blue-400 block">Chaje...</span>
-                            <div class="text-gray-400 text-[11px]">Pa gen absans</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-5 rounded-3xl bg-brand-card border border-brand-border">
                     <h3 class="text-xs font-extrabold text-white uppercase tracking-wider mb-4 mono flex items-center gap-2">
                         <i class="fa-solid fa-chart-pie text-emerald-400"></i>
                         <span>Bilan Lakay vs Deyò</span>
@@ -292,7 +273,7 @@
         &copy; 2026 Bet Zone. Tout dwa rezève.
     </footer>
 
-    <!-- SCRIPT POU SWITCH TAB YO AK SHARJE DONE DINAMIK (LIVE TIMER AK VS LOGIC) -->
+    <!-- SCRIPT POU SWITCH TAB YO AK SHARJE DONE DINAMIK -->
     <script>
         const BACKEND_URL = 'https://bet-zone.onrender.com'; 
 
@@ -389,14 +370,11 @@
                     document.getElementById('awayTeamName').innerText = data.matchInfo.awayName;
                     document.getElementById('formHomeName').innerText = data.matchInfo.homeName;
                     document.getElementById('formAwayName').innerText = data.matchInfo.awayName;
-                    document.getElementById('absenceHomeName').innerText = data.matchInfo.homeName;
-                    document.getElementById('absenceAwayName').innerText = data.matchInfo.awayName;
 
                     const scoreContainer = document.getElementById('scoreContainer');
                     const matchStatusBadge = document.getElementById('matchStatus');
                     const statusDot = document.getElementById('statusDot');
 
-                    // LOJIK POU AFICHAJ VS VS SCORE AK LIVE TIMER
                     if (status === 'LIVE' || status === 'EN COURS') {
                         matchStatusBadge.className = "px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-400 font-bold text-[10px] uppercase mono animate-pulse";
                         statusDot.className = "w-2 h-2 rounded-full bg-red-500 animate-ping";
@@ -425,7 +403,6 @@
                             <span>${aGoals}</span>
                         `;
                     } else {
-                        // MATCH KI POKO KÒMANSE / ANNATANT -> AFICHE "VS" OLYE 0-0
                         matchStatusBadge.className = "px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[10px] uppercase mono";
                         statusDot.className = "w-2 h-2 rounded-full bg-amber-400";
 
@@ -494,22 +471,19 @@
 
                 // 4. Mete Bilan
                 if (data.bilan) {
-                    if (data.bilan.home) {
-                        document.getElementById('bilanHome').innerHTML = `
-                            <span class="font-extrabold text-white block border-b border-brand-border pb-1">${data.matchInfo?.homeName || 'Lakay'}</span>
-                            <div class="flex justify-between text-gray-400"><span>Genyen:</span> <span class="font-bold text-emerald-400">${data.bilan.home.win || 0}</span></div>
-                            <div class="flex justify-between text-gray-400"><span>Nul:</span> <span class="font-bold text-amber-400">${data.bilan.home.draw || 0}</span></div>
-                            <div class="flex justify-between text-gray-400"><span>Pèdi:</span> <span class="font-bold text-red-400">${data.bilan.home.loss || 0}</span></div>
-                        `;
-                    }
-                    if (data.bilan.away) {
-                        document.getElementById('bilanAway').innerHTML = `
-                            <span class="font-extrabold text-white block border-b border-brand-border pb-1">${data.matchInfo?.awayName || 'Deyò'}</span>
-                            <div class="flex justify-between text-gray-400"><span>Genyen:</span> <span class="font-bold text-emerald-400">${data.bilan.away.win || 0}</span></div>
-                            <div class="flex justify-between text-gray-400"><span>Nul:</span> <span class="font-bold text-amber-400">${data.bilan.away.draw || 0}</span></div>
-                            <div class="flex justify-between text-gray-400"><span>Pèdi:</span> <span class="font-bold text-red-400">${data.bilan.away.loss || 0}</span></div>
-                        `;
-                    }
+                    document.getElementById('bilanHome').innerHTML = `
+                        <span class="font-extrabold text-white block border-b border-brand-border pb-1">${data.matchInfo?.homeName || 'Lakay'}</span>
+                        <div class="flex justify-between text-gray-400"><span>Genyen:</span> <span class="font-bold text-emerald-400">${data.bilan.home.win}</span></div>
+                        <div class="flex justify-between text-gray-400"><span>Nul:</span> <span class="font-bold text-amber-400">${data.bilan.home.draw}</span></div>
+                        <div class="flex justify-between text-gray-400"><span>Pèdi:</span> <span class="font-bold text-red-400">${data.bilan.home.loss}</span></div>
+                    `;
+
+                    document.getElementById('bilanAway').innerHTML = `
+                        <span class="font-extrabold text-white block border-b border-brand-border pb-1">${data.matchInfo?.awayName || 'Deyò'}</span>
+                        <div class="flex justify-between text-gray-400"><span>Genyen:</span> <span class="font-bold text-emerald-400">${data.bilan.away.win}</span></div>
+                        <div class="flex justify-between text-gray-400"><span>Nul:</span> <span class="font-bold text-amber-400">${data.bilan.away.draw}</span></div>
+                        <div class="flex justify-between text-gray-400"><span>Pèdi:</span> <span class="font-bold text-red-400">${data.bilan.away.loss}</span></div>
+                    `;
                 }
 
                 // 5. Mete Forme (Fòm Aktyèl)
@@ -554,32 +528,6 @@
                             ekip sa yo poko kwaze pandan on bon moman
                         </div>
                     `;
-                }
-
-                // 7. Mete Absences
-                if (data.absences) {
-                    if (data.absences.home && data.absences.home.length > 0) {
-                        document.getElementById('absencesHome').innerHTML = `
-                            <span class="font-extrabold text-emerald-400 block">${data.matchInfo?.homeName || 'Lakay'}</span>
-                            ${data.absences.home.map(p => `
-                                <div class="flex items-center justify-between text-gray-300">
-                                    <span>${p.name}</span>
-                                    <span class="text-[10px] text-red-400 font-bold"><i class="fa-solid fa-kit-medical mr-1"></i>${p.status}</span>
-                                </div>
-                            `).join('')}
-                        `;
-                    }
-                    if (data.absences.away && data.absences.away.length > 0) {
-                        document.getElementById('absencesAway').innerHTML = `
-                            <span class="font-extrabold text-blue-400 block">${data.matchInfo?.awayName || 'Deyò'}</span>
-                            ${data.absences.away.map(p => `
-                                <div class="flex items-center justify-between text-gray-300">
-                                    <span>${p.name}</span>
-                                    <span class="text-[10px] text-red-400 font-bold"><i class="fa-solid fa-kit-medical mr-1"></i>${p.status}</span>
-                                </div>
-                            `).join('')}
-                        `;
-                    }
                 }
 
                 if (data.recommendation) {
