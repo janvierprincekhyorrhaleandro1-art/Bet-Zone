@@ -1,3 +1,5 @@
+let isAnalyzing = false;
+
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const cron = require('node-cron');
@@ -204,31 +206,33 @@ RÈG STRICT:
 async function buildMatchAnalysis(match) {
     const apiData = await getApiFootballPrediction(match.id);
 
+    if (!apiData || !apiData.rawPred) {
+        return null; // Pa gen vrè done — pa sove, eseye ankò pita
+    }
+
     let pronostik = [];
     let recommendation = "Match sa a sanble balanse.";
     let analiz_ia = "Analiz taktik: De ekip yo ap rantre nan match sa a ak anpil motivasyon.";
 
-    if (apiData && apiData.rawPred) {
-        const p = apiData.rawPred;
-        const homePercent = parseInt(p.percent?.home) || 0;
-        const drawPercent = parseInt(p.percent?.draw) || 0;
-        const awayPercent = parseInt(p.percent?.away) || 0;
+    const p = apiData.rawPred;
+    const homePercent = parseInt(p.percent?.home) || 0;
+    const drawPercent = parseInt(p.percent?.draw) || 0;
+    const awayPercent = parseInt(p.percent?.away) || 0;
 
-        let bestWinTeam = match.team_a;
-        let bestWinConfidence = homePercent;
-        if (awayPercent > homePercent) {
-            bestWinTeam = match.team_b;
-            bestWinConfidence = awayPercent;
-        }
-
-        pronostik = [
-            { label: `${bestWinTeam} Win / Draw`, confidence: bestWinConfidence || 65, risk: bestWinConfidence > 60 ? "Fèb" : "Modere" },
-            { label: p.advice || "Over 1.5 Goals", confidence: Math.max(homePercent + drawPercent, 60), risk: "Modere" }
-        ];
-
-        recommendation = p.advice ? `Opsyon ki pi sekirize: ${p.advice}` : recommendation;
-        analiz_ia = await generateShortAnalysis(match, apiData);
+    let bestWinTeam = match.team_a;
+    let bestWinConfidence = homePercent;
+    if (awayPercent > homePercent) {
+        bestWinTeam = match.team_b;
+        bestWinConfidence = awayPercent;
     }
+
+    pronostik = [
+        { label: `${bestWinTeam} Win / Draw`, confidence: bestWinConfidence || 65, risk: bestWinConfidence > 60 ? "Fèb" : "Modere" },
+        { label: p.advice || "Over 1.5 Goals", confidence: Math.max(homePercent + drawPercent, 60), risk: "Modere" }
+    ];
+
+    recommendation = p.advice ? `Opsyon ki pi sekirize: ${p.advice}` : recommendation;
+    analiz_ia = await generateShortAnalysis(match, apiData);
 
     return {
         matchInfo: {
@@ -264,30 +268,44 @@ async function saveMatchAnalysis(matchId, finalResponse) {
 }
 
 async function generatePendingAnalysis() {
-    console.log('🧠 Chèche match Jodi a/Demen ki bezwen analiz...');
-    const todayStr = getLocalDateString(0);
-    const tomorrowStr = getLocalDateString(1);
+    if (isAnalyzing) {
+        console.log('⏸️ Yon analiz deja ap kouri — sote kous sa a.');
+        return;
+    }
+    isAnalyzing = true;
 
-    const { data: pending, error } = await supabase
-        .from('daily_matches')
-        .select('*')
-        .in('match_date', [todayStr, tomorrowStr])
-        .is('percent', null)
-        .eq('status', 'ANNATANT')
-        .limit(15);
+    try {
+        console.log('🧠 Chèche match Jodi a/Demen ki bezwen analiz...');
+        const todayStr = getLocalDateString(0);
+        const tomorrowStr = getLocalDateString(1);
 
-    if (error) { console.error('❌ Erè chèche match pou analize:', error.message); return; }
-    if (!pending || pending.length === 0) { console.log('✅ Tout match Jodi a/Demen deja analize.'); return; }
+        const { data: pending, error } = await supabase
+            .from('daily_matches')
+            .select('*')
+            .in('match_date', [todayStr, tomorrowStr])
+            .is('percent', null)
+            .eq('status', 'ANNATANT')
+            .limit(15);
 
-    console.log(`🧠 ${pending.length} match pou analize...`);
-    for (const match of pending) {
-        try {
-            const finalResponse = await buildMatchAnalysis(match);
-            await saveMatchAnalysis(match.id, finalResponse);
-            console.log(`✅ Analize: ${match.team_a} vs ${match.team_b}`);
-        } catch (err) {
-            console.error(`❌ Erè analiz pou ${match.team_a} vs ${match.team_b}:`, err.message);
+        if (error) { console.error('❌ Erè chèche match pou analize:', error.message); return; }
+        if (!pending || pending.length === 0) { console.log('✅ Tout match Jodi a/Demen deja analize.'); return; }
+
+        console.log(`🧠 ${pending.length} match pou analize...`);
+        for (const match of pending) {
+            try {
+                const finalResponse = await buildMatchAnalysis(match);
+                if (!finalResponse) {
+                    console.log(`⏭️ Sote ${match.team_a} vs ${match.team_b} (done pa disponib, n ap eseye ankò pita)`);
+                    continue;
+                }
+                await saveMatchAnalysis(match.id, finalResponse);
+                console.log(`✅ Analize: ${match.team_a} vs ${match.team_b}`);
+            } catch (err) {
+                console.error(`❌ Erè analiz pou ${match.team_a} vs ${match.team_b}:`, err.message);
+            }
         }
+    } finally {
+        isAnalyzing = false;
     }
 }
 
@@ -349,6 +367,15 @@ app.get('/api/match-details/:matchId', async (req, res) => {
         }
 
         const finalResponse = await buildMatchAnalysis(match);
+        if (!finalResponse) {
+            return res.json({
+                matchInfo: { league: match.league_name, status: match.status || 'ANNATANT', date: match.match_date, homeName: match.team_a, awayName: match.team_b, homeLogo: getCrestUrl(match.team_a_id, match.team_a), awayLogo: getCrestUrl(match.team_b_id, match.team_b), homeScore: match.home_score ?? null, awayScore: match.away_score ?? null },
+                pronostik: [], analiz_ia: "Analiz la ap pran plis tan — eseye ankò nan kèk minit.",
+                bilan: { home:{win:0,draw:0,loss:0}, away:{win:0,draw:0,loss:0} },
+                forme: { home:['N','N','N','N','N'], away:['N','N','N','N','N'] },
+                h2h: [], absences: { home:[], away:[] }, recommendation: "", cached: false
+            });
+        }
         await saveMatchAnalysis(matchId, finalResponse);
 
         return res.json({ ...finalResponse, cached: false });
@@ -367,6 +394,11 @@ app.get('/api/trigger-analysis', async (req, res) => {
 cron.schedule('0 2 * * *', async () => {
     console.log('⏰ Otomatisasyon cron kòmanse (2:00 AM)...');
     await syncDailyMatches();
+    await generatePendingAnalysis();
+});
+
+cron.schedule('*/15 * * * *', async () => {
+    console.log('🔁 Analiz otomatik chak 15 minit...');
     await generatePendingAnalysis();
 });
 
